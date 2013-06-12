@@ -1,6 +1,8 @@
 package org.centralperf.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -36,6 +38,9 @@ public class Run {
 	private Date startDate;
 	
 	private Date endDate;
+	
+	@OneToMany(cascade=CascadeType.ALL)
+	private List<ScriptVariable> customScriptVariables = new ArrayList<ScriptVariable>();
 	
 	@Lob
 	@Column( length = 100000 )
@@ -127,6 +132,14 @@ public class Run {
 
 	public void setSamples(Set<Sample> samples) {
 		this.samples = samples;
+	}
+
+	public List<ScriptVariable> getCustomScriptVariables() {
+		return customScriptVariables;
+	}
+
+	public void setCustomScriptVariables(List<ScriptVariable> customScriptVariables) {
+		this.customScriptVariables = customScriptVariables;
 	}
 	
 }

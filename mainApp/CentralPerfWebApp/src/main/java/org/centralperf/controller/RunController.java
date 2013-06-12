@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.JMeterJob;
 import org.centralperf.model.Run;
 import org.centralperf.model.RunResultSummary;
+import org.centralperf.model.ScriptVariable;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.service.RunResultService;
@@ -24,8 +25,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.context.request.WebRequest;
 
 @Controller
 @SessionAttributes
@@ -59,7 +62,7 @@ public class RunController {
 			return "redirect:/run";
 		}
 		runRepository.save(run);
-        return "redirect:/run";
+        return "redirect:/run/" + run.getId() + "/detail";
     }
 	
 	@RequestMapping(value = "/run/{id}/delete", method = RequestMethod.GET)
@@ -103,6 +106,23 @@ public class RunController {
     	populateModelWithRunInfo(id, model);
     	return "runDetail";
     }    
+    
+    @RequestMapping(value = "/run/{id}/variables/update", method = RequestMethod.POST)
+    @ResponseBody
+    public boolean updateRunVariables(
+    		@PathVariable("id") Long id, 
+    		@RequestParam("name") String variableName,
+    		@RequestParam("value") String variableValue,
+    		Model model){
+    	log.debug("Update variable " + variableName + " with value " +  variableValue + " for run ["+id+"]");
+    	ScriptVariable variable = new ScriptVariable();
+    	variable.setName(variableName);
+    	variable.setValue(variableValue);
+
+    	runService.updateRunVariable(id, variable);
+    	
+    	return true;
+    }        
     
     /**
      * Returns the current output of a running run

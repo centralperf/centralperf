@@ -1,16 +1,64 @@
 <#import 'macros/layout.macro.ftl' as layout>
 <#import "spring.ftl" as spring />
 
+<script type="text/javascript">
+
+	// Live update of a variable value
+	function updateRunVariable(inputRef){
+		$.ajax({
+		  type: "POST",
+		  url: "${rc.contextPath}/run/${run.id}/variables/update",
+		  data: {
+		  		name : $(inputRef).attr('name'),
+		  		value : $(inputRef).val()
+		  	}
+		});
+	}
+</script>
+
 <@layout.main title="Run detail">
 	<H1>Run detail</H1>
 	<ul>
 		<li>Label : ${run.label}
+		<li><a id="showHideVariables" href="#">Script variables</a>
+			<script type="text/javascript">
+				$('a#showHideVariables').click(
+					function(){
+						$('#scriptVariables').toggle('slow'); 
+						return false;
+					}
+				);
+			</script>
+			<ul id="scriptVariables" style="display:none">
+			<#list run.script.scriptVariableSets as variableSet>
+			<li>${variableSet.name}
+				<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Run value</th>
+						<th>Default value</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				
+				<#list variableSet.scriptVariables as variable>
+					<tr>
+						<td>${variable.name}</td>
+						<td><input type="text" name="${variable.name}" value="${variable.defaultValue}" onchange="updateRunVariable(this)"/></td>
+						<td>${variable.defaultValue}</td>
+						<td>${variable.description!}</td>
+					</tr>		 
+				</#list>
+				</table>
+			</#list>
+			</ul>
 		<li>Launched : ${run.launched?string}
 		<li>Running : <span id="isRunning">${run.running?string}</span>
 		<#if !run.running>
 			<a href="${rc.contextPath}/run/${run.id}/launch">launch <#if run.launched && !run.running>again</#if></a>
 		</#if>
-		<li>Script : <a href="${rc.contextPath}/script/${run.script.id}/edit">${run.script.label}</a>
+		<li>Script : <a href="${rc.contextPath}/script/${run.script.id}/detail">${run.script.label}</a>
 		<#if run.running>
 			<!-- Refreshing output -->
 			<script type="text/javascript">

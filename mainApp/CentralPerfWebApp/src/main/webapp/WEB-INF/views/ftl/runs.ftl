@@ -19,7 +19,7 @@
 				<td>${run.launched?string} <#if run.launched>(${run.startDate?string})</#if></td>
 				<td>${run.running?string}</td>
 				<td>
-					<a href="${rc.contextPath}/script/${run.script.id}/edit">${run.script.label}</a>
+					<a href="${rc.contextPath}/script/${run.script.id}/detail">${run.script.label}</a>
 				</td>
 				<td>
 					<a href="${rc.contextPath}/run/${run.id}/detail">detail</a> -

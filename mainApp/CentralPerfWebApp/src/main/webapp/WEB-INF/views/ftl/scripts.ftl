@@ -16,7 +16,7 @@
 			<td>${script.label}</td>
 			<td><div class="scroll"><pre>${script.jmx?xml}</pre></div></td>
 			<td>
-		 		<a href="${rc.contextPath}/script/${script.id}/edit">edit</a>
+				<a href="${rc.contextPath}/script/${script.id}/detail">detail</a>
 				<a href="${rc.contextPath}/script/${script.id}/delete">delete</a>
 		 	</td>
 		</tr>

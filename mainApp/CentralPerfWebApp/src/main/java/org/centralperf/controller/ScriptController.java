@@ -9,7 +9,9 @@ import org.centralperf.model.Run;
 import org.centralperf.model.Script;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.centralperf.service.ScriptService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -26,11 +28,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @SessionAttributes
 public class ScriptController {
 	
-	@Autowired
+	@Resource
 	private ScriptRepository scriptRepository;
 	
 	@Resource
+	private ScriptService scriptService;
+	
+	@Resource
 	private RunRepository runRepository;	
+	
+	private static final Logger log = LoggerFactory.getLogger(ScriptController.class);
 	
 	@RequestMapping(value = "/script/new", method = RequestMethod.POST)
     public String addScript(
@@ -41,11 +48,10 @@ public class ScriptController {
 		try {
 			String jmxContent = new String(file.getBytes());
 			script.setJmx(jmxContent);
-			scriptRepository.save(script);			
 		} catch (IOException e) {
 		}
-
-        return "redirect:/script";
+		scriptService.addScript(script);
+        return "redirect:/script/" + script.getId() + "/detail";
     }
      
     @RequestMapping("/script")
@@ -54,6 +60,14 @@ public class ScriptController {
     	model.addAttribute("command",new Script());
         return "scripts";
     }
+    
+    @RequestMapping(value="/script/{id}/detail", method = RequestMethod.GET)
+    public String showScriptDetail(@PathVariable("id") Long id, Model model){
+    	log.debug("script details for script ["+id+"]");
+    	Script script = scriptRepository.findOne(id);
+    	model.addAttribute("script",script);
+        return "scriptDetail";
+    }    
     
 	@RequestMapping(value = "/script/{id}/delete", method = RequestMethod.GET)
     public String deleteScript(@PathVariable("id") Long id, RedirectAttributes redirectAttrs) {
