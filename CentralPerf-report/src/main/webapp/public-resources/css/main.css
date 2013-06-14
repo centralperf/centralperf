@@ -1,0 +1,11 @@
+body {margin:0; padding:0; font:100% tahoma,arial,helvetica,"bitstream vera sans",sans-serif; color:#000; background:#fff}
+#navigation-menu {overflow:hidden; background:#dae0d2 url(../img/fond.png) bottom repeat-x}
+#navigation-menu ul {float:left; margin:16px 0 0 16px; padding:0; list-style:none}
+#navigation-menu li {float:left; margin-left: 3px}
+#navigation-menu a, #selected {float:left; text-decoration:none; letter-spacing:1px; padding-left:10px; background:url(../img/coin-gauche.png) 0% -250px no-repeat}
+#navigation-menu span, #selected span {float:left; padding:6px 10px 3px 0; background:url(../img/coin-droit.png) 100% -250px no-repeat; color:#fff}
+#selected {background-position:0 0}
+#selected span {background-position:100% 0; color:#333}
+#navigation-menu a:hover, #navigation-menu a:focus {background-position:0 -500px}
+#navigation-menu a:hover span, #navigation-menu a:focus span {background-position:100% -500px}
+#big-logo {background : transparent url("../img/logo-300.png") no-repeat; height : 126px; width : 300px; margin : 0 auto; vertical-align:middle;} 
