@@ -1,6 +1,7 @@
 package org.centralperf.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -56,8 +57,21 @@ public class RunService {
 			Run newRun = new Run();
 			newRun.setLabel(run.getLabel());
 			newRun.setLaunched(false);
-			newRun.setRunning(true);
+			newRun.setRunning(false);
 			newRun.setScript(run.getScript());
+			
+			// Copy custom variables
+			List<ScriptVariable> oldScriptVariables = run.getCustomScriptVariables();
+			List<ScriptVariable> newScriptVariables = new ArrayList<ScriptVariable>();
+			for (ScriptVariable oldScriptVariable : oldScriptVariables) {
+				ScriptVariable newScriptVariable = new ScriptVariable();
+				newScriptVariable.setName(oldScriptVariable.getName());
+				newScriptVariable.setValue(oldScriptVariable.getValue());
+				newScriptVariables.add(newScriptVariable);
+			}
+			newRun.setCustomScriptVariables(newScriptVariables);
+			
+			// Create the new run
 			runRepository.save(newRun);
 			return newRun;
 		} else {

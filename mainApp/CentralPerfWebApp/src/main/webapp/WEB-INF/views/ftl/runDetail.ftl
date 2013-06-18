@@ -4,15 +4,28 @@
 <script type="text/javascript">
 
 	// Live update of a variable value
-	function updateRunVariable(inputRef){
+	function updateRunVariable(inputId, restored){
 		$.ajax({
 		  type: "POST",
 		  url: "${rc.contextPath}/run/${run.id}/variables/update",
 		  data: {
-		  		name : $(inputRef).attr('name'),
-		  		value : $(inputRef).val()
+		  		name : $('#' + inputId).attr('name'),
+		  		value : $('#' + inputId).val()
 		  	}
+		}).then(function(data){
+			if(!restored){
+				$('#' + inputId + "Custom").show();
+			}
 		});
+		return false;
+	}
+	
+	// Restore previous variable value
+	function restorePreviousValue(inputId, defaultValue){
+		$('#' + inputId).val(defaultValue);
+		updateRunVariable(inputId, true);
+		$('#' + inputId + "Custom").hide();
+		return false;
 	}
 </script>
 
@@ -45,7 +58,20 @@
 				<#list variableSet.scriptVariables as variable>
 					<tr>
 						<td>${variable.name}</td>
-						<td><input type="text" name="${variable.name}" value="${variable.defaultValue}" onchange="updateRunVariable(this)"/></td>
+						<td>
+							<#assign variableName = variable.name>
+							<#assign variableNameEscaped = variableName?replace(".","\\.")?js_string>
+							<#assign variableValue = variable.defaultValue>
+							<#assign variableDefaultValueEscaped = variable.defaultValue?js_string>
+							<#list run.customScriptVariables as customScriptVariable>
+								<#if customScriptVariable.name == variable.name><#assign variableValue = customScriptVariable.value></#if>
+							</#list>
+							<input type="text" name="${variableName}" id="${variableName}" value="${variableValue}" onchange="updateRunVariable('${variableNameEscaped}', false)"/>
+							<div id="${variableName}Custom" style="display:${(variableValue != variable.defaultValue)?string("block","none")}">
+								Custom, <a href="#" onclick="restorePreviousValue('${variableNameEscaped}', '${variableDefaultValueEscaped}')">restore default value</a>
+							</div>
+							
+						</td>
 						<td>${variable.defaultValue}</td>
 						<td>${variable.description!}</td>
 					</tr>		 
@@ -55,9 +81,11 @@
 			</ul>
 		<li>Launched : ${run.launched?string}
 		<li>Running : <span id="isRunning">${run.running?string}</span>
-		<#if !run.running>
-			<a href="${rc.contextPath}/run/${run.id}/launch">launch <#if run.launched && !run.running>again</#if></a>
-		</#if>
+		<li>Actions
+			<ul>
+				<#if !run.running><li><a href="${rc.contextPath}/run/${run.id}/launch">launch <#if run.launched && !run.running>again</#if></a></#if>
+				<li><a href="${rc.contextPath}/run/${run.id}/duplicate">duplicate</a>
+			</ul>
 		<li>Script : <a href="${rc.contextPath}/script/${run.script.id}/detail">${run.script.label}</a>
 		<#if run.running>
 			<!-- Refreshing output -->
@@ -90,9 +118,16 @@
 			</script>			
 		</#if>
 		<#if run.launched>
-			<li>Run output : <div id="runOuput" class="scroll">${run.processOutput!}</div>
-			<li>Data: 
-			<div id="runResultCSV" class="scroll">
+			<li><a href="#" id="showHideRunOutput">Run output</a>
+			<script type="text/javascript">
+				$('a#showHideRunOutput').click(function(){$('#runOuput').toggle('slow');return false;});
+			</script>
+			<div id="runOuput" class="scroll" style="display:none">${run.processOutput!}</div>
+			<li><a href="#" id="showHideRunData">Data</a>
+			<script type="text/javascript">
+				$('a#showHideRunData').click(function(){$('#runResultCSV').toggle('slow');return false;});
+			</script>
+			<div id="runResultCSV" class="scroll" style="display:none">
 			<ul>
 				<#list run.samples as sample>
 					<li>${sample}

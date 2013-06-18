@@ -8,6 +8,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,9 +37,9 @@ import org.xml.sax.SAXException;
  * @author Charles Le Gallic
  *
  */
-public class JMXScriptVariableExtractor {
+public class JMXScriptVariableHelper {
 
-	private static final Logger log = LoggerFactory.getLogger(JMXScriptVariableExtractor.class);
+	private static final Logger log = LoggerFactory.getLogger(JMXScriptVariableHelper.class);
 	
 	/**
 	 * Parse a JMX file to extract all variables declared in it
@@ -141,11 +143,33 @@ public class JMXScriptVariableExtractor {
 
 	}
 	
+	/**
+	 * Replace variables in JMX by their values for a run  
+	 * @param variables
+	 * @param jmx
+	 * @return the JMX file with variable replaced
+	 */
+	public static String replaceVariableInJMX(List<ScriptVariable> variables, String jmx){
+		for (ScriptVariable scriptVariable : variables) {
+			String regexp = "(<stringProp[^>]*>" + scriptVariable.getName() + "</stringProp>[^<]*<stringProp[^>]*>)([^<]*)(</stringProp>)";
+			Pattern pattern = Pattern.compile(regexp);
+			Matcher matcher = pattern.matcher(jmx);
+			jmx = matcher.replaceAll("$1" + scriptVariable.getValue() + "$3");
+		}
+		return jmx;
+	}
+	
 	public static void main(String args[]){
 		try {
-			File inputFile = new File("E:\\Users\\charles\\Desktop\\sonde.jmx");
+			File inputFile = new File("E:/Prod/GitLib/centralperf/mainApp/CentralPerfWebApp/src/test_resource/jmx/CP_SingleRequest.jmx");
 			String jmxContent = new Scanner(inputFile).useDelimiter("\\Z").next();
-			JMXScriptVariableExtractor.extractVariables(jmxContent);
+			//JMXScriptVariableHelper.extractVariables(jmxContent);
+			ScriptVariable scriptVariable = new ScriptVariable();
+			scriptVariable.setName("centralperf.protocol");
+			scriptVariable.setValue("*****dzadzadzadjzaipjdzaijio");
+			List<ScriptVariable> variables = new ArrayList<ScriptVariable>();
+			variables.add(scriptVariable);
+			System.out.println(JMXScriptVariableHelper.replaceVariableInJMX(variables, jmxContent));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
