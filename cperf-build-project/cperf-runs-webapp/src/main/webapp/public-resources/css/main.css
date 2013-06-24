@@ -1,0 +1,10 @@
+.scroll {
+	height: 200px;
+	width: 500px;
+	overflow: auto;
+	border: 1px solid #666;
+	background-color: #ccc;
+	padding: 8px;
+	white-space:pre;
+	font-size: 12px;
+}
