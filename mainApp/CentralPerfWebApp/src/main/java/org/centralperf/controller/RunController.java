@@ -92,6 +92,13 @@ public class RunController {
     	return "redirect:/run/" + run.getId() + "/detail";
     }
     
+    @RequestMapping(value = "/run/{id}/duplicate", method = RequestMethod.GET)
+    public String duplicateRun(@PathVariable("id") Long id){
+    	Run run = runRepository.findOne(id);
+    	run = runService.copyRun(id);
+    	return "redirect:/run/" + run.getId() + "/detail";
+    }    
+    
     @RequestMapping(value = "/run/{id}/saveResults", method = RequestMethod.GET)
     @ResponseBody
     public String saveRunResults(@PathVariable("id") Long id){

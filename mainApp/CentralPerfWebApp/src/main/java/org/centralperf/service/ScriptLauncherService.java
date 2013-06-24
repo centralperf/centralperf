@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import javax.annotation.Resource;
 
+import org.centralperf.helper.JMXScriptVariableHelper;
 import org.centralperf.helper.JMeterJob;
 import org.centralperf.helper.JMeterLauncher;
 import org.centralperf.model.Run;
@@ -33,7 +34,12 @@ public class ScriptLauncherService {
 	public boolean launchRun(Run run){
     	Script script = run.getScript();
     	log.debug("Launching run " + run.getLabel());
-    	JMeterJob job = jMeterLauncher.launch(script.jmx);
+    	
+    	// Replacing variables
+    	String parameterizedScript = JMXScriptVariableHelper.replaceVariableInJMX(run.getCustomScriptVariables(), script.jmx);
+    	
+    	// Launch run
+    	JMeterJob job = jMeterLauncher.launch(parameterizedScript);
     	runningJobs.put(run.getId(), job);
     	run.setLaunched(true);
     	run.setRunning(true);

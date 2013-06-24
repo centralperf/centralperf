@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.centralperf.helper.JMXScriptVariableExtractor;
+import org.centralperf.helper.JMXScriptVariableHelper;
 import org.centralperf.model.Script;
 import org.centralperf.model.ScriptVariableSet;
 import org.centralperf.repository.ScriptRepository;
@@ -29,7 +29,7 @@ public class ScriptService {
 	public void addScript(Script script){
 		
 		// Extract variables from JMX file
-		List<ScriptVariableSet> scriptVariableSets = JMXScriptVariableExtractor.extractVariables(script.jmx);
+		List<ScriptVariableSet> scriptVariableSets = JMXScriptVariableHelper.extractVariables(script.jmx);
 		script.setScriptVariableSets(scriptVariableSets);
 		scriptRepository.save(script);	
 	}
