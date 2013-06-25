@@ -11,7 +11,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
-public class Sample implements Serializable{
+public class Sample implements Serializable, Comparable<Sample>{
 
 	private static final long serialVersionUID = 1758196304097304496L;
 
@@ -96,5 +96,11 @@ public class Sample implements Serializable{
 	@Override
 	public String toString() {
 		return "org.centralperf.model.Sample ["+id+"]["+run.getId()+"]["+timestamp+"]["+elapsed+"]["+sampleName+"]["+returnCode+"]["+latency+"]["+sizeInOctet+"]["+assertResult+"]["+status+"]";
+	}
+	
+	@Override
+	public int compareTo(Sample s) {
+		//Sort by ID (default)
+		return this.id.compareTo(s.getId());
 	}
 }

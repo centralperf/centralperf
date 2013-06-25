@@ -3,7 +3,6 @@ package org.centralperf.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -51,7 +50,7 @@ public class Run {
 	private String runResultCSV;	
 	
 	@OneToMany(mappedBy="run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private Set<Sample> samples;
+	private List<Sample> samples;
 	
 	public boolean isLaunched() {
 		return launched;
@@ -126,11 +125,11 @@ public class Run {
 		this.runResultCSV = runResultCSV;
 	}
 	
-	public Set<Sample> getSamples() {
+	public List<Sample> getSamples() {
 		return samples;
 	}
 
-	public void setSamples(Set<Sample> samples) {
+	public void setSamples(List<Sample> samples) {
 		this.samples = samples;
 	}
 
