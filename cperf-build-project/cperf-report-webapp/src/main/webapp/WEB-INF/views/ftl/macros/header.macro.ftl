@@ -6,10 +6,10 @@
 	        <!--[if IE]><style type="text/css" media="screen">@import url(${rc.contextPath}/resources/css/main-ie.css);</style><![endif]-->
   			<!--[if lte IE 6]><style type="text/css" media="screen">@import url(${rc.contextPath}/resources/css/main-ie6.css);</style><![endif]-->
 	        <script src="${rc.contextPath}/resources/js/jquery.min.js"></script>
-			<script src="http://code.highcharts.com/highcharts.js"></script>
+			<script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/highcharts.js'></script>
 			
 			<script type='text/javascript' src='${rc.contextPath}/resources/js/utils.js'></script>
 			<script type='text/javascript' src='${rc.contextPath}/resources/js/data.js'></script>
-			<script type='text/javascript' src='${rc.contextPath}/resources/js/main.js'></script>
+			
 	    </head>
 </#macro>

@@ -3,7 +3,10 @@
 
 <@layout.main title="Report">
 
-<div id='pieChart'></div>
+<script type='text/javascript'>
+	<#include "graphs/sum.ftl">
+</script>
+<div id='sumChart'></div>
 
 
 </@layout.main>
