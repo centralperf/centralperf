@@ -10,7 +10,6 @@ import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.JMeterJob;
 import org.centralperf.model.Run;
 import org.centralperf.model.ScriptVariable;
-import org.centralperf.model.ScriptVariableSet;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptVariableRepository;
 import org.slf4j.Logger;

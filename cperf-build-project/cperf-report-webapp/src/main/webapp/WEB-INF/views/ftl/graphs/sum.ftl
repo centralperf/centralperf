@@ -9,8 +9,8 @@ $(document).ready(function ()
 	                'Click and drag in the plot area to zoom in' :
 	                'Drag your finger over the plot to zoom in'
 	        },
-	        xAxis: {type: 'datetime', title: {text: null}},
-	        yAxis: {title:{text: 'Response Time (ms)'}},
+	        xAxis: {type: 'datetime', title: {text: 'Test duration'}, labels: {rotation: 0}},
+	        yAxis: [{title:{text: 'Response Time (ms)'}},{title:{text: 'Number of requests by second'},opposite: true}],
 	        tooltip: {shared: true},
 	        legend: {enabled: false},
 	        plotOptions: {
@@ -31,11 +31,22 @@ $(document).ready(function ()
         	},
         	series: [
         	{
+        		yAxis: 0,
 	            type: 'area',
 	            name: 'Response time (ms)',
-	            pointInterval: 1000,
-	            pointStart: ${start?c},
-	            data: [<#list run.samples as sample>${sample.elapsed?c},</#list>]
-        	}]
+	            data: [${series.rstSerie}]
+        	},{
+        		yAxis: 1,
+                type: 'spline',
+                name: 'Request/s',
+                data: [${series.reqSerie}],
+                marker: {
+                	lineWidth: 2,
+                	lineColor: Highcharts.getOptions().colors[3],
+                	fillColor: 'white'
+                }
+            }
+        	
+        	]
     	});
 });

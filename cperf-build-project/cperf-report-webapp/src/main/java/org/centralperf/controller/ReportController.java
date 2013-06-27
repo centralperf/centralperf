@@ -1,17 +1,12 @@
 package org.centralperf.controller;
 
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
-
 import javax.annotation.Resource;
 
+import org.centralperf.graph.model.SumSeries;
 import org.centralperf.model.Run;
-import org.centralperf.model.Sample;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.SampleRepository;
+import org.centralperf.service.GraphService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -30,6 +25,9 @@ public class ReportController {
 	@Resource
 	private SampleRepository sampleRepository;
 	
+	@Resource
+	private GraphService graphService;
+	
 	private static final Logger log = LoggerFactory.getLogger(ReportController.class);
      
     @RequestMapping("/report")
@@ -45,25 +43,9 @@ public class ReportController {
     	log.debug("Run report SUM for run ["+id+"]");
     	Run run = runRepository.findOne(id);
     	model.addAttribute("run",run);
-    	Calendar c = Calendar.getInstance();
-    	TimeZone tz = c.getTimeZone();
-    	long time = run.getStartDate().getTime();
-    	int offsetFromUTC = tz.getOffset(time);
     	
-    	Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-    	gmtCal.setTime(run.getStartDate());
-    	gmtCal.add(Calendar.MILLISECOND, offsetFromUTC);
-    	
-    	log.debug("DATE ["+run.getStartDate()+"]["+run.getStartDate().getTime()+"]\n["+c+"]");
-    	model.addAttribute("start",gmtCal.getTimeInMillis());
-
-    	List<Sample> lst = run.getSamples();
-    	Collections.sort(lst);
-    	for (Sample sample : lst) {
-    		log.debug(sample.getId()+"-"+sample.getElapsed());
-		}
-    	
-    	
+    	SumSeries series = graphService.getSumSeries(run);
+    	model.addAttribute("series",series);
     	model.addAttribute("menu","report_sum");
     	
    
