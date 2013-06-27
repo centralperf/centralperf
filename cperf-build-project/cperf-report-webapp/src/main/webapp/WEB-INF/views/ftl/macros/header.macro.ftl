@@ -8,8 +8,6 @@
 	        <script src="${rc.contextPath}/resources/js/jquery.min.js"></script>
 			<script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/highcharts.js'></script>
 			
-			<script type='text/javascript' src='${rc.contextPath}/resources/js/utils.js'></script>
-			<script type='text/javascript' src='${rc.contextPath}/resources/js/data.js'></script>
 			
 	    </head>
 </#macro>

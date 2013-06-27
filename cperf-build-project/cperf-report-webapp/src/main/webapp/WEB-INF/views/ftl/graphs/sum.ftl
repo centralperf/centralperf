@@ -45,8 +45,46 @@ $(document).ready(function ()
                 	lineColor: Highcharts.getOptions().colors[3],
                 	fillColor: 'white'
                 }
-            }
-        	
+            },{
+                type: 'pie',
+                name: 'HTTP responses',
+                tooltip: {valueSuffix: '%'},
+                data: [{
+                    name: '1xx',
+                    y: ${pie.http1xxRatio?string("0.##")},
+                    color: Highcharts.getOptions().colors[0]
+                }, {
+                    name: '2xx',
+                    y: ${pie.http2xxRatio?string("0.##")},
+                    color: Highcharts.getOptions().colors[2]
+                }, {
+                    name: '3xx',
+                    y: ${pie.http3xxRatio?string("0.##")},
+                    color: Highcharts.getOptions().colors[4]
+                }, {
+                    name: '4xx',
+                    y: ${pie.http4xxRatio?string("0.##")},
+                    color: Highcharts.getOptions().colors[6]
+                }, {
+                    name: '5xx',
+                    y: ${pie.http5xxRatio?string("0.##")},
+                    color: Highcharts.getOptions().colors[8]
+                }, {
+                    name: 'ERR',
+                    y: ${pie.httpErrRatio?string("0.##")},
+                    color: Highcharts.getOptions().colors[1]
+                }],
+                center: [150, 0],
+                size: 150,
+                showInLegend: true,
+                dataLabels: {
+                    formatter: function() {
+                        return this.y > 5 ? this.point.name : null;
+                    },
+                    color: 'white',
+                    distance: -15
+                }
+        	}
         	]
     	});
 });

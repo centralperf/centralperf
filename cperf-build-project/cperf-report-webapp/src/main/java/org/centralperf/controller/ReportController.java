@@ -2,7 +2,6 @@ package org.centralperf.controller;
 
 import javax.annotation.Resource;
 
-import org.centralperf.graph.model.SumSeries;
 import org.centralperf.model.Run;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.SampleRepository;
@@ -43,9 +42,8 @@ public class ReportController {
     	log.debug("Run report SUM for run ["+id+"]");
     	Run run = runRepository.findOne(id);
     	model.addAttribute("run",run);
-    	
-    	SumSeries series = graphService.getSumSeries(run);
-    	model.addAttribute("series",series);
+    	model.addAttribute("series",graphService.getSumSeries(run));
+    	model.addAttribute("pie", graphService.getCodeRepartition(run));
     	model.addAttribute("menu","report_sum");
     	
    

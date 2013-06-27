@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.centralperf.graph.model.HttpCodeRepartition;
 import org.centralperf.graph.model.SumSeries;
 import org.centralperf.model.Run;
 import org.slf4j.Logger;
@@ -76,8 +77,24 @@ public class GraphService {
 				if(results.hasNext()){rstSerie.append(','); reqSerie.append(',');}
 			} catch (ParseException pE) {log.error("Error in date convertion",pE);}
 		}
-		log.debug("TOT: "+reqTot+" - COUNT: "+count+"  => "+(reqTot/count) );
+		
 		return new SumSeries(rstSerie.toString(),reqSerie.toString(),rstMin,rstMax,rstTot/count,reqMin,reqMax,reqTot/count);
 	}
+	
+	@SuppressWarnings("rawtypes")
+	public HttpCodeRepartition getCodeRepartition(Run run){
+		Query q = em.createQuery("SELECT  substring(status,1,1), count(*) from Sample s where run_fk='"+run.getId()+"'   GROUP BY substring(status,1,1)");
+		
+		Iterator results =q.getResultList().iterator();
+		Object[] row =null;
+		HttpCodeRepartition hcr = new HttpCodeRepartition();
+		
+		while ( results.hasNext() ) {
+			row = (Object[]) results.next();
+			hcr.setNbHttpXXX(row[0].toString(), Long.parseLong(row[1].toString()));
+		}
+		return hcr;
+	}
+    	
 	
 }
