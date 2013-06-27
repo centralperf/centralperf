@@ -14,6 +14,7 @@
 						<td valign="middle">
 		    				<form name="Reportform" >
 								<select size="1"  onChange="location = this.options[this.selectedIndex].value;">
+									<option value="#" >Select a run</option>
 									<#list runs as run>
 										<option value="${rc.contextPath}/report/${run.id}/sum" >${run.label}</option>
 									</#list>
