@@ -1,16 +1,17 @@
 <#import 'navigation.macro.ftl' as navigation>
 <#import 'header.macro.ftl' as header>
-<#macro main title>
+<#macro main title menu>
 
 	<html>
 	    <@header.main title/>
 	    <body>
-			<H1>${title}</H1>
 			<!-- Main navigation -->
-			<@navigation.main/>
-			
+			<@navigation.main menu/>
+
 			<!-- Templates -->
-	        <#nested/>
+            <div class="container">
+	            <#nested/>
+            </div>
 	    </body>
 	</html>
 

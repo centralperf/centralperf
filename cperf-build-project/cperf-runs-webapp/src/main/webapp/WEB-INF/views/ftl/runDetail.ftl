@@ -16,98 +16,83 @@
 	}
 </script>
 
-<@layout.main title="Run detail">
-	<H1>Run detail</H1>
-	<ul>
-		<li>Label : ${run.label}
-		<li><a id="showHideVariables" href="#">Script variables</a>
-			<script type="text/javascript">
-				$('a#showHideVariables').click(
-					function(){
-						$('#scriptVariables').toggle('slow'); 
-						return false;
-					}
-				);
-			</script>
-			<ul id="scriptVariables" style="display:none">
-			<#list run.script.scriptVariableSets as variableSet>
-			<li>${variableSet.name}
-				<table>
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Run value</th>
-						<th>Default value</th>
-						<th>Description</th>
-					</tr>
-				</thead>
-				
-				<#list variableSet.scriptVariables as variable>
-					<tr>
-						<td>${variable.name}</td>
-						<td><input type="text" name="${variable.name}" value="${variable.defaultValue}" onchange="updateRunVariable(this)"/></td>
-						<td>${variable.defaultValue}</td>
-						<td>${variable.description!}</td>
-					</tr>		 
-				</#list>
-				</table>
-			</#list>
-			</ul>
-		<li>Launched : ${run.launched?string}
-		<li>Running : <span id="isRunning">${run.running?string}</span>
-		<#if !run.running>
-			<a href="${rc.contextPath}/run/${run.id}/launch">launch <#if run.launched && !run.running>again</#if></a>
-		</#if>
-		<li>Script : <a href="${rc.contextPath}/script/${run.script.id}/detail">${run.script.label}</a>
-		<#if run.running>
-			<!-- Refreshing output -->
-			<script type="text/javascript">
-				var running = true;
-				function refreshOuput() {
-				  $.ajax({
-					type: "GET",
-	    			url: "/run/${run.id}/output",
-	    			success: function(data) {
-	    				console.log(data);
-	                    if(data.running){
-	                    	$("#runOuput").html(data.jobOutput); 
-	                    	$("#runResultCSV").html(data.csvresult);
-	                    	$("#numberOfSamples").html(data.numberOfSamples);
-	                    	$("#lastSampleDate").html(data.lastSampleDate);
-	                    } else{
-	                    	running = false;
-	                    	$("#isRunning").html("false");
-	                    }
-	                },
-				   	complete: function() {
-				    	if(running) setTimeout(refreshOuput,3000); //now that the request is complete, do it again in 5 seconds
-				   	}
-				  });
-				}
-				jQuery(document).ready(function(){
-					refreshOuput();
-				});	
-			</script>			
-		</#if>
-		<#if run.launched>
-			<li>Run output : <div id="runOuput" class="scroll">${run.processOutput!}</div>
-			<li>Data: 
-			<div id="runResultCSV" class="scroll">
-			<ul>
-				<#list run.samples as sample>
-					<li>${sample}
-				</#list>
-			</ul>
-			</div>
-			<li>Launched at : <span id="launchDate">${run.startDate!?string}</span>
-			<#if !run.running>
-				<li>Ended at : ${run.endDate!?string}
-				<li>Duration : ${runDurationInSeconds!} seconds
-			</#if>
-			<li>Number of samples : <span id="numberOfSamples">${(run.samples?size)!}</span>
-			
-			
-			<li>Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span>
-		</#if>
-	</ul>
+<@layout.main title="Run detail" menu="runs">
+    <div class="page-header">
+        <div>
+	        <span style="float: left"><H1 >Run <strong>${run.label}</strong></H1></span>(script : <a href="${rc.contextPath}/script/${run.script.id}/detail">${run.script.label})</a>
+        </div>
+        <div style="clear: both">
+            <#if run.launched>
+                <#if !run.running>Launched on<#else>Started since</#if>
+                <span id="launchDate">${run.startDate!?string}</span>
+                <#if !run.running>
+                    to ${run.endDate!?string}
+                </#if>
+                (${runDurationInSeconds!} seconds)
+            </#if>
+            <#if !run.running>
+                <a href="${rc.contextPath}/run/${run.id}/launch" class="btn btn-success">
+                    <#if run.launched><li class="icon-forward icon-white"></li> launch again
+                    <#else><li class="icon-play icon-white"></li> launch</#if>
+                </a>
+            </#if>
+        </div>
+    </div>
+
+    <div>
+
+    </div>
+
+    <div style="clear:both">
+    <legend>Outputs</legend>
+    <ul>
+            <#if run.running>
+                <!-- Refreshing output -->
+                <script type="text/javascript">
+                    var running = true;
+                    function refreshOuput() {
+                      $.ajax({
+                        type: "GET",
+                        url: "${rc.contextPath}/run/${run.id}/output",
+                        success: function(data) {
+                            console.log(data);
+                            if(data.running){
+                                $("#runOuput").html(data.jobOutput);
+                                $("#runResultCSV").html(data.csvresult);
+                                $("#numberOfSamples").html(data.numberOfSamples);
+                                $("#lastSampleDate").html(data.lastSampleDate);
+                            } else{
+                                running = false;
+                                $("#isRunning").html("false");
+                            }
+                        },
+                        complete: function() {
+                            if(running) setTimeout(refreshOuput,3000); //now that the request is complete, do it again in 5 seconds
+                        }
+                      });
+                    }
+                    jQuery(document).ready(function(){
+                        refreshOuput();
+                    });
+                </script>
+            </#if>
+            <#if run.launched>
+                <li>Run output : <div id="runOuput" class="scroll scroll-expanded">${run.processOutput!}</div>
+                <li>Data:
+                <div id="runResultCSV" class="scroll scroll-expanded">
+                <ul>
+                    <#list run.samples as sample>
+                        <li>${sample}
+                    </#list>
+                </ul>
+                </div>
+                <li>
+
+                <li>Number of samples : <span id="numberOfSamples">${(run.samples?size)!}</span>
+
+
+                <li>Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span>
+            </#if>
+        </ul>
+    </div>
 </@layout.main>

@@ -8,7 +8,7 @@
 	</parent>
 	
 	<artifactId>cperf-common-model</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<name>Central Perf model module</name>
 	<packaging>jar</packaging>
   

@@ -14,6 +14,8 @@ import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptVariableRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -88,4 +90,12 @@ public class RunService {
 		run.setCustomScriptVariables(customVariables);
 		runRepository.save(run);
 	}
+
+    public List<Run> getLastRuns(){
+        return runRepository.findAll(new PageRequest(0, 10, new Sort(Sort.Direction.DESC, "startDate"))).getContent();
+    }
+
+    public List<Run> getActiveRuns(){
+        return runRepository.findByRunning(true);
+    }
 }

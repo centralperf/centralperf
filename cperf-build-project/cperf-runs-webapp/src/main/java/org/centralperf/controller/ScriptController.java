@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.centralperf.model.Project;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
 import org.centralperf.repository.RunRepository;
@@ -12,15 +13,14 @@ import org.centralperf.repository.ScriptRepository;
 import org.centralperf.service.ScriptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -38,8 +38,19 @@ public class ScriptController {
 	private RunRepository runRepository;	
 	
 	private static final Logger log = LoggerFactory.getLogger(ScriptController.class);
-	
-	@RequestMapping(value = "/script/new", method = RequestMethod.POST)
+
+    @ExceptionHandler(Throwable.class)
+    public @ResponseBody String handleValidationFailure(Throwable exception) {
+        return exception.getMessage();
+    }
+
+    @RequestMapping(value = "/script/new", method = RequestMethod.GET)
+    public String createScript(Model model) {
+        model.addAttribute("newScript",new Script());
+        return "macro/script/news-script-form.macro";
+    }
+
+    @RequestMapping(value = "/script/new", method = RequestMethod.POST)
     public String addScript(
     						@ModelAttribute("script") Script script,
                             @RequestParam("jmxFile") MultipartFile file,
@@ -57,7 +68,7 @@ public class ScriptController {
     @RequestMapping("/script")
     public String showScripts(Model model) {
     	model.addAttribute("scripts",scriptRepository.findAll());
-    	model.addAttribute("command",new Script());
+    	model.addAttribute("newScript",new Script());
         return "scripts";
     }
     

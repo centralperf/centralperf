@@ -2,14 +2,7 @@ package org.centralperf.model;
 
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 @Entity
 public class Script{
@@ -22,7 +15,12 @@ public class Script{
 	 * Label of the script
 	 */
 	private String label;
-	
+
+    /**
+     * Short description for the script
+     */
+    private String description;
+
 	/**
 	 * Set of variables for this script 
 	 */
@@ -32,6 +30,10 @@ public class Script{
 	@Lob
 	@Column( length = 100000 )
 	public String jmx;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "projectId")
+    private Project project;
 
 	public Long getId() {
 		return id;
@@ -65,4 +67,19 @@ public class Script{
 		this.scriptVariableSets = scriptVariableSets;
 	}
 
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }
