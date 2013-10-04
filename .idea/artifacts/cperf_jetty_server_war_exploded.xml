@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="cperf-jetty-server:war exploded">
+    <output-path>$PROJECT_DIR$/cperf-build-project/cperf-jetty-server/target/servers</output-path>
+    <root id="root">
+      <element id="javaee-facet-resources" facet="cperf-jetty-server/web/Web" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="cperf-jetty-server" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>
