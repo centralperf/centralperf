@@ -9,6 +9,7 @@ import org.centralperf.helper.JMeterJob;
 import org.centralperf.helper.JMeterLauncher;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
+import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.RunRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,9 @@ public class ScriptLauncherService {
 	private static final Logger log = LoggerFactory.getLogger(ScriptLauncherService.class);
 	
 	public boolean launchRun(Run run){
-    	Script script = run.getScript();
+    	ScriptVersion scriptVersion = run.getScriptVersion();
     	log.debug("Launching run " + run.getLabel());
-    	JMeterJob job = jMeterLauncher.launch(script.jmx);
+    	JMeterJob job = jMeterLauncher.launch(scriptVersion.getJmx());
     	runningJobs.put(run.getId(), job);
     	run.setLaunched(true);
     	run.setRunning(true);

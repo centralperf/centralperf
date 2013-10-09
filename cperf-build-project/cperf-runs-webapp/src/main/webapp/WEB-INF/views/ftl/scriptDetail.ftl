@@ -4,9 +4,13 @@
 
 <@layout.main title="Script detail" menu="scripts">
     <div class="page-header page-title">
-        <strong>Script </strong><span>${script.label}</span>
+        <strong><a href="${rc.contextPath}/project/${project.id}/detail">${project.name}</a> > Script </strong><span>${script.label}</span>
     </div>
-    <legend>JMX content</legend>
-	<div class="scroll scroll-collapsed"><pre>${script.jmx?xml}</pre></div></li>
-    <@script_variable.main script true false/>
+    ${script.description!}
+    <#list script.versions as version>
+        <legend><h3>Version ${version.number} (${version.description})</h3></legend>
+        <legend>JMX content</legend>
+        <div class="scroll scroll-collapsed"><pre>${version.jmx?xml}</pre></div></li>
+        <@script_variable.main version true false/>
+    </#list>
 </@layout.main>

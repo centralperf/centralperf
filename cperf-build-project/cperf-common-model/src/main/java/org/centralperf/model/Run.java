@@ -20,7 +20,7 @@ public class Run {
 	private String label;
 
 	@ManyToOne
-	private Script script;
+	private ScriptVersion scriptVersion;
 	
 	private boolean launched = false;
 	
@@ -81,12 +81,12 @@ public class Run {
 		this.label = label;
 	}
 
-	public Script getScript() {
-		return script;
+	public ScriptVersion getScriptVersion() {
+		return scriptVersion;
 	}
 
-	public void setScript(Script script) {
-		this.script = script;
+	public void setScriptVersion(ScriptVersion scriptVersion) {
+		this.scriptVersion = scriptVersion;
 	}
 
 	public Date getStartDate() {

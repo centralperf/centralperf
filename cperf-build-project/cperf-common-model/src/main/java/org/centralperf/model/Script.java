@@ -1,5 +1,6 @@
 package org.centralperf.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.*;
@@ -21,19 +22,13 @@ public class Script{
      */
     private String description;
 
-	/**
-	 * Set of variables for this script 
-	 */
-	@OneToMany(fetch = FetchType.EAGER, cascade=CascadeType.ALL)
-	private List<ScriptVariableSet> scriptVariableSets;
-	
-	@Lob
-	@Column( length = 100000 )
-	public String jmx;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "projectId")
     private Project project;
+
+    @OneToMany(cascade=CascadeType.ALL)
+    @OrderColumn(name="INDEX")
+    private List<ScriptVersion> versions = new ArrayList<ScriptVersion>();
 
 	public Long getId() {
 		return id;
@@ -51,22 +46,6 @@ public class Script{
 		this.label = label;
 	}
 
-	public String getJmx() {
-		return jmx;
-	}
-
-	public void setJmx(String jmx) {
-		this.jmx = jmx;
-	}
-
-	public List<ScriptVariableSet> getScriptVariableSets() {
-		return scriptVariableSets;
-	}
-
-	public void setScriptVariableSets(List<ScriptVariableSet> scriptVariableSets) {
-		this.scriptVariableSets = scriptVariableSets;
-	}
-
     public Project getProject() {
         return project;
     }
@@ -81,5 +60,13 @@ public class Script{
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<ScriptVersion> getVersions() {
+        return versions;
+    }
+
+    public void setVersions(List<ScriptVersion> versions) {
+        this.versions = versions;
     }
 }

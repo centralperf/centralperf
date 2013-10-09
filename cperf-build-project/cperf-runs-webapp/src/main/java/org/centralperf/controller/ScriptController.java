@@ -8,6 +8,8 @@ import javax.annotation.Resource;
 import org.centralperf.model.Project;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
+import org.centralperf.model.ScriptVersion;
+import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.service.ScriptService;
@@ -30,13 +32,16 @@ public class ScriptController {
 	
 	@Resource
 	private ScriptRepository scriptRepository;
-	
+
 	@Resource
 	private ScriptService scriptService;
 	
 	@Resource
-	private RunRepository runRepository;	
-	
+	private RunRepository runRepository;
+
+    @Resource
+    private ProjectRepository projectRepository;
+
 	private static final Logger log = LoggerFactory.getLogger(ScriptController.class);
 
     @ExceptionHandler(Throwable.class)
@@ -44,51 +49,65 @@ public class ScriptController {
         return exception.getMessage();
     }
 
-    @RequestMapping(value = "/script/new", method = RequestMethod.GET)
-    public String createScript(Model model) {
+    @RequestMapping(value = "/project/{projectId}/script/new", method = RequestMethod.GET)
+    public String createScript(@PathVariable("projectId") Long projectId, Model model) {
         model.addAttribute("newScript",new Script());
-        return "macro/script/news-script-form.macro";
+        model.addAttribute("project",projectRepository.findOne(projectId));
+        return "macros/script/new-script-form.macro";
     }
 
-    @RequestMapping(value = "/script/new", method = RequestMethod.POST)
+    @RequestMapping(value = "/project/{projectId}/script/new", method = RequestMethod.POST)
     public String addScript(
+                            @PathVariable("projectId") Long projectId,
     						@ModelAttribute("script") Script script,
                             @RequestParam("jmxFile") MultipartFile file,
                             BindingResult result) {
+        ScriptVersion scriptVersion = new ScriptVersion();
+
 		// Get the jmx File
 		try {
 			String jmxContent = new String(file.getBytes());
-			script.setJmx(jmxContent);
+            scriptVersion.setJmx(jmxContent);
 		} catch (IOException e) {
 		}
+        scriptVersion.setNumber(1L);
+        scriptVersion.setDescription("First version");
+        script.getVersions().add(0, scriptVersion);
 		scriptService.addScript(script);
-        return "redirect:/script/" + script.getId() + "/detail";
+        return "redirect:/project/" + projectId + "/script/" + script.getId() + "/detail";
     }
      
-    @RequestMapping("/script")
-    public String showScripts(Model model) {
-    	model.addAttribute("scripts",scriptRepository.findAll());
-    	model.addAttribute("newScript",new Script());
+    @RequestMapping("/project/{projectId}/script")
+    public String showScripts(@PathVariable("projectId") Long projectId, Model model) {
+        model.addAttribute("newScript",new Script());
+        model.addAttribute("scripts",scriptRepository.findAll());
+        model.addAttribute("project",projectRepository.findOne(projectId));
         return "scripts";
     }
     
-    @RequestMapping(value="/script/{id}/detail", method = RequestMethod.GET)
-    public String showScriptDetail(@PathVariable("id") Long id, Model model){
+    @RequestMapping(value="/project/{projectId}/script/{id}/detail", method = RequestMethod.GET)
+    public String showScriptDetail(
+            @PathVariable("id") Long id,
+            @PathVariable("projectId") Long projectId,
+            Model model){
     	log.debug("script details for script ["+id+"]");
-    	Script script = scriptRepository.findOne(id);
-    	model.addAttribute("script",script);
+    	model.addAttribute("script",scriptRepository.findOne(id));
+        model.addAttribute("project",projectRepository.findOne(projectId));
         return "scriptDetail";
     }    
     
-	@RequestMapping(value = "/script/{id}/delete", method = RequestMethod.GET)
-    public String deleteScript(@PathVariable("id") Long id, RedirectAttributes redirectAttrs) {
-		List<Run> runsAttached = runRepository.findByScriptId(id);
+	@RequestMapping(value = "/project/{projectId}/script/{id}/delete", method = RequestMethod.GET)
+    public String deleteScript(
+            @PathVariable("id") Long id,
+            @PathVariable("projectId") Long projectId,
+            RedirectAttributes redirectAttrs) {
+		List<Run> runsAttached = runRepository.findByScriptVersionScriptId(id);
 		if(!runsAttached.isEmpty()){
 			redirectAttrs.addFlashAttribute("error","Unable to delete this script because it's attached to at least one run");
 		} else{
 			scriptRepository.delete(id);
 		}
-        return "redirect:/script";
+        return "redirect:/project/" + projectId + "/script";
     }    
    
 }

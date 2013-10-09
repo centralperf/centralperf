@@ -29,8 +29,8 @@ public class ScriptService {
 	public void addScript(Script script){
 		
 		// Extract variables from JMX file
-		List<ScriptVariableSet> scriptVariableSets = JMXScriptVariableExtractor.extractVariables(script.jmx);
-		script.setScriptVariableSets(scriptVariableSets);
+		List<ScriptVariableSet> scriptVariableSets = JMXScriptVariableExtractor.extractVariables(script.getVersions().get(0).getJmx());
+		script.getVersions().get(0).setScriptVariableSets(scriptVariableSets);
 		scriptRepository.save(script);	
 	}
 	

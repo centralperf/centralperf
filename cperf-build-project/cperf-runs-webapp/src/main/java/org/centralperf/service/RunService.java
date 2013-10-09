@@ -58,7 +58,9 @@ public class RunService {
 			newRun.setLabel(run.getLabel());
 			newRun.setLaunched(false);
 			newRun.setRunning(true);
-			newRun.setScript(run.getScript());
+			newRun.setScriptVersion(run.getScriptVersion());
+            newRun.setProject(run.getProject());
+            // TODO : Copy script variables
 			runRepository.save(newRun);
 			return newRun;
 		} else {

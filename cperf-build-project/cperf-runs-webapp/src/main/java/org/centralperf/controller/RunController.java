@@ -7,11 +7,11 @@ import javax.validation.Valid;
 
 import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.JMeterJob;
-import org.centralperf.model.Run;
-import org.centralperf.model.RunResultSummary;
-import org.centralperf.model.ScriptVariable;
+import org.centralperf.model.*;
+import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
+import org.centralperf.repository.ScriptVersionRepository;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.RunService;
 import org.centralperf.service.ScriptLauncherService;
@@ -38,7 +38,10 @@ public class RunController {
 
 	@Resource
 	private ScriptRepository scriptRepository;
-	
+
+    @Resource
+    private ScriptVersionRepository scriptVersionRepository;
+
 	@Resource
 	private ScriptLauncherService scriptLauncherService;
 	
@@ -47,27 +50,45 @@ public class RunController {
 
 	@Resource
 	private RunService runService;
-	
+
+    @Resource
+    private ProjectRepository projectRepository;
+
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
-	
-	@RequestMapping(value = "/run/new", method = RequestMethod.POST)
+
+    @RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.GET)
+    public String createRun(
+            @PathVariable("projectId") Long projectId,
+            Model model
+    ) {
+        model.addAttribute("newRun",new Run());
+        model.addAttribute("project", projectRepository.findOne(projectId));
+        return "macros/run/new-run-form.macro";
+    }
+
+	@RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.POST)
     public String addRun(
+            @PathVariable("projectId") Long projectId,
     		@ModelAttribute("run") @Valid Run run, 
     		BindingResult result,
     		Model model
     		) {
 		if(result.hasErrors()){
-			model.addAttribute("command",run);
-			return "redirect:/run";
+			model.addAttribute("newRun",run);
+			return "redirect:/project/" + projectId + "/run";
 		}
+        ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
+        run.setScriptVersion(scriptVersion);
 		runRepository.save(run);
-        return "redirect:/run/" + run.getId() + "/detail";
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 	
-	@RequestMapping(value = "/run/{id}/delete", method = RequestMethod.GET)
+	@RequestMapping(value = "/project/{projectId}/run/{id}/delete", method = RequestMethod.GET)
     public String deleteRun(@PathVariable("id") Long id) {
+        Run run = runRepository.findOne(id);
+        Long projectId = run.getProject().getId();
 		runRepository.delete(id);
-        return "redirect:/run";
+        return "redirect:/project/" + projectId + "/detail";
     }
      
     @RequestMapping("/run")
@@ -76,39 +97,47 @@ public class RunController {
     	model.addAttribute("runs",runRepository.findAll());
     	Sort scriptSort = new Sort(Sort.DEFAULT_DIRECTION, "label");
     	model.addAttribute("scripts",scriptRepository.findAll(scriptSort));
-    	model.addAttribute("command",new Run());
+    	model.addAttribute("newRun",new Run());
         return "runs";
     }
     
-    @RequestMapping(value = "/run/{id}/launch", method = RequestMethod.GET)
-    public String launchRun(@PathVariable("id") Long id){
+    @RequestMapping(value = "/project/{projectId}/run/{id}/launch", method = RequestMethod.GET)
+    public String launchRun(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id){
     	Run run = runRepository.findOne(id);
     	// If the run has already been launched, then create a new run and
     	if(run.isLaunched()){
     		run = runService.copyRun(id);
     	}
     	scriptLauncherService.launchRun(run);
-    	return "redirect:/run/" + run.getId() + "/detail";
+    	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
     
-    @RequestMapping(value = "/run/{id}/saveResults", method = RequestMethod.GET)
+    @RequestMapping(value = "/project/{projectId}/run/{id}/saveResults", method = RequestMethod.GET)
     @ResponseBody
-    public String saveRunResults(@PathVariable("id") Long id){
+    public String saveRunResults(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id){
     	Run run = runRepository.findOne(id);
     	runResultService.saveResults(run);
     	return "OK";
     }    
     
-    @RequestMapping(value = "/run/{id}/detail", method = RequestMethod.GET)
-    public String showRunDetail(@PathVariable("id") Long id, Model model){
+    @RequestMapping(value = "/project/{projectId}/run/{id}/detail", method = RequestMethod.GET)
+    public String showRunDetail(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id,
+            Model model){
     	log.debug("Run details for run ["+id+"]");
     	populateModelWithRunInfo(id, model);
     	return "runDetail";
     }    
     
-    @RequestMapping(value = "/run/{id}/variables/update", method = RequestMethod.POST)
+    @RequestMapping(value = "/project/{projectId}/run/{id}/variables/update", method = RequestMethod.POST)
     @ResponseBody
     public boolean updateRunVariables(
+            @PathVariable("projectId") Long projectId,
     		@PathVariable("id") Long id, 
     		@RequestParam("name") String variableName,
     		@RequestParam("value") String variableValue,
@@ -128,9 +157,12 @@ public class RunController {
      * @param id
      * @return
      */
-    @RequestMapping(value = "/run/{id}/output", method = RequestMethod.GET)
+    @RequestMapping(value = "/project/{projectId}/run/{id}/output", method = RequestMethod.GET)
     @ResponseBody
-    public RunResult getRunOutput(@PathVariable("id") Long id, Model model){
+    public RunResult getRunOutput(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id,
+            Model model){
     	Run run = runRepository.findOne(id);
     	RunResult result = new RunResult();
     	JMeterJob job = scriptLauncherService.getJob(run.getId());

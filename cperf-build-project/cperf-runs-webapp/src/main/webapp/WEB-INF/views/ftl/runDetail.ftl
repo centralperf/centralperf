@@ -7,7 +7,7 @@
 	function updateRunVariable(inputRef){
 		$.ajax({
 		  type: "POST",
-		  url: "${rc.contextPath}/run/${run.id}/variables/update",
+		  url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/variables/update",
 		  data: {
 		  		name : $(inputRef).attr('name'),
 		  		value : $(inputRef).val()
@@ -18,8 +18,9 @@
 
 <@layout.main title="Run detail" menu="runs">
     <div class="page-header">
-        <div>
-	        <span style="float: left"><H1 >Run <strong>${run.label}</strong></H1></span>(script : <a href="${rc.contextPath}/script/${run.script.id}/detail">${run.script.label})</a>
+        <div class="page-header page-title">
+	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > <strong>${run.label}</strong>
+            (script : <a href="${rc.contextPath}/script/${run.scriptVersion.id}/version/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
         </div>
         <div style="clear: both">
             <#if run.launched>
@@ -31,16 +32,12 @@
                 (${runDurationInSeconds!} seconds)
             </#if>
             <#if !run.running>
-                <a href="${rc.contextPath}/run/${run.id}/launch" class="btn btn-success">
+                <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn btn-success">
                     <#if run.launched><li class="icon-forward icon-white"></li> launch again
                     <#else><li class="icon-play icon-white"></li> launch</#if>
                 </a>
             </#if>
         </div>
-    </div>
-
-    <div>
-
     </div>
 
     <div style="clear:both">
@@ -53,7 +50,7 @@
                     function refreshOuput() {
                       $.ajax({
                         type: "GET",
-                        url: "${rc.contextPath}/run/${run.id}/output",
+                        url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/output",
                         success: function(data) {
                             console.log(data);
                             if(data.running){
@@ -95,4 +92,6 @@
             </#if>
         </ul>
     </div>
+    <#import 'macros/script/script-variables.macro.ftl' as script_variable>
+    <@script_variable.main run.scriptVersion false false run.customScriptVariables/>
 </@layout.main>

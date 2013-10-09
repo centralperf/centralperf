@@ -24,9 +24,9 @@
             <script src="${rc.contextPath}/resources/js/centralperfs.js"></script>
             <script>
                 $( document ).ready(function() {
-                    $("#newRun").click(function(){displayModal("${rc.contextPath}/run/new")});
+                    $("#newRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/new")});
                     $("#newProject").click(function(){displayModal("${rc.contextPath}/project/new")});
-                    $("#newScript").click(function(){displayModal("${rc.contextPath}/script/new")});
+                    $("#newScript").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/script/new")});
                 });
             </script>
 	    </head>
