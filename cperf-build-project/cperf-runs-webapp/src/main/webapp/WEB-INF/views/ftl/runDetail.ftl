@@ -1,4 +1,5 @@
 <#import 'macros/layout.macro.ftl' as layout>
+<#import 'macros/run/upload-results-form.macro.ftl' as upload_results_form>
 <#import "spring.ftl" as spring />
 
 <script type="text/javascript">
@@ -20,7 +21,7 @@
     <div class="page-header">
         <div class="page-header page-title">
 	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > <strong>${run.label}</strong>
-            (script : <a href="${rc.contextPath}/script/${run.scriptVersion.id}/version/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
+            (script : <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
         </div>
         <div style="clear: both">
             <#if run.launched>
@@ -41,8 +42,6 @@
     </div>
 
     <div style="clear:both">
-    <legend>Outputs</legend>
-    <ul>
             <#if run.running>
                 <!-- Refreshing output -->
                 <script type="text/javascript">
@@ -74,24 +73,44 @@
                 </script>
             </#if>
             <#if run.launched>
-                <li>Run output : <div id="runOuput" class="scroll scroll-expanded">${run.processOutput!}</div>
-                <li>Data:
-                <div id="runResultCSV" class="scroll scroll-expanded">
-                <ul>
+                <legend>Logs</legend> <div id="runOuput" class="scroll scroll-expanded terminal">${run.processOutput!}</div>
+                <legend>Samples (<span id="numberOfSamples">${(run.samples?size)!}</span>) - Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span></legend>
+                <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">
+                <#if run.samples?size gt 0>
+                    <table class="table">
+                        <tr>
+                            <th>timestamp</th>
+                            <th>elapsed</th>
+                            <th>sampleName</th>
+                            <th>returnCode</th>
+                            <th>latency</th>
+                            <th>sizeInOctet</th>
+                            <th>assertResult</th>
+                            <th>status</th>
+                        </tr>
                     <#list run.samples as sample>
-                        <li>${sample}
+                        <tr>
+                            <td>${sample.timestamp}</td>
+                            <td>${sample.elapsed}</td>
+                            <td title="${sample.sampleName}"><#if sample.sampleName?length gt 15>${sample.sampleName?substring(0,15)}...<#else>${sample.sampleName}</#if></td>
+                            <td>${sample.returnCode}</td>
+                            <td>${sample.latency}</td>
+                            <td>${sample.sizeInOctet}</td>
+                            <td>${sample.assertResult?string}</td>
+                            <td>${sample.status}</td>
+                        </tr>
                     </#list>
-                </ul>
+                    </table>
+                </#if>
                 </div>
-                <li>
-
-                <li>Number of samples : <span id="numberOfSamples">${(run.samples?size)!}</span>
-
-
-                <li>Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span>
+            <#else>
+                Upload your own results ?
+                <div>
+                    <@upload_results_form.main run/>
+                </div>
             </#if>
         </ul>
     </div>
     <#import 'macros/script/script-variables.macro.ftl' as script_variable>
-    <@script_variable.main run.scriptVersion false false run.customScriptVariables/>
+    <@script_variable.main run.scriptVersion run.launched false run.customScriptVariables/>
 </@layout.main>

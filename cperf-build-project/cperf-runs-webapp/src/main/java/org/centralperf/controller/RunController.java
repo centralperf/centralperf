@@ -1,6 +1,7 @@
 package org.centralperf.controller;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @SessionAttributes
@@ -113,6 +115,14 @@ public class RunController {
     	scriptLauncherService.launchRun(run);
     	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
+
+    @RequestMapping(value = "/project/{projectId}/run/{id}/copy", method = RequestMethod.GET)
+    public String copyRun(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id){
+        Run newRun = runService.copyRun(id);
+        return "redirect:/project/" + projectId + "/run/" + newRun.getId() + "/detail";
+    }
     
     @RequestMapping(value = "/project/{projectId}/run/{id}/saveResults", method = RequestMethod.GET)
     @ResponseBody
@@ -182,7 +192,33 @@ public class RunController {
     	}
     	return result;
     }
-    
+
+    /**
+     * Set results from an uploaded JTL file
+     * @param projectId
+     * @param runId
+     * @param file
+     * @param result
+     * @return
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/results", method = RequestMethod.POST)
+    public String uploadResults(
+            @PathVariable("projectId") Long projectId,
+            @ModelAttribute("runId") Long runId,
+            @RequestParam("jtlFile") MultipartFile file,
+            BindingResult result) {
+
+        Run run = runRepository.findOne(runId);
+
+        // Get the jtl File
+        try {
+            String jtlContent = new String(file.getBytes());
+            runService.insertResultsFromCSV(run, jtlContent);
+        } catch (IOException e) {
+        }
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
+    }
+
     /**
      * Set model info depending on run state
      * @param runId

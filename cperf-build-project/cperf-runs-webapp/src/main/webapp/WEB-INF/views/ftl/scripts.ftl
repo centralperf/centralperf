@@ -3,9 +3,6 @@
 <#import "spring.ftl" as spring />
 
 <@layout.main title="Scripts" menu="scripts">
-<legend>All scripts</legend>
-<@script_list.main/>
-
-
-
+    <legend>All scripts (${scripts?size})</legend>
+    <@script_list.main scripts/>
 </@layout.main>

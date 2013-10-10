@@ -78,7 +78,7 @@ public class ScriptController {
     }
      
     @RequestMapping("/project/{projectId}/script")
-    public String showScripts(@PathVariable("projectId") Long projectId, Model model) {
+    public String showProjectScripts(@PathVariable("projectId") Long projectId, Model model) {
         model.addAttribute("newScript",new Script());
         model.addAttribute("scripts",scriptRepository.findAll());
         model.addAttribute("project",projectRepository.findOne(projectId));
@@ -108,6 +108,11 @@ public class ScriptController {
 			scriptRepository.delete(id);
 		}
         return "redirect:/project/" + projectId + "/script";
-    }    
-   
+    }
+
+    @RequestMapping("/script")
+    public String showScripts(Model model) {
+        model.addAttribute("scripts",scriptRepository.findAll());
+        return "scripts";
+    }
 }

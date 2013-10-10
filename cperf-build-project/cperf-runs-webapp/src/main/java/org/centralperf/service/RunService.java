@@ -23,7 +23,7 @@ public class RunService {
 
 	@Resource
 	private RunRepository runRepository;
-	
+
 	@Resource
 	private RunResultService runResultService;
 	
@@ -57,7 +57,7 @@ public class RunService {
 			Run newRun = new Run();
 			newRun.setLabel(run.getLabel());
 			newRun.setLaunched(false);
-			newRun.setRunning(true);
+			newRun.setRunning(false);
 			newRun.setScriptVersion(run.getScriptVersion());
             newRun.setProject(run.getProject());
             // TODO : Copy script variables
@@ -99,5 +99,21 @@ public class RunService {
 
     public List<Run> getActiveRuns(){
         return runRepository.findByRunning(true);
+    }
+
+    public void insertResultsFromCSV(Run run, String CSVContent){
+
+        // Convert CSV to samples
+        run.setRunResultCSV(CSVContent);
+        runResultService.saveResults(run);
+
+        // Update the run to mark it as launched
+        // Set start date for imported CSV files
+        run.setStartDate(run.getSamples().get(0).getTimestamp());
+        run.setEndDate(run.getSamples().get(run.getSamples().size() - 1 ).getTimestamp());
+        run.setLaunched(true);
+        run.setProcessOutput("Results uploaded by user on " + new Date());
+        runRepository.save(run);
+
     }
 }

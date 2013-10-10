@@ -54,7 +54,7 @@ public class ProjectController {
     	log.debug("project details for project ["+id+"]");
         Project project = projectRepository.findOne(id);
     	model.addAttribute("project",project);
-        model.addAttribute("runs",project.getRuns());
+        model.addAttribute("runs",projectService.getLastRuns(project));
         model.addAttribute("scripts",project.getScripts());
         model.addAttribute("newScript",new Script());
         model.addAttribute("newRun",new Run());

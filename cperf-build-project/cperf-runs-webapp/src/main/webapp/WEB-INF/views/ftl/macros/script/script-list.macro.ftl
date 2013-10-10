@@ -1,4 +1,4 @@
-<#macro main project>
+<#macro main scripts>
     <#if scripts?size == 0>
      No scripts
     <#else>
@@ -14,6 +14,7 @@
             </thead>
 
             <#list scripts as script>
+                <#assign project=script.project/>
                 <tr>
                     <td><a href="${rc.contextPath}/project/${project.id}/script/${script.id}/detail">${script.label}</a></td>
                     <td>${script.description!}</td>

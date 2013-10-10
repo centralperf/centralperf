@@ -24,7 +24,7 @@
                 </td>
                 <td>
                     <#if !run.running>
-                        <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn-small btn-success" title="Launch">
+                        <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn-small btn-success" title="<#if run.launched>Relaunch<#else>Launch</#if>">
                             <#if run.launched>
                                 <li class="icon-forward icon-white"></li>
                             <#else>
@@ -34,6 +34,7 @@
                     </#if>
                 </td>
                 <td class="column-with-btns">
+                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/copy" title="Copy"><i  class="icon-tags"></i></a>
                      <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail"><i  class="icon-search" title="Detail"></i></a>
                      <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/delete" title="Delete"><i  class="icon-trash" title="Delete"></i></a>
                 </td>

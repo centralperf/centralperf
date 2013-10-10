@@ -38,11 +38,11 @@ public class Run {
     private Project project;
 	
 	@Lob
-	@Column( length = 100000 )
+	@Column( length = 1000000 )
 	private String processOutput;
 	
 	@Lob
-	@Column( length = 100000 )
+	@Column( length = 100000000 )
 	private String runResultCSV;	
 	
 	@OneToMany(mappedBy="run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

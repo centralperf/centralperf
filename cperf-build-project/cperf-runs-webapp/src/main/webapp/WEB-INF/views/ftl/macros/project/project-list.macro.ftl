@@ -1,6 +1,6 @@
 <#macro main>
     <#if projects?size == 0>
-        No projects yet... <a href="${rc.contextPath}/project">Create one !</a>
+        No projects yet...
     <#else>
         <table class="table table-striped">
             <thead>

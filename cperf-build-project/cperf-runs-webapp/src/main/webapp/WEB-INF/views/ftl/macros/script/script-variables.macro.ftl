@@ -33,7 +33,7 @@
                                         <input type="text" name="${variable.name}" value="${variableValue}" onchange="updateRunVariable(this)" style="height:30px"/>
                                     </#if>
                                     <#if readonly || isCustom>
-                                        <span class="add-on">${variable.defaultValue}</span>
+                                        <span class="add-on">${readonly?string(variableValue,variable.defaultValue)}</span>
                                     </#if>
                                 </div>
                         </div>
