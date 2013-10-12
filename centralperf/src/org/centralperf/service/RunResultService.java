@@ -80,12 +80,7 @@ public class RunResultService {
 
                 sample.setElapsed(new Long(headerInfo.getValue("elapsed",nextLine)));
                 sample.setSampleName(headerInfo.getValue("label",nextLine));
-                try{
-                    sample.setStatus(new Integer(headerInfo.getValue("responseCode",nextLine)));
-                }
-                catch (NumberFormatException e){
-                    sample.setStatus(-1);
-                }
+                sample.setStatus(headerInfo.getValue("responseCode",nextLine));
                 sample.setAssertResult(new Boolean(headerInfo.getValue("assertionResult",nextLine)));
                 sample.setSizeInOctet(new Long(headerInfo.getValue("bytes",nextLine)));
                 sample.setLatency(new Long(headerInfo.getValue("latency",nextLine)));

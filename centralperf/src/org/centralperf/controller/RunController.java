@@ -1,6 +1,7 @@
 package org.centralperf.controller;
 
 import java.io.IOException;
+
 import javax.annotation.Resource;
 import javax.validation.Valid;
 
@@ -11,6 +12,7 @@ import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.repository.ScriptVersionRepository;
+import org.centralperf.service.GraphService;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.RunService;
 import org.centralperf.service.ScriptLauncherService;
@@ -51,6 +53,9 @@ public class RunController {
 	@Resource
 	private RunService runService;
 
+	@Resource
+	private GraphService graphService;
+	
     @Resource
     private ProjectRepository projectRepository;
 
@@ -231,6 +236,8 @@ public class RunController {
     		model.addAttribute("runSummary",runResultService.getSummaryFromCSVFile(job.getResultFile()));
     	}
     	else if(run.isLaunched()){
+    		model.addAttribute("runGraphSeries",graphService.getSumSeries(run));
+    		model.addAttribute("runGraphPie", graphService.getCodeRepartition(run));
     		model.addAttribute("runSummary",runResultService.getSummaryFromRun(run));
     		model.addAttribute("runDurationInSeconds",(run.getEndDate().getTime() - run.getStartDate().getTime()) / 1000);
     	}    	

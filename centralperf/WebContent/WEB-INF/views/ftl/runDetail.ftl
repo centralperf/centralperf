@@ -1,7 +1,6 @@
 <#import 'macros/layout.macro.ftl' as layout>
 <#import 'macros/run/upload-results-form.macro.ftl' as upload_results_form>
 <#import "spring.ftl" as spring />
-
 <script type="text/javascript">
 
 	// Live update of a variable value
@@ -18,6 +17,9 @@
 </script>
 
 <@layout.main title="Run detail" menu="runs">
+
+
+
     <div class="page-header">
         <div class="page-header page-title">
 	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > <strong>${run.label}</strong>
@@ -73,6 +75,10 @@
                 </script>
             </#if>
             <#if run.launched>
+            	<script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/highcharts.js'></script>
+				<script type='text/javascript'><#include "graphs/sum.ftl"></script>
+            	<legend>Summary</legend><div id="sumChart"></div>
+            	
                 <legend>Logs</legend> <div id="runOuput" class="scroll scroll-expanded terminal">${run.processOutput!}</div>
                 <legend>Samples (<span id="numberOfSamples">${(run.samples?size)!}</span>) - Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span></legend>
                 <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">
