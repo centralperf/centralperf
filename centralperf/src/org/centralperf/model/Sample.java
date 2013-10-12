@@ -30,7 +30,7 @@ public class Sample implements Serializable, Comparable<Sample>{
 	private long latency;
 	private long sizeInOctet;
 	private boolean assertResult;
-	private int status;
+	private String status;
 	
 	public Run getRun() {
 		return run;
@@ -74,10 +74,10 @@ public class Sample implements Serializable, Comparable<Sample>{
 	public void setSizeInOctet(long sizeInOctet) {
 		this.sizeInOctet = sizeInOctet;
 	}
-	public int getStatus() {
+	public String getStatus() {
 		return status;
 	}
-	public void setStatus(int status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 	public Long getId() {
