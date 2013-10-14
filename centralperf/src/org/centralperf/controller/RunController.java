@@ -1,6 +1,7 @@
 package org.centralperf.controller;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -62,7 +63,7 @@ public class RunController {
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
 
     @RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.GET)
-    public String createRun(
+    public String addRunForm(
             @PathVariable("projectId") Long projectId,
             Model model
     ) {
@@ -194,6 +195,48 @@ public class RunController {
 	    	result.setRunning(run.isRunning());
     	}
     	return result;
+    }
+
+    /**
+     * Import run from JTL file (form)
+     * @param projectId
+     * @return
+     */
+    @RequestMapping(value = "/project/{projectId}/run/import", method = RequestMethod.GET)
+    public String importRunForm(
+            @PathVariable("projectId") Long projectId,
+            Model model) {
+        model.addAttribute("newRun",new Run());
+        model.addAttribute("project", projectRepository.findOne(projectId));
+        model.addAttribute("importRun", true);
+        return "macros/run/new-run-form.macro";
+    }
+
+    /**
+     * Import run from JTL file (action)
+     * @param projectId
+     * @return
+     */
+    @RequestMapping(value = "/project/{projectId}/run/import", method = RequestMethod.POST)
+    public String importRun(
+            @PathVariable("projectId") Long projectId,
+            @ModelAttribute("run") @Valid Run run,
+            @RequestParam("jtlFile") MultipartFile file,
+            BindingResult result,
+            Model model) {
+        if(result.hasErrors()){
+            model.addAttribute("newRun",run);
+            return "redirect:/project/" + projectId + "/run";
+        }
+
+        // Get the jtl File
+        try {
+            String jtlContent = new String(file.getBytes());
+            runService.importRun(run, jtlContent);
+        } catch (IOException e) {
+        }
+
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 
     /**

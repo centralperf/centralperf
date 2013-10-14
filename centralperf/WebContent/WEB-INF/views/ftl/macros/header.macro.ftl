@@ -25,6 +25,7 @@
             <script>
                 $( document ).ready(function() {
                     $("#newRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/new")});
+                    $("#importRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/import")});
                     $("#newProject").click(function(){displayModal("${rc.contextPath}/project/new")});
                     $("#newScript").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/script/new")});
                 });

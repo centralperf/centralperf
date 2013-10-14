@@ -1,9 +1,13 @@
 <#import "/spring.ftl" as spring />
+<#import 'upload-results-form.macro.ftl' as upload_results_form>
+
     <#if project.scripts?size = 0>
         No script available... Please create one before
     <#else>
-    <legend>New run</legend>
-        <form method="post" action="${rc.contextPath}/project/${project.id}/run/new">
+    <legend>${importRun?has_content?string("Import","New")} run</legend>
+        <form method="post" action="${rc.contextPath}/project/${project.id}/run/${importRun?has_content?string("import","new")}"
+                ${importRun?has_content?string("enctype='multipart/form-data'","")}
+                >
             <fieldset>
                 <@spring.bind "newRun.project.id" />
                 <input type="hidden" name="${spring.status.expression}" value="${project.id}"/>
@@ -18,8 +22,13 @@
                         <option value="${script.versions[script.versions?size -1].id}">${script.label} (version ${script.versions?size})</option>
                     </#list>
                 </select>
+
+                <#if importRun?has_content>
+                    <@upload_results_form.main/>
+                </#if>
+
                 <label></label><#-- bug in Twitter boostrap force to add empty label -->
-                <input type="submit" value="Create" class="btn btn-primary"/>
+                <input type="submit" value="Create" class="btn btn-success"/>
             </fieldset>
         </form>
     </#if>

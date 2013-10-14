@@ -1,6 +1,6 @@
 <#import 'macros/layout.macro.ftl' as layout>
-<#import 'macros/run/upload-results-form.macro.ftl' as upload_results_form>
 <#import "spring.ftl" as spring />
+
 <script type="text/javascript">
 
 	// Live update of a variable value
@@ -17,9 +17,6 @@
 </script>
 
 <@layout.main title="Run detail" menu="runs">
-
-
-
     <div class="page-header">
         <div class="page-header page-title">
 	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > <strong>${run.label}</strong>
@@ -108,11 +105,6 @@
                     </#list>
                     </table>
                 </#if>
-                </div>
-            <#else>
-                Upload your own results ?
-                <div>
-                    <@upload_results_form.main run/>
                 </div>
             </#if>
         </ul>

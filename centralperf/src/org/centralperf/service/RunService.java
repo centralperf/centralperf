@@ -10,8 +10,10 @@ import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.JMeterJob;
 import org.centralperf.model.Run;
 import org.centralperf.model.ScriptVariable;
+import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptVariableRepository;
+import org.centralperf.repository.ScriptVersionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +30,10 @@ public class RunService {
 	private RunResultService runResultService;
 	
 	@Resource
-	private ScriptVariableRepository scriptVariableRepository;	
+	private ScriptVariableRepository scriptVariableRepository;
+
+    @Resource
+    private ScriptVersionRepository scriptVersionRepository;
 	
 	private static final Logger log = LoggerFactory.getLogger(RunService.class);
 	
@@ -107,13 +112,26 @@ public class RunService {
         run.setRunResultCSV(CSVContent);
         runResultService.saveResults(run);
 
+        runRepository.save(run);
+    }
+
+    public void importRun(Run run, String CSVContent){
+
+        // Import CSV
+        insertResultsFromCSV(run, CSVContent);
+
+        // Set script version
+        ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
+        run.setScriptVersion(scriptVersion);
+
         // Update the run to mark it as launched
         // Set start date for imported CSV files
         run.setStartDate(run.getSamples().get(0).getTimestamp());
         run.setEndDate(run.getSamples().get(run.getSamples().size() - 1 ).getTimestamp());
         run.setLaunched(true);
         run.setProcessOutput("Results uploaded by user on " + new Date());
-        runRepository.save(run);
 
+        // Insert into persistence
+        runRepository.save(run);
     }
 }
