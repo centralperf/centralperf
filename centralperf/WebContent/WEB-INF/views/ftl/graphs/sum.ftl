@@ -1,3 +1,4 @@
+<#if runGraphSeries?exists>
 $(document).ready(function () 
 {
     $('#sumChart').highcharts(
@@ -88,3 +89,4 @@ $(document).ready(function ()
         	]
     	});
 });
+</#if>
