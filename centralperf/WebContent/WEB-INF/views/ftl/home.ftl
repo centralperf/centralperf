@@ -4,7 +4,7 @@
 <#import "spring.ftl" as spring />
 
 <@layout.main title="Home" menu="home">
-    <div class="hero-unit">
+    <div class="hero-unit home-background">
         <div >
             <a href="#" id="newRun" class="btn btn-large btn-primary" style="float: right;margin-top: 60px">New run</a>
             <H2>Central Perf</H2>

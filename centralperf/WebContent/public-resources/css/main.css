@@ -17,6 +17,13 @@
     border-bottom: 1px solid #e5e5e5;
 }
 
+.home-background{
+	background-color: #eee; 
+	background-image:url(../img/logo-600-gray.png);
+	background-repeat: no-repeat;
+	background-position:center center
+}
+
 
 .scroll {
     overflow: auto;
