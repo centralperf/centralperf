@@ -71,6 +71,17 @@
     text-align: right!important;
 }
 
+/* Editable text input*/
+.editableText {
+    cursor: hand;
+    white-space : pre-wrap;
+}
+.editableText form input {
+    font: inherit;
+    color: inherit;	
+    vertical-align:baseline;
+}
+
 /* Modal windows */
 #basic-modal-content {display:none;}
 #simplemodal-overlay {background-color:#000;}

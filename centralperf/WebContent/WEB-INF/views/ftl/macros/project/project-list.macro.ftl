@@ -17,7 +17,7 @@
             <#list projects as project>
                 <tr>
                     <td><a href="${rc.contextPath}/project/${project.id}/detail" title="Detail">${project.name}</a></td>
-                    <td>Description</td>
+                    <td>${project.description!}</td>
                     <td>${project.scripts?size}</td>
                     <td>${project.runs?size}</td>
                     <td>

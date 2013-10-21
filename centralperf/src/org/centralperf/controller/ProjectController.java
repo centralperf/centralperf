@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
@@ -75,5 +77,25 @@ public class ProjectController {
 		}
         return "redirect:/project";
     }    
+	
+    @RequestMapping(value = "/project/{projectId}", method = RequestMethod.POST)
+    @ResponseBody
+    public String updateProject(
+                            @PathVariable("projectId") Long projectId,
+                            @RequestParam(value="name",required=false) String name,
+                            @RequestParam(value="description",required=false) String description
+                            ) {
+        Project project = projectRepository.findOne(projectId);
+        String valueToReturn = name;
+        if(name != null){
+        	project.setName(name);
+        }
+        else if(description != null){
+        	project.setDescription(description);
+        	valueToReturn = description;
+        }
+        projectRepository.save(project);
+        return valueToReturn;
+    }  
    
 }

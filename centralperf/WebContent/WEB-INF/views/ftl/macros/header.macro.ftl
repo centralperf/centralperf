@@ -6,7 +6,8 @@
 
             <#-- jQuery -->
 	        <script src="${rc.contextPath}/resources/js/jquery.min.js"></script>
-            <script src="${rc.contextPath}/resources/js/jquery.simplemodal.1.4.4.min.js"></script>
+            <script src="${rc.contextPath}/resources/js/jquery-plugins/jquery.simplemodal.1.4.4.min.js"></script>
+            <script src="${rc.contextPath}/resources/js/jquery-plugins/jquery.jeditable.js"></script>
 
             <#-- Twitter Bootstrap -->
             <link rel="stylesheet" href="${rc.contextPath}/resources/css/bootstrap.min.css">
@@ -24,11 +25,20 @@
             <script src="${rc.contextPath}/resources/js/centralperfs.js"></script>
             <script>
                 $( document ).ready(function() {
+                    
+                    // Modal forms
                     $("#newRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/new")});
                     $("#importRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/import")});
                     $("#newProject").click(function(){displayModal("${rc.contextPath}/project/new")});
                     $("#newScript").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/script/new")});
-                });
+				    
+				    // Edit in place
+				    setEditable(".scriptLabelEditable", "label", "${rc.contextPath}/script/");
+				    setEditable(".runLabelEditable", "label", "${rc.contextPath}/run/");
+				    setEditable(".projectNameEditable", "name", "${rc.contextPath}/project/");
+				    setEditable(".projectDescriptionEditable", "description", "${rc.contextPath}/project/","textarea");
+				    setEditable(".runCommentEditable", "comment", "${rc.contextPath}/run/","textarea");
+				});
             </script>
 	    </head>
 </#macro>

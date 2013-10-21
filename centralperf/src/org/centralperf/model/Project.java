@@ -21,6 +21,8 @@ public class Project {
 
     @OneToMany(cascade=CascadeType.ALL, mappedBy = "project")
     private List<Script> scripts;
+   
+    private String description;
 
     public Long getId() {
         return id;
@@ -53,4 +55,13 @@ public class Project {
     public void setScripts(List<Script> scripts) {
         this.scripts = scripts;
     }
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+       
 }

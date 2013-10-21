@@ -4,7 +4,8 @@
 
 <@layout.main title="Script detail" menu="scripts">
     <div class="page-header page-title">
-        <strong><a href="${rc.contextPath}/project/${project.id}/detail">${project.name}</a> > Script </strong><span>${script.label}</span>
+        <strong><a href="${rc.contextPath}/project/${project.id}/detail">${project.name}</a> 
+        > Script </strong><span class="scriptLabelEditable editableText" entityId="${script.id}">${script.label}</span>
     </div>
     ${script.description!}
     <#list script.versions as version>

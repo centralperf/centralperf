@@ -21,6 +21,7 @@ import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.SampleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -37,6 +38,9 @@ public class RunResultService {
 
     @Resource
     private RunRepository runRepository;
+    
+    @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
+    private String csvHeaders;
 
 	private static final Logger log = LoggerFactory.getLogger(RunResultService.class);
 	
@@ -52,7 +56,7 @@ public class RunResultService {
     public void saveResults(Run run, String resultInCSV){
         CSVReader csvReader = new CSVReader(new StringReader(resultInCSV));
         String[] nextLine = null;
-        CSVHeaderInfo headerInfo = new CSVHeaderInfo("timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,assertionResult,bytes,Latency".split(","));
+        CSVHeaderInfo headerInfo = new CSVHeaderInfo(csvHeaders.split(","));
         run.setSamples(new ArrayList<Sample>());
         try {
             while ((nextLine = csvReader.readNext()) != null) {
@@ -105,7 +109,11 @@ public class RunResultService {
 
 	public RunResultSummary getSummaryFromRun(Run run){
 		if(run.isLaunched()){
-			return getSummaryFromCSVString(run.getRunResultCSV());
+			String runResultCVS = run.getRunResultCSV();
+			if(runResultCVS != null)
+				return getSummaryFromCSVString(run.getRunResultCSV());
+			else
+				return null;
 		}
 		else
 			return null;

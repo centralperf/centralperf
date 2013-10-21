@@ -19,7 +19,8 @@
 <@layout.main title="Run detail" menu="runs">
     <div class="page-header">
         <div class="page-header page-title">
-	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > <strong>${run.label}</strong>
+	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > 
+	        <span class="runLabelEditable" entityId="${run.id}">${run.label}</span>
             (script : <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
         </div>
         <div style="clear: both">
@@ -37,8 +38,16 @@
                     <#else><li class="icon-play icon-white"></li> launch</#if>
                 </a>
             </#if>
-        </div>
+        </div>          
     </div>
+    <div class="container">
+    	<legend>Comment</legend>
+    	<#if run.comment?exists>
+    		<div class="runCommentEditable" entityId="${run.id}">${run.comment}</div>
+    	<#else>
+    		<div class="runCommentEditable muted" entityId="${run.id}" ondblclick="if($(this).hasClass('muted')) $(this).text(' ');$(this).removeClass('muted');">Double click to add a comment</div>
+    	</#if>
+    </div>      
 
     <div style="clear:both">
             <#if run.running>
@@ -77,7 +86,11 @@
             	<legend>Summary</legend><div id="sumChart"></div>
             	
                 <legend>Logs</legend> <div id="runOuput" class="scroll scroll-expanded terminal">${run.processOutput!}</div>
-                <legend>Samples (<span id="numberOfSamples">${(run.samples?size)!}</span>) - Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span></legend>
+                <legend>
+	                Samples <span class="badge">${run.samples?size}</span> 
+	                - Last sample : <span id="lastSampleDate">${(runSummary.lastSampleDate?datetime)!}</span>
+	                <#if !run.running><span class="pull-right"><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/results" class="btn">Download results</a></#if>
+                </legend>
                 <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">
                 <#if run.samples?size gt 0>
                     <table class="table">

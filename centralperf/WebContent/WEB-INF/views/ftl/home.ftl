@@ -22,7 +22,7 @@
         <@run_list.main/>
     </div>
     <div class="container">
-        <div class="section-title">Projects<div style="float: right"><a id="newProject" href="#" class="btn btn-primary">New project</a></div></div>
+        <div class="section-title">Projects <span class="badge">${projects?size}</span><div style="float: right"><a id="newProject" href="#" class="btn btn-primary">New project</a></div></div>
         <@project_list.main/>
     </div>
 </@layout.main>

@@ -30,6 +30,8 @@ public class Run {
 	
 	private Date endDate;
 	
+	private String comment;
+	
 	@OneToMany(cascade=CascadeType.ALL)
 	private List<ScriptVariable> customScriptVariables = new ArrayList<ScriptVariable>();
 
@@ -144,4 +146,14 @@ public class Run {
     public void setProject(Project project) {
         this.project = project;
     }
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+    
+    
 }

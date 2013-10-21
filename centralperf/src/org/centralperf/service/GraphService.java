@@ -78,7 +78,7 @@ public class GraphService {
 			} catch (ParseException pE) {log.error("Error in date convertion",pE);}
 		}
 		
-		return new SumSeries(rstSerie.toString(),reqSerie.toString(),rstMin,rstMax,rstTot/count,reqMin,reqMax,reqTot/count);
+		return new SumSeries(rstSerie.toString(),reqSerie.toString(),rstMin,rstMax,count > 0 ? rstTot/count : 0,reqMin,reqMax,count > 0 ? reqTot/count : 0);
 	}
 	
 	@SuppressWarnings("rawtypes")
