@@ -27,7 +27,10 @@
                 $( document ).ready(function() {
                     
                     // Modal forms
-                    $("#newRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/new")});
+                    $("#newRun").click(function(){
+                    	var url =   $(this).attr("projectId") != null ? "${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/new" : "${rc.contextPath}/run/new";
+                    	displayModal(url);}
+                    );
                     $("#importRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/import")});
                     $("#newProject").click(function(){displayModal("${rc.contextPath}/project/new")});
                     $("#newScript").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/script/new")});

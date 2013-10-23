@@ -80,6 +80,15 @@ public class RunController {
         model.addAttribute("project", projectRepository.findOne(projectId));
         return "macros/run/new-run-form.macro";
     }
+    
+    @RequestMapping(value = "/run/new", method = RequestMethod.GET)
+    public String addRunFormGlobal(
+            Model model
+    ) {
+        model.addAttribute("newRun",new Run());
+        model.addAttribute("projects", projectRepository.findAll());
+        return "macros/run/new-run-form.macro";
+    }    
 
 	@RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.POST)
     public String addRun(
