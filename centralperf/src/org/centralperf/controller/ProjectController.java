@@ -1,6 +1,11 @@
 package org.centralperf.controller;
 
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.centralperf.model.Project;
+import org.centralperf.model.ProjectLight;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
 import org.centralperf.repository.ProjectRepository;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
@@ -28,13 +34,6 @@ public class ProjectController {
     @Resource
     private ProjectRepository projectRepository;
 
-
-    @RequestMapping(value = "/project/new", method = RequestMethod.GET)
-    public String createProject(Model model) {
-        model.addAttribute("newProject",new Project());
-        return "projectCreate";
-    }
-
 	@RequestMapping(value = "/project/new", method = RequestMethod.POST)
     public String addProject(
     						@ModelAttribute("project") Project project) {
@@ -42,6 +41,19 @@ public class ProjectController {
         return "redirect:/project/" + project.getId() + "/detail";
     }
      
+	@RequestMapping(value ="/project/json/list", method=RequestMethod.GET)  
+	public @ResponseBody List<ProjectLight> getJsonProjectList(Model model){
+		//FIXME: Should fine a better way to have smaller object (ID/NAME only)
+		Iterable<Project> temp = projectRepository.findAll();
+		List<ProjectLight> lst = new ArrayList<ProjectLight>();
+		for (Project project : temp) {
+			if(!project.getScripts().isEmpty()){
+				lst.add(new ProjectLight(project));
+			}
+		}
+	    return lst;
+	}
+	
     @RequestMapping("/project")
     public String showProjects(Model model) {
     	model.addAttribute("projects",projectRepository.findAll());

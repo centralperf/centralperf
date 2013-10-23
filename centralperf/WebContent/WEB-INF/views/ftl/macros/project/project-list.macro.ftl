@@ -28,8 +28,8 @@
                         </#list>
                     </td>
                     <td class="column-with-btns">
-                        <a href="${rc.contextPath}/project/${project.id}/detail" title="Detail"><i  class="icon-search" title="Detail"></i></a>
-                        <a href="${rc.contextPath}/project/${project.id}/delete" title="Delete"><i  class="icon-trash" title="Delete"></i></a>
+                        <a href="${rc.contextPath}/project/${project.id}/detail" title="Detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
+                        <a href="${rc.contextPath}/project/${project.id}/delete" title="Delete"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;
                     </td>
                 </tr>
             </#list>

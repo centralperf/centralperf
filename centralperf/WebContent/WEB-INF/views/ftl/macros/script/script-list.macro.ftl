@@ -21,8 +21,8 @@
                     <td>${script.versions?size!}</td>
                     <td>${script.versions[script.versions?size - 1].description}</td>
                     <td class="column-with-btns" style="width:200px">
-                        <a href="${rc.contextPath}/project/${project.id}/script/${script.id}/detail"><i  class="icon-search" title="Detail"></i></a>
-                        <a href="${rc.contextPath}/project/${project.id}/script/${script.id}/delete"><i  class="icon-trash" title="Delete"></i></a>
+                        <a href="${rc.contextPath}/project/${project.id}/script/${script.id}/detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
+                        <a href="${rc.contextPath}/project/${project.id}/script/${script.id}/delete"><span class="glyphicon glyphicon-trash"/></span></a>&nbsp;
                     </td>
                 </tr>
             </#list>

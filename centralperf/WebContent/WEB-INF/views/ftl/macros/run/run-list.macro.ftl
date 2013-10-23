@@ -34,9 +34,9 @@
                     </#if>
                 </td>
                 <td class="column-with-btns">
-                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/copy" title="Copy"><i  class="icon-tags"></i></a>
-                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail"><i  class="icon-search" title="Detail"></i></a>
-                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/delete" title="Delete"><i  class="icon-trash" title="Delete"></i></a>
+                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/copy" title="Copy"><span class="glyphicon glyphicon-tags"></span></a>&nbsp;
+                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
+                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/delete" title="Delete"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;
                 </td>
             </tr>
         </#list>

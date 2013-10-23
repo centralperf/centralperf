@@ -1,12 +1,16 @@
 package org.centralperf.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.centralperf.model.Project;
+import org.centralperf.model.ProjectLight;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
+import org.centralperf.model.ScriptLight;
 import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
@@ -79,6 +83,21 @@ public class ScriptController {
         model.addAttribute("project",projectRepository.findOne(projectId));
         return "scripts";
     }
+    
+	@RequestMapping(value ="/project/{projectId}/script/json/list", method=RequestMethod.GET)  
+	public @ResponseBody List<ScriptLight> getJsonScriptList(@PathVariable("projectId") Long projectId, Model model){
+		//FIXME: Should fine a better way to have smaller object (ID/NAME only)
+		Project p = projectRepository.findOne(projectId);
+		List<ScriptLight> lst = new ArrayList<ScriptLight>();
+		for (Script s : p.getScripts()) {
+			int last = s.getVersions().size();
+			if(last>0){
+				ScriptVersion scriptVersion = s.getVersions().get(last-1);
+				lst.add(new ScriptLight(scriptVersion.getId(), s.getLabel()+" (version "+last+")"));
+			}
+		}
+	    return lst;
+	}
     
     @RequestMapping(value="/project/{projectId}/script/{id}/detail", method = RequestMethod.GET)
     public String showScriptDetail(

@@ -18,16 +18,13 @@
             <link href="${rc.contextPath}/resources/css/bootstrap-responsive.css" rel="stylesheet">
             <script src="${rc.contextPath}/resources/js/bootstrap.min.js"></script>
 
+			<#-- Bootstrap select -->
+			<link href="${rc.contextPath}/resources/css/bootstrap-select.min.css" rel="stylesheet">
+      		<script src="${rc.contextPath}/resources/js/bootstrap-select.min.js"></script>
+      		<script type="text/javascript">$(document).ready(function(){$('.selectpicker').selectpicker();});</script>
 
             <#-- Central Perf -->
             <link rel="stylesheet" type="text/css" href="${rc.contextPath}/resources/css/main.css">
             <script src="${rc.contextPath}/resources/js/centralperfs.js"></script>
-            <script>
-                $( document ).ready(function() {
-                    $("#newRun").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/run/new")});
-                    $("#newProject").click(function(){displayModal("${rc.contextPath}/project/new")});
-                    $("#newScript").click(function(){displayModal("${rc.contextPath}/project/" + $(this).attr("projectId") + "/script/new")});
-                });
-            </script>
 	    </head>
 </#macro>

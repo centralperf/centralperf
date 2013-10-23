@@ -144,8 +144,22 @@ public class RunController {
             Model model){
     	log.debug("Run details for run ["+id+"]");
     	populateModelWithRunInfo(id, model);
+    	model.addAttribute("page","sum");
+    	return "runDetail";
+    } 
+    //FIXME: Use only one with {page} optional
+    @RequestMapping(value = "/project/{projectId}/run/{id}/detail/{page}", method = RequestMethod.GET)
+    public String showRunDetail(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id,
+            @PathVariable("page") String page,
+            Model model){
+    	log.debug("Run details for run ["+id+"]");
+    	populateModelWithRunInfo(id, model);
+    	model.addAttribute("page",page);
     	return "runDetail";
     }    
+    
     
     @RequestMapping(value = "/project/{projectId}/run/{id}/variables/update", method = RequestMethod.POST)
     @ResponseBody
