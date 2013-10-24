@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,9 +17,11 @@ import org.apache.commons.io.FileUtils;
 import org.centralperf.model.Run;
 import org.centralperf.model.RunResultSummary;
 import org.centralperf.model.Sample;
+import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.SampleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -32,7 +35,13 @@ public class RunResultService {
 
 	@Resource
 	private SampleRepository sampleRepository;
-	
+
+    @Resource
+    private RunRepository runRepository;
+    
+    @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
+    private String csvHeaders;
+
 	private static final Logger log = LoggerFactory.getLogger(RunResultService.class);
 	
 	/**
@@ -47,7 +56,8 @@ public class RunResultService {
     public void saveResults(Run run, String resultInCSV){
         CSVReader csvReader = new CSVReader(new StringReader(resultInCSV));
         String[] nextLine = null;
-        CSVHeaderInfo headerInfo = new CSVHeaderInfo("timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,assertionResult,bytes,Latency".split(","));
+        CSVHeaderInfo headerInfo = new CSVHeaderInfo(csvHeaders.split(","));
+        run.setSamples(new ArrayList<Sample>());
         try {
             while ((nextLine = csvReader.readNext()) != null) {
                 int size = nextLine.length;
@@ -63,7 +73,6 @@ public class RunResultService {
                 }
 
                 Sample sample = new Sample();
-                sample.setRun(run);
                 try{
                     // Try first to get a timestamp
                     sample.setTimestamp(new Date(new Long(headerInfo.getValue("timestamp",nextLine))));
@@ -82,14 +91,16 @@ public class RunResultService {
                 sample.setSampleName(headerInfo.getValue("label",nextLine));
                 sample.setStatus(headerInfo.getValue("responseCode",nextLine));
                 sample.setAssertResult(new Boolean(headerInfo.getValue("assertionResult",nextLine)));
-                sample.setSizeInOctet(new Long(headerInfo.getValue("bytes",nextLine)));
-                sample.setLatency(new Long(headerInfo.getValue("latency",nextLine)));
-                sampleRepository.save(sample);
+                sample.setSizeInOctet(new Long(headerInfo.getValue("bytes", nextLine)));
+                sample.setLatency(new Long(headerInfo.getValue("latency", nextLine)));
+                sample.setRun(run);
+                run.getSamples().add(sample);
                 log.debug("Adding Sample :"+sample.getSampleName());
             }
         } catch (IOException e) {
             // Impossible to access to the file ?!
         }
+        runRepository.save(run);
     }
 
     private String getColumnValue(String[] CSVHeaders, String[] CSVLine, String columnName){
@@ -98,7 +109,11 @@ public class RunResultService {
 
 	public RunResultSummary getSummaryFromRun(Run run){
 		if(run.isLaunched()){
-			return getSummaryFromCSVString(run.getRunResultCSV());
+			String runResultCVS = run.getRunResultCSV();
+			if(runResultCVS != null)
+				return getSummaryFromCSVString(run.getRunResultCSV());
+			else
+				return null;
 		}
 		else
 			return null;

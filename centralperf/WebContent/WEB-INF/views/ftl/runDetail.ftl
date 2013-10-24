@@ -2,6 +2,7 @@
 <#import 'macros/run/upload-results-form.macro.ftl' as upload_results_form>
 <#import 'macros/run/graph-panel.macro.ftl' as graph_panel>
 <#import "spring.ftl" as spring />
+
 <script type="text/javascript">
 
 	// Live update of a variable value
@@ -18,12 +19,10 @@
 </script>
 
 <@layout.main title="Run detail" menu="runs">
-
-
-
     <div class="page-header">
         <div class="page-header page-title">
-	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > <strong>${run.label}</strong>
+	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > 
+	        <span class="runLabelEditable" entityId="${run.id}">${run.label}</span>
             (script : <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
         </div>
         <div>
@@ -37,8 +36,16 @@
 	                </#if>
                 </a>
             </#if>
-        </div>
+        </div>          
     </div>
+    <div style="clear:both">
+    	<legend>Comment</legend>
+    	<#if run.comment?exists>
+    		<div class="runCommentEditable" entityId="${run.id}">${run.comment}</div>
+    	<#else>
+    		<div class="runCommentEditable muted" entityId="${run.id}" ondblclick="if($(this).hasClass('muted')) $(this).text(' ');$(this).removeClass('muted');">Double click to add a comment</div>
+    	</#if>
+    </div>      
 
     <div style="clear:both">
             <#if run.running>

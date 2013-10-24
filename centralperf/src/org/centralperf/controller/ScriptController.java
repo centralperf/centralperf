@@ -129,4 +129,16 @@ public class ScriptController {
         model.addAttribute("scripts",scriptRepository.findAll());
         return "scripts";
     }
+    
+    @RequestMapping(value = "/script/{scriptId}", method = RequestMethod.POST)
+    @ResponseBody
+    public String updateScript(
+                            @PathVariable("scriptId") Long scriptId,
+                            @RequestParam("label") String label
+                            ) {
+        Script script = scriptRepository.findOne(scriptId);
+        script.setLabel(label);
+        scriptRepository.save(script);
+        return label;
+    }    
 }

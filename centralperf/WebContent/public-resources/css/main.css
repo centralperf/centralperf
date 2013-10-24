@@ -17,6 +17,13 @@
     border-bottom: 1px solid #e5e5e5;
 }
 
+.home-background{
+	background-color: #eee; 
+	background-image:url(../img/logo-600-gray.png);
+	background-repeat: no-repeat;
+	background-position:center center
+}
+
 
 .scroll {
     overflow: auto;
@@ -62,6 +69,17 @@
     padding-bottom: 0px!important;
     padding-top: 0px!important;
     text-align: right!important;
+}
+
+/* Editable text input*/
+.editableText {
+    cursor: hand;
+    white-space : pre-wrap;
+}
+.editableText form input {
+    font: inherit;
+    color: inherit;	
+    vertical-align:baseline;
 }
 
 /* Modal windows */

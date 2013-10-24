@@ -7,7 +7,10 @@ import javax.validation.Valid;
 
 import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.JMeterJob;
-import org.centralperf.model.*;
+import org.centralperf.model.Run;
+import org.centralperf.model.RunResultSummary;
+import org.centralperf.model.ScriptVariable;
+import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
@@ -18,7 +21,11 @@ import org.centralperf.service.RunService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -59,10 +66,13 @@ public class RunController {
     @Resource
     private ProjectRepository projectRepository;
 
+    @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
+    private String csvHeaders;
+    
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
 
     @RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.GET)
-    public String createRun(
+    public String addRunForm(
             @PathVariable("projectId") Long projectId,
             Model model
     ) {
@@ -70,6 +80,15 @@ public class RunController {
         model.addAttribute("project", projectRepository.findOne(projectId));
         return "macros/run/new-run-form.macro";
     }
+    
+    @RequestMapping(value = "/run/new", method = RequestMethod.GET)
+    public String addRunFormGlobal(
+            Model model
+    ) {
+        model.addAttribute("newRun",new Run());
+        model.addAttribute("projects", projectRepository.findAll());
+        return "macros/run/new-run-form.macro";
+    }    
 
 	@RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.POST)
     public String addRun(
@@ -211,6 +230,48 @@ public class RunController {
     }
 
     /**
+     * Import run from JTL file (form)
+     * @param projectId
+     * @return
+     */
+    @RequestMapping(value = "/project/{projectId}/run/import", method = RequestMethod.GET)
+    public String importRunForm(
+            @PathVariable("projectId") Long projectId,
+            Model model) {
+        model.addAttribute("newRun",new Run());
+        model.addAttribute("project", projectRepository.findOne(projectId));
+        model.addAttribute("importRun", true);
+        return "macros/run/new-run-form.macro";
+    }
+
+    /**
+     * Import run from JTL file (action)
+     * @param projectId
+     * @return
+     */
+    @RequestMapping(value = "/project/{projectId}/run/import", method = RequestMethod.POST)
+    public String importRun(
+            @PathVariable("projectId") Long projectId,
+            @ModelAttribute("run") @Valid Run run,
+            @RequestParam("jtlFile") MultipartFile file,
+            BindingResult result,
+            Model model) {
+        if(result.hasErrors()){
+            model.addAttribute("newRun",run);
+            return "redirect:/project/" + projectId + "/run";
+        }
+
+        // Get the jtl File
+        try {
+            String jtlContent = new String(file.getBytes());
+            runService.importRun(run, jtlContent);
+        } catch (IOException e) {
+        }
+
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
+    }
+
+    /**
      * Set results from an uploaded JTL file
      * @param projectId
      * @param runId
@@ -235,6 +296,54 @@ public class RunController {
         }
         return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
+    
+    /**
+     * get results from a RUN as file (CSV or other)
+     * @param projectId
+     * @param runId
+     * @return
+     */
+    @RequestMapping(
+    		value = {"/project/{projectId}/run/{runId}/results"}, 
+    		method = RequestMethod.GET, 
+    		produces = "text/csv")
+    public ResponseEntity<String> getResultsAsCSV(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("runId") Long runId
+    		) {
+
+        Run run = runRepository.findOne(runId);
+
+        // Get the CSV file content
+        String CSVContent=run.getRunResultCSV();
+        // Add headers
+        CSVContent = csvHeaders + "\r\n" + CSVContent; 
+        
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("Content-Disposition", "attachment; filename=results.csv");
+        
+        return new ResponseEntity<String>(CSVContent, responseHeaders, HttpStatus.CREATED);
+    }    
+    
+    @RequestMapping(value = "/run/{runId}", method = RequestMethod.POST)
+    @ResponseBody
+    public String updateRun(
+                            @PathVariable("runId") Long runId,
+                            @RequestParam(value="label", required=false) String label,
+                            @RequestParam(value="comment", required=false) String comment
+                            ) {
+        Run run = runRepository.findOne(runId);
+        String valueToReturn = label;
+        if(label != null){
+        	run.setLabel(label);
+        }
+        else if(comment != null){
+        	run.setComment(comment);
+        	valueToReturn = comment;
+        }
+        runRepository.save(run);
+        return valueToReturn;
+    }       
 
     /**
      * Set model info depending on run state
