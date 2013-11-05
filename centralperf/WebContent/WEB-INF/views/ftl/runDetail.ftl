@@ -22,7 +22,7 @@
     <div class="page-header">
         <div class="page-header page-title">
 	        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> > 
-	        <span class="runLabelEditable" entityId="${run.id}">${run.label}</span>
+	        <a href="#" id="runLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run name">${run.label}</a>
             (script : <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
         </div>
         <div>
@@ -40,11 +40,8 @@
     </div>
     <div style="clear:both">
     	<legend>Comment</legend>
-    	<#if run.comment?exists>
-    		<div class="runCommentEditable" entityId="${run.id}">${run.comment}</div>
-    	<#else>
-    		<div class="runCommentEditable muted" entityId="${run.id}" ondblclick="if($(this).hasClass('muted')) $(this).text(' ');$(this).removeClass('muted');">Double click to add a comment</div>
-    	</#if>
+    		<a href="#" id="runCommentEditable" data-name="comment" data-type="textarea" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run comment"
+    		data-placement="bottom" data-emptyText="Click to add a comment to your run">${run.comment!}</a>
     </div>      
 
     <div style="clear:both">

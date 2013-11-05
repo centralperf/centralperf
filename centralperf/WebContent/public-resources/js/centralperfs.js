@@ -10,34 +10,18 @@ $( document ).ready(function() {
 /**
  * Editable fields 
  * @param elementName 	Name of the element to turn into editable field
- * @param attributeName Name of the editable entity attribute
- * @param entityPath 	Server path to submit entity change
  */
-function setEditable(elementName, attributeName, entityPath, editorType){
-	if(editorType == undefined){
-		editorType = "text";
-	}
-	$(elementName).addClass("editableText");
-    $(elementName).editable("", {
-        onsubmit: function (settings, self) {
-        	var entityId = $(self).attr("entityId");
-        	settings.name = attributeName;
-            settings.target = entityPath + entityId;
-            var value = "";
-            if(editorType == "textarea"){
-            	value = $(self).find('textarea').val();
-            } else {
-            	value = $(self).find('input').val();
-            }
-            // Validate not empty
-            return ("" != value.trim());
-        },
-        tooltip : "Double click to edit " + attributeName,
-        event	: 'dblclick',
-    	style   : 'inherit',
-    	type	: editorType,
-        submit  : editorType == "textarea" ? "OK" : "",
-        cancel  : editorType == "textarea" ? "Cancel" : "",
-        height	: editorType == "textarea" ? "200px" : "auto"
-    });	
+function setEditable(elementName){
+	 $(elementName).editable({
+	    	send: 'always',
+	    	params: function(params) {
+		    	// change submit format : [entity attribute]=[new value]
+		    	var attributeName = params.name;
+		    	delete params.name;
+		    	params[attributeName] = params.value;
+				delete params.value;
+				delete params.pk;
+		    	return params;
+			}
+	    });
 }

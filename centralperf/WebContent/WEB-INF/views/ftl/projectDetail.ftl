@@ -8,14 +8,12 @@
 <@layout.main title="Project detail" menu="projects">
     <div class="page-header page-title">
         <strong>Project </strong>
-        <span class="projectNameEditable" entityId="${project.id}">${project.name}</span>
+        <a href="#" id="projectNameEditable" data-name="name" data-type="text" data-url="${rc.contextPath}/project/${project.id}" data-title="Enter project name">${project.name}</a>
     </div>
     <div class="container">
-    	<#if project.description?exists>
-    		<div class="projectDescriptionEditable" entityId="${project.id}" >${project.description}</div>
-    	<#else>
-    		<div class="projectDescriptionEditable muted" entityId="${project.id}" ondblclick="if($(this).hasClass('muted')) $(this).text(' ');$(this).removeClass('muted');">Double click to add a description to your project</div>
-    	</#if>
+    		<a href="#" id="projectDescriptionEditable" data-name="description" data-type="textarea" data-url="${rc.contextPath}/project/${project.id}" data-title="Enter project description"
+    		data-placement="bottom" data-emptyText="Click to add a description to your project"
+    		>${project.description!}</a>
     </div>
     <div>
         <legend style="line-height: 40px">Last runs <span class="badge">${runs?size}</span>

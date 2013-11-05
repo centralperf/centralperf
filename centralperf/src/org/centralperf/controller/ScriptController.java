@@ -136,11 +136,20 @@ public class ScriptController {
     @ResponseBody
     public String updateScript(
                             @PathVariable("scriptId") Long scriptId,
-                            @RequestParam("label") String label
+                            @RequestParam(value="label",required=false) String label,
+                            @RequestParam(value="description",required=false) String description
                             ) {
         Script script = scriptRepository.findOne(scriptId);
-        script.setLabel(label);
+        String valueToReturn = label;
+        if(label != null){
+        	script.setLabel(label);
+        }
+        else 
+        if(description != null){
+        	script.setDescription(description);
+        	valueToReturn = description;
+        }        
         scriptRepository.save(script);
-        return label;
+        return valueToReturn;
     }    
 }
