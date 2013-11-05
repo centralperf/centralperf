@@ -1,1 +1,0 @@
-<legend>Logs</legend> <div id="runOuput" class="scroll scroll-expanded terminal">${run.processOutput!}</div>

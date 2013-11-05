@@ -9,50 +9,38 @@
 				</div>
 				<div class="modal-body">
                 	<form method="post" action="${rc.contextPath}/project/${project.id}/script/new" enctype="multipart/form-data" class="form-horizontal">
-						<fieldset>
-							<legend>Create a new script</legend>
-							
 				            <@spring.bind "newScript.project.id" />
 				            <input type="hidden" name="${spring.status.expression}" value="${project.id}"/>
 				
 							<#-- INPUT SCRIPT NAME -->
-							<div class="control-group">
+							<div class="form-group">
 				            	<label for="label">Label</label>
-				            	<div class="controls">
-				            		<@spring.formInput "newScript.label", "class=input style=height:30px"/>
-				            	</div>
+			            		<@spring.formInput "newScript.label", "class=form-control"/>
 				            	<@spring.showErrors "<br/>", "cssError"/>
 							</div>
 							
 							<#-- INPUT SCRIPT DESC -->
-							<div class="control-group">
+							<div class="form-group">
 				           		<label for="label">Description</label>
-				           		<div class="controls">
-				            		<@spring.formTextarea "newScript.description", "class=input rows=3"/>
-				            	</div>
+			            		<@spring.formTextarea "newScript.description", "class=form-control rows=3"/>
 				            	<@spring.showErrors "<br/>", "cssError"/>
 							</div>
 				
 							<#-- INPUT SCRIPT JMX FILE -->
-							<div class="control-group">
+							<div class="form-group">
 				            	<label for="jmxFile">JMX File</label>
-				            	<div class="controls">
-				            		<input type="file" name="jmxFile" id="jmxFile" class="input"/>
-				            	</div>
+			            		<input type="file" name="jmxFile" id="jmxFile" class="form-control"/>
 							</div>
 				            
 							<#-- CREATE BUTTON -->
-							<div class="control-group">
+							<div class="form-group">
 								<label class="control-label"></label>
-  								<div class="controls">
-   									<input type="submit" value="Create" class="btn btn-success"/>
-  								</div>
+   								<input type="submit" value="Create" class="btn btn-success"/>
 							</div>
-						</fieldset>
 					</form>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				</div>
 			</div>
 		</div>

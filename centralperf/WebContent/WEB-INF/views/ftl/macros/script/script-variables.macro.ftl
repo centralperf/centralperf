@@ -8,14 +8,15 @@
                 }
         );
     </script>
-    <form class="form-horizontal">
-        <div id="scriptVariables" style="<#if collapsed>display:none</#if>">
+    
+        <div id="scriptVariables" <#if collapsed>style="display:none"</#if> class="row">
         <#list script.scriptVariableSets as variableSet>
-            <div style="float:left; padding: 10px">
+            <div class="col-md-6">
                 <legend>${variableSet.name}</legend>
+                <form class="form-horizontal" role="form">
                 <#list variableSet.scriptVariables as variable>
-                    <div class="control-group">
-                        <label class="control-label" for="{variable.name}" title="${variable.description!}">${variable.name}</label>
+                    <div class="form-group row">
+                        <label class="col-md-6 control-label" for="${variable.name}" title="${variable.description!}">${variable.name}</label>
                         <#assign isCustom = false>
                         <#assign variableName = variable.name>
                         <#assign variableNameEscaped = variableName?replace(".","\\.")?js_string>
@@ -27,20 +28,19 @@
                                 <#assign isCustom = true>
                             </#if>
                         </#list>
-                        <div class="controls">
-                                <div  class="input-append">
-                                    <#if !readonly>
-                                        <input type="text" name="${variable.name}" value="${variableValue}" onchange="updateRunVariable(this)" style="height:30px"/>
-                                    </#if>
-                                    <#if readonly || isCustom>
-                                        <span class="add-on">${readonly?string(variableValue,variable.defaultValue)}</span>
-                                    </#if>
-                                </div>
+                        <div class="col-md-6 input-group">
+                            <#if !readonly>
+                                <input type="text" name="${variable.name}" value="${variableValue}" onchange="updateRunVariable(this)" class="form-control"/>
+                            </#if>
+                            <#if readonly || isCustom>
+                                <span class="input-group-addon">${readonly?string(variableValue,variable.defaultValue)}</span>
+                            </#if>
                         </div>
                     </div>
                 </#list>
+                </form>
             </div>
         </#list>
         </div>
-    </form>
+
 </#macro>

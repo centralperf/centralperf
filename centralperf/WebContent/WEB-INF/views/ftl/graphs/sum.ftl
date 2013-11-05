@@ -93,5 +93,5 @@ $(document).ready(function ()
     	});
 });
 </script>
-<div id="sumChart"></div>
+<div id="sumChart" class="tab-pane active"></div>
 </#if>

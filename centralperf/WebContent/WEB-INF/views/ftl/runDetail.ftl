@@ -1,6 +1,6 @@
 <#import 'macros/layout.macro.ftl' as layout>
-<#import 'macros/run/upload-results-form.macro.ftl' as upload_results_form>
 <#import 'macros/run/graph-panel.macro.ftl' as graph_panel>
+<#import 'macros/script/script-variables.macro.ftl' as script_variable>
 <#import "spring.ftl" as spring />
 
 <script type="text/javascript">
@@ -32,7 +32,7 @@
 	                <#if run.launched>
 	                	<span class="glyphicon glyphicon-forward"></span><b> launch again</b>
 	                <#else>
-	                	<span class="glyphicon glyphicon-play"/>launch
+	                	<span class="glyphicon glyphicon-play"></span><b> launch</b>
 	                </#if>
                 </a>
             </#if>
@@ -80,14 +80,8 @@
             </#if>
             <#if run.launched>
             	<@graph_panel.main />
-            <#else>
-                Upload your own results ?
-                <div>
-                    <@upload_results_form.main run/>
-                </div>
             </#if>
         </ul>
     </div>
-    <#import 'macros/script/script-variables.macro.ftl' as script_variable>
     <@script_variable.main run.scriptVersion run.launched false run.customScriptVariables/>
 </@layout.main>

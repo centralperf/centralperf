@@ -5,8 +5,10 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.JMXScriptVariableExtractor;
+import org.centralperf.model.Project;
 import org.centralperf.model.Script;
 import org.centralperf.model.ScriptVariableSet;
+import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.ScriptRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,5 +35,22 @@ public class ScriptService {
 		script.getVersions().get(0).setScriptVariableSets(scriptVariableSets);
 		scriptRepository.save(script);	
 	}
+	
+	// Add a new script to the repository
+	public Script addScript(Project project, String label, String description, String jmxContent){
+		Script script = new Script();
+		script.setLabel(label);
+		script.setDescription(description);
+		script.setProject(project);
+		ScriptVersion scriptVersion = new ScriptVersion();
+		scriptVersion.setDescription("First version");
+		scriptVersion.setNumber(1L);
+		scriptVersion.setJmx(jmxContent);
+        script.getVersions().add(0, scriptVersion);
+        
+        addScript(script);
+        
+        return script;
+	}	
 	
 }

@@ -21,10 +21,11 @@
         <legend style="line-height: 40px">Last runs <span class="badge">${runs?size}</span>
         	<div style="float: right">
         		<a data-toggle="modal" href="#run-modal-new" class="btn btn-primary">New run</a>
-        		<a href="#" id="importRun" class="btn btn-primary" projectId="${project.id}">Import run</a>
+        		<a data-toggle="modal" href="#run-modal-import" class="btn btn-primary" projectId="${project.id}">Import run</a>
         	</div>
         </legend>
         <@run_modal_new.main/>
+        <@run_modal_new.main action="import"/>
         <@run_list.main/>
     </div>
     <div>

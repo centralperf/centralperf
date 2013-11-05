@@ -230,21 +230,6 @@ public class RunController {
     }
 
     /**
-     * Import run from JTL file (form)
-     * @param projectId
-     * @return
-     */
-    @RequestMapping(value = "/project/{projectId}/run/import", method = RequestMethod.GET)
-    public String importRunForm(
-            @PathVariable("projectId") Long projectId,
-            Model model) {
-        model.addAttribute("newRun",new Run());
-        model.addAttribute("project", projectRepository.findOne(projectId));
-        model.addAttribute("importRun", true);
-        return "macros/run/new-run-form.macro";
-    }
-
-    /**
      * Import run from JTL file (action)
      * @param projectId
      * @return

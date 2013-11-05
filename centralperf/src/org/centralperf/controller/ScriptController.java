@@ -7,7 +7,6 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.centralperf.model.Project;
-import org.centralperf.model.ProjectLight;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
 import org.centralperf.model.ScriptLight;
@@ -21,7 +20,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -61,19 +67,15 @@ public class ScriptController {
     						@ModelAttribute("script") Script script,
                             @RequestParam("jmxFile") MultipartFile file,
                             BindingResult result) {
-        ScriptVersion scriptVersion = new ScriptVersion();
+    	String jmxContent = null;
 
 		// Get the jmx File
 		try {
-			String jmxContent = new String(file.getBytes());
-            scriptVersion.setJmx(jmxContent);
+			jmxContent = new String(file.getBytes());
 		} catch (IOException e) {
 		}
-        scriptVersion.setNumber(1L);
-        scriptVersion.setDescription("First version");
-        script.getVersions().add(0, scriptVersion);
-		scriptService.addScript(script);
-        return "redirect:/project/" + projectId + "/script/" + script.getId() + "/detail";
+		Script newScript = scriptService.addScript(script.getProject(), script.getLabel(), script.getDescription(), jmxContent);
+        return "redirect:/project/" + projectId + "/script/" + newScript.getId() + "/detail";
     }
      
     @RequestMapping("/project/{projectId}/script")

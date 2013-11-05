@@ -3,14 +3,17 @@
 	<div class="navbar-inner">
 		<div class="container">
 		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-		    </button>
+			<#if menu != "bootstrap">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+			    </button>
+		    </#if>
 		    <a class="navbar-brand" href="${rc.contextPath}/home" style="padding: 0px"><img src="${rc.contextPath}/resources/img/logo-40_150.png" style="border: 0px"></a>
 		</div>
+		<#if menu != "bootstrap">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
                  <ul class="nav navbar-nav">
                     <li<#if menu == "projects"> class="active"</#if>><a href="${rc.contextPath}/project">Projects</a></li>
@@ -18,6 +21,7 @@
                     <li<#if menu == "scripts"> class="active"</#if>><a href="${rc.contextPath}/script">Scripts</a></li>
                  </ul>
         </div>
+        </#if>
 	</div>
 	</div>
 </div>
