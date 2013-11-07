@@ -9,10 +9,17 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
+import org.centralperf.model.RunResultSummary;
+import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A thread to handle external jMeter job launcher and watcher
+ * @author Charles Le Gallic
+ *
+ */
 public class JMeterJob implements Runnable {
 
 	private String[] command;
@@ -24,7 +31,10 @@ public class JMeterJob implements Runnable {
 	private File jmxFile;
 	private File resultFile;
 
+	private JTLFileWatcher fileChangeWatcher;
+	
 	private ScriptLauncherService scriptLauncherService;
+	private RunResultService runResultService;
 
 	private static final Logger log = LoggerFactory.getLogger(JMeterJob.class);
 
@@ -33,6 +43,9 @@ public class JMeterJob implements Runnable {
 	}
 
 	@Override
+	/**
+	 * Launch the jMeter external program
+	 */
 	public void run() {
 		log.debug("Running a new jMeter job with command "
 				+ Arrays.toString(command));
@@ -42,13 +55,20 @@ public class JMeterJob implements Runnable {
 		Process p;
 		try {
 			p = pb.start();
+			// JMeter is launched
 			running = true;
-		    StreamWriter ouputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));			
+			// Listening to jMeter standard output
+		    StreamWriter ouputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));		
+		    
+		    // Watching for result file change
+		    fileChangeWatcher = JTLFileWatcher.newWatcher(this.getResultFile(), runResultService);
+		    
 		    ouputListener.start();		    
 			while (running) {
 				try {
 					p.waitFor();
 					running = false;
+					fileChangeWatcher.cancel();
 					ouputListener.interrupt();
 				} catch (InterruptedException e) {
 					p.destroy();
@@ -61,12 +81,26 @@ public class JMeterJob implements Runnable {
 		}
 		endTime = System.currentTimeMillis();
 		scriptLauncherService.endJob(this);
+		fileChangeWatcher = null;
 	}
 	
 	public String getProcessOutput() {
 		return processOutputWriter.toString();
 	}	
 	
+	public RunResultSummary getPartialResults(){
+		if(fileChangeWatcher != null){
+			return fileChangeWatcher.getPartialResults();
+		}
+		else{
+			return null;
+		}
+	}
+	
+	/**
+	 * Internal stream writer to redirect jMeter standard output to a PrintWriter
+	 * @author charles
+	 */
 	class StreamWriter extends Thread {
 		private InputStream in;
 		private PrintWriter pw;
@@ -161,4 +195,14 @@ public class JMeterJob implements Runnable {
 	public void setResultFile(File jtlFile) {
 		this.resultFile = jtlFile;
 	}
+
+	public RunResultService getRunResultService() {
+		return runResultService;
+	}
+
+	public void setRunResultService(RunResultService runResultService) {
+		this.runResultService = runResultService;
+	}
+	
+	
 }

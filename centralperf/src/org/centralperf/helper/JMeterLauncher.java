@@ -7,6 +7,7 @@ import java.util.UUID;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
+import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,9 @@ public class JMeterLauncher {
 	
 	@Resource
 	private ScriptLauncherService scriptLauncherService;
+
+	@Resource
+	private RunResultService runResultService;
 	
 	public JMeterJob launch(String jmxContent) {
 		
@@ -49,6 +53,7 @@ public class JMeterLauncher {
 				};
 		JMeterJob job = new JMeterJob(command);
 		job.setScriptLauncherService(scriptLauncherService);
+		job.setRunResultService(runResultService);
 		job.setJmxFile(jmxFile);
 		job.setResultFile(new File(jtlFilePath));
 		Thread jobThread = new Thread(job);

@@ -15,13 +15,15 @@ public class HttpCodeRepartition implements Serializable{
 	private long nbSamples;
 
 	public void setNbHttpXXX(String codeFirstChar, long count){
-		switch (codeFirstChar.charAt(0)) {
-			case '1':this.nbHttp1xx=count;break;
-			case '2':this.nbHttp2xx=count;break;
-			case '3':this.nbHttp3xx=count;break;
-			case '4':this.nbHttp4xx=count;break;
-			case '5':this.nbHttp5xx=count;break;
-			default: this.nbHttpErr=count;break;
+		if(codeFirstChar.length() > 0){
+			switch (codeFirstChar.charAt(0)) {
+				case '1':this.nbHttp1xx=count;break;
+				case '2':this.nbHttp2xx=count;break;
+				case '3':this.nbHttp3xx=count;break;
+				case '4':this.nbHttp4xx=count;break;
+				case '5':this.nbHttp5xx=count;break;
+				default: this.nbHttpErr=count;break;
+			}
 		}
 		nbSamples=nbHttp1xx+nbHttp2xx+nbHttp3xx+nbHttp4xx+nbHttp5xx+nbHttpErr;
 	}

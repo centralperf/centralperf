@@ -6,8 +6,8 @@
 <#import "spring.ftl" as spring />
 
 <@layout.main title="Home" menu="home">
-    <div class="container jumbotron home-background">
-        <div >
+    <div class="jumbotron home-background">
+        <div>
         	<a data-toggle="modal" href="#run-modal-new" class="btn btn-primary" style="float: right;margin-top: 60px">New run</a>
         	<@run_modal_new_noproject.main/>
             <H2>Central Perf</H2>
@@ -20,11 +20,11 @@
             </H4>
         </div>
     </div>
-    <div class="container" style="clear: both">
+    <div>
         <legend>Last runs</legend>
         <@run_list.main/>
     </div>
-    <div class="container">
+    <div>
         <div class="section-title">Projects <span class="badge">${projects?size}</span><div style="float: right"><a data-toggle="modal" href="#project-modal-new" class="btn btn-primary">New project</a></div></div>
         <@project_modal_new.main/>
         <@project_list.main/>

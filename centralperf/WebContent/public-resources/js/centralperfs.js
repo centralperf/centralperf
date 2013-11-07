@@ -14,6 +14,8 @@ $( document ).ready(function() {
 function setEditable(elementName){
 	 $(elementName).editable({
 	    	send: 'always',
+	    	placement : 'bottom',
+	    	emptyclass : 'cp-editable-empty',
 	    	params: function(params) {
 		    	// change submit format : [entity attribute]=[new value]
 		    	var attributeName = params.name;

@@ -1,5 +1,5 @@
 <#macro main script readonly collapsed customScriptVariables=[]>
-    <legend id="showHideVariables" style="cursor: hand">Script variables</legend>
+	<h2 id="showHideVariables" style="cursor: hand"><small>Script variables</small></h2>
     <script type="text/javascript">
         $('#showHideVariables').click(
                 function(){
@@ -12,7 +12,7 @@
         <div id="scriptVariables" <#if collapsed>style="display:none"</#if> class="row">
         <#list script.scriptVariableSets as variableSet>
             <div class="col-md-6">
-                <legend>${variableSet.name}</legend>
+            	<legend style="text-align:center">${variableSet.name}</legend>
                 <form class="form-horizontal" role="form">
                 <#list variableSet.scriptVariables as variable>
                     <div class="form-group row">
@@ -30,7 +30,7 @@
                         </#list>
                         <div class="col-md-6 input-group">
                             <#if !readonly>
-                                <input type="text" name="${variable.name}" value="${variableValue}" onchange="updateRunVariable(this)" class="form-control"/>
+                                <input type="text" name="${variable.name}" value="${variableValue}" onchange="updateRunVariable(this,'${variableValue}')" class="form-control"/>
                             </#if>
                             <#if readonly || isCustom>
                                 <span class="input-group-addon">${readonly?string(variableValue,variable.defaultValue)}</span>

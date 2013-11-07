@@ -41,6 +41,10 @@ public class RunResultService {
     
     @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
     private String csvHeaders;
+    
+    private CSVHeaderInfo headerInfo;
+    
+    private static final String JTL_CSV_SEPARATOR = ",";
 
 	private static final Logger log = LoggerFactory.getLogger(RunResultService.class);
 	
@@ -53,11 +57,17 @@ public class RunResultService {
         saveResults(run, resultInCSV);
 	}
 
+	/**
+	 * Save results for a run based on a CSV string (multi line)
+	 * @param run
+	 * @param resultInCSV
+	 */
     public void saveResults(Run run, String resultInCSV){
         CSVReader csvReader = new CSVReader(new StringReader(resultInCSV));
         String[] nextLine = null;
-        CSVHeaderInfo headerInfo = new CSVHeaderInfo(csvHeaders.split(","));
         run.setSamples(new ArrayList<Sample>());
+        
+        // Loop other CSV lines to build samples
         try {
             while ((nextLine = csvReader.readNext()) != null) {
                 int size = nextLine.length;
@@ -66,34 +76,17 @@ public class RunResultService {
                 if (size == 0) {
                     continue;
                 }
-                // Header line (for uploaded files)
-                if("timestamp".equals(nextLine[0].trim().toLowerCase())){
+                
+                // Header line (for uploaded files). Build header info on this header line then skip to next line
+                if(isHeaderLine(nextLine)){
                     headerInfo = new CSVHeaderInfo(nextLine);
                     continue;
                 }
-
-                Sample sample = new Sample();
-                try{
-                    // Try first to get a timestamp
-                    sample.setTimestamp(new Date(new Long(headerInfo.getValue("timestamp",nextLine))));
-                }
-                catch(NumberFormatException e){
-                    // Try to parse this format : 2012/10/30 12:47:47
-                    SimpleDateFormat parserSDF=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    try {
-                        sample.setTimestamp(parserSDF.parse(headerInfo.getValue("timestamp",nextLine)));
-                    } catch (ParseException e1) {
-                        // TODO : return parsing error
-                    }
-                }
-
-                sample.setElapsed(new Long(headerInfo.getValue("elapsed",nextLine)));
-                sample.setSampleName(headerInfo.getValue("label",nextLine));
-                sample.setStatus(headerInfo.getValue("responseCode",nextLine));
-                sample.setAssertResult(new Boolean(headerInfo.getValue("assertionResult",nextLine)));
-                sample.setSizeInOctet(new Long(headerInfo.getValue("bytes", nextLine)));
-                sample.setLatency(new Long(headerInfo.getValue("latency", nextLine)));
+                
+                // Build sample
+                Sample sample = buildSampleFromCSVLine(headerInfo, nextLine);
                 sample.setRun(run);
+                
                 run.getSamples().add(sample);
                 log.debug("Adding Sample :"+sample.getSampleName());
             }
@@ -103,15 +96,73 @@ public class RunResultService {
         runRepository.save(run);
     }
 
-    private String getColumnValue(String[] CSVHeaders, String[] CSVLine, String columnName){
-        return CSVLine[java.util.Arrays.asList(CSVHeaders).indexOf(columnName)].trim();
+    /**
+     * Build a sample based on a CSV line and information about the headers names and orders
+     * @param headerInfo	Information about headers
+     * @param CSVline		Array of string
+     * @return	a sample
+     */
+    public Sample buildSampleFromCSVLine(CSVHeaderInfo headerInfo, String[] CSVline){
+    	Sample sample = new Sample();
+        try{
+            // Try first to get a timestamp
+            sample.setTimestamp(new Date(new Long(headerInfo.getValue("timestamp",CSVline))));
+        }
+        catch(NumberFormatException e){
+            // Try to parse this format : 2012/10/30 12:47:47
+            SimpleDateFormat parserSDF=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            try {
+                sample.setTimestamp(parserSDF.parse(headerInfo.getValue("timestamp",CSVline)));
+            } catch (ParseException e1) {
+                // TODO : return parsing error
+            }
+        }
+
+        sample.setElapsed(new Long(headerInfo.getValue("elapsed",CSVline)));
+        sample.setSampleName(headerInfo.getValue("label",CSVline));
+        sample.setStatus(headerInfo.getValue("responseCode",CSVline));
+        sample.setAssertResult(new Boolean(headerInfo.getValue("assertionResult",CSVline)));
+        String sizeString = headerInfo.getValue("bytes", CSVline);
+        
+        // TODO : manage format errors
+        if(!"".equals(sizeString.trim())){
+        	try{
+        		sample.setSizeInOctet(new Long(headerInfo.getValue("bytes", CSVline)));
+        	}
+        	catch(NumberFormatException exception){}
+        }
+        else{
+        	sample.setSizeInOctet(0);
+        }
+        String latencyString = headerInfo.getValue("latency", CSVline);
+        if(!"".equals(latencyString.trim())){
+        	try{
+        		sample.setLatency(new Long(headerInfo.getValue("latency", CSVline)));
+        	}
+        	catch(NumberFormatException exception){}
+        }
+        return sample;
+    }
+    
+    
+    public Sample buildSampleFromCSVLine(String[] CSVlineAsArray){
+    	return buildSampleFromCSVLine(getCSVHeaderInfo(), CSVlineAsArray);
     }
 
+    public Sample buildSampleFromCSVLine(String CSVlineAsString){
+    	return buildSampleFromCSVLine(CSVlineAsString.split(JTL_CSV_SEPARATOR));
+    }    
+    
+    /**
+     * Compute the main indicators for a run
+     * @param run
+     * @return a summary instance
+     */
 	public RunResultSummary getSummaryFromRun(Run run){
 		if(run.isLaunched()){
 			String runResultCVS = run.getRunResultCSV();
 			if(runResultCVS != null)
-				return getSummaryFromCSVString(run.getRunResultCSV());
+				return getSummaryFromCSVString(runResultCVS);
 			else
 				return null;
 		}
@@ -119,6 +170,11 @@ public class RunResultService {
 			return null;
 	}
 	
+	/**
+	 * Compute the main indicators from a CVS (JTL) file
+	 * @param resultFile a CSV file (Jmeter JTL format)
+	 * @return a summary instance
+	 */
 	public RunResultSummary getSummaryFromCSVFile(File resultFile) {
 		try {
 			return getSummaryFromCSVLines(FileUtils.readLines(resultFile));
@@ -127,33 +183,93 @@ public class RunResultService {
 		}
 	}
 
+	/**
+	 * Compute the main indicators from a CVS String
+	 * @param CSVString a CSV formatted string (Jmeter JTL format), mutliple lines
+	 * @return a summary instance
+	 */
 	public RunResultSummary getSummaryFromCSVString(String CSVString) {
 		return getSummaryFromCSVLines(Arrays.asList(CSVString.split(System.getProperty("line.separator"))));
 	}
 
-	private RunResultSummary getSummaryFromCSVLines(List<String> lines) {
+	/**
+	 * Loop over CSV lines to build a summary
+	 * @param lines
+	 * @return
+	 */
+	public RunResultSummary getSummaryFromCSVLines(List<String> lines) {
 		RunResultSummary summary = new RunResultSummary();
+		int numberOfSample = 0;
+		Date startDate = null;
+		Date lastSampleDate = null;
+		long totalBandwith = 0;
+		long totalResponseTime = 0;
+		long totalLatency = 0;
+		long numberOfErrors = 0;
+		long duration = 0;
+		
 		summary.setNumberOfSample(lines.size());
-		if (lines.size() > 0) {
-			String lastLine = lines.get(lines.size() - 1);
-            try{
-			    long lastLineDateAsLong = new Long(lastLine.split(",")[0]);
-			    summary.setLastSampleDate(new Date(lastLineDateAsLong));
-            }
-            catch(NumberFormatException e){
-                // TODO : Handle various CSV formats
-            }
+		for (int i=0; i<lines.size(); i++){
+			String[] line = lines.get(i).split(JTL_CSV_SEPARATOR);
+			
+			// Skip header line if necessary
+			if(i==0 && isHeaderLine(line))
+				continue;
+			
+			Sample sample = buildSampleFromCSVLine(getCSVHeaderInfo(), line);
+			
+			if(startDate == null){
+				startDate = sample.getTimestamp();
+			}
+			
+			// update indicators
+			numberOfSample++;
+			totalBandwith += sample.getSizeInOctet();
+			totalResponseTime += sample.getElapsed();
+			totalLatency += sample.getLatency();	
+			if(!"OK".equals(sample.getStatus())){
+				numberOfErrors ++;
+			}
+			
+			if(i == lines.size() - 1){
+				lastSampleDate = sample.getTimestamp();
+				duration = lastSampleDate.getTime() - startDate.getTime();
+			}
 		}
+		summary.setNumberOfSample(numberOfSample);
+		summary.setAverageLatency(totalLatency / numberOfSample);
+		summary.setAverageResponseTime(totalResponseTime / numberOfSample);
+		if(duration > 0){
+			summary.setCurrentBandwith(totalBandwith / (duration / 1000));
+			summary.setRequestPerSecond(numberOfSample / (duration / 1000F));
+		}
+		summary.setErrorRate((100 * numberOfErrors) / numberOfSample);
+		summary.setLastSampleDate(lastSampleDate);
 		return summary;
 	}
 
+	/**
+	 * Get info about CSV headers
+	 * @return
+	 */
+	private CSVHeaderInfo getCSVHeaderInfo(){
+		if(this.headerInfo == null){
+			headerInfo = new CSVHeaderInfo(csvHeaders.split(JTL_CSV_SEPARATOR));
+		}
+		return headerInfo;
+	}
+	
+	private boolean isHeaderLine(String[] line){
+        return line.length > 0 && "timestamp".equals(line[0].trim().toLowerCase());
+	}
+	
+	/**
+	 * Allows to store the CSV headers information and retrieve their index by name 
+	 * @author Charles Le Gallic
+	 */
     private class CSVHeaderInfo{
-
-        private String[] headers;
         private HashMap<String, Integer> headersIndex = new HashMap<String, Integer>();
-
         public CSVHeaderInfo(String[] headers){
-            this.headers = headers;
             for (int i=0; i<headers.length; i++){
                 headersIndex.put(headers[i].trim().toLowerCase(), i);
             }

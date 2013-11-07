@@ -205,27 +205,30 @@ public class RunController {
      */
     @RequestMapping(value = "/project/{projectId}/run/{id}/output", method = RequestMethod.GET)
     @ResponseBody
-    public RunResult getRunOutput(
+    public RunStatus getRunOutput(
             @PathVariable("projectId") Long projectId,
             @PathVariable("id") Long id,
             Model model){
     	Run run = runRepository.findOne(id);
-    	RunResult result = new RunResult();
-    	JMeterJob job = scriptLauncherService.getJob(run.getId());
-    	if(job != null){
-	    	result.setJobOutput(job.getProcessOutput());
-	    	try {
-				result.CSVResult = FileUtils.readFileToString(job.getResultFile());
-				RunResultSummary summary = runResultService.getSummaryFromCSVFile(job.getResultFile());
-				if(summary.getLastSampleDate() != null){
-					result.setLastSampleDate(summary.getLastSampleDate().toString());
+    	RunStatus result = new RunStatus();
+    	RunResultSummary summary = null;
+    	if(run.isRunning()){
+	    	JMeterJob job = scriptLauncherService.getJob(run.getId());
+	    	if(job != null){
+		    	result.setJobOutput(job.getProcessOutput());		
+		    	try {
+					result.setCSVResult(FileUtils.readFileToString(job.getResultFile()));
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-				result.setNumberOfSamples(summary.getNumberOfSample());
-			} catch (IOException e) {
-				// Do nothing, as the file may not be created yet
-			}
-	    	result.setRunning(run.isRunning());
+				summary = job.getPartialResults();
+	    	}
     	}
+    	else if(run.isLaunched()){
+    		summary = runResultService.getSummaryFromRun(run);
+    	}
+    	result.setSummary(summary);
+    	result.setRunning(run.isRunning());
     	return result;
     }
 
@@ -352,12 +355,11 @@ public class RunController {
     }
     
     // Inner class to return run results
-    class RunResult{
+    class RunStatus{
     	private String jobOutput = "";
     	private String CSVResult = "";
     	private boolean running = false;
-    	private long numberOfSamples = 0;
-    	private String lastSampleDate = null;
+    	private RunResultSummary summary;
     	
 		public String getJobOutput() {
 			return jobOutput;
@@ -377,17 +379,11 @@ public class RunController {
 		public void setRunning(boolean running) {
 			this.running = running;
 		}
-		public long getNumberOfSamples() {
-			return numberOfSamples;
+		public RunResultSummary getSummary() {
+			return summary;
 		}
-		public void setNumberOfSamples(long numberOfSamples) {
-			this.numberOfSamples = numberOfSamples;
-		}
-		public String getLastSampleDate() {
-			return lastSampleDate;
-		}
-		public void setLastSampleDate(String lastSampleDate) {
-			this.lastSampleDate = lastSampleDate;
+		public void setSummary(RunResultSummary summary) {
+			this.summary = summary;
 		}
     }
 }

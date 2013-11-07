@@ -12,7 +12,6 @@
 		<#include "/graphs/sum.ftl">
 		<div id="runOuput" class="tab-pane scroll scroll-expanded terminal">${run.processOutput!}</div>
 		<div id="samples" class="tab-pane">
-                <#if !run.running><div class="pull-right"><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/results" class="btn">Download results</a></div></#if>
                 <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">
 	                <#if run.samples?size gt 0>
 	                    <table class="table">
@@ -41,6 +40,7 @@
 	                    </table>
 	                </#if>
                 </div>		
+                <#if !run.running><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/results" class="btn btn-primary pull-right">Download results</a></#if>
           </div>
 	</div>
 </#macro>

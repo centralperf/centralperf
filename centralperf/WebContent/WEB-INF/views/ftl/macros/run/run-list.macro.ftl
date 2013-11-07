@@ -1,4 +1,4 @@
-<#macro main>
+<#macro main displayProject=true>
     <#if runs?size == 0>
         No runs
     <#else>
@@ -7,6 +7,7 @@
             <tr>
                 <th>Label</th>
                 <th style="width: 18px"></th>
+                <#if displayProject><th>Project</th></#if>
                 <th>Launched</th>
                 <th>Script</th>
                 <th class="column-with-btns"></th>
@@ -18,6 +19,7 @@
             <tr>
                 <td><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail">${run.label}</a></td>
                 <td><#if run.running><img src="${rc.contextPath}/resources/img/lemming_running.gif" style="border: 0px"></#if></td>
+                <#if displayProject><td>${run.project.name}</td></#if>
                 <td>${run.launched?string} <#if run.launched>(${run.startDate?string})</#if></td>
                 <td>
                     <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>
