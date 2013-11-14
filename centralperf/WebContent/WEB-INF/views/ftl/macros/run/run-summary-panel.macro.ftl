@@ -5,7 +5,7 @@
 				height		: 80px;
 				margin-right: 5px;
 				margin-bottom: 5px;
-			float		: left;		
+				float		: left;		
 				background-color : #E6E6FF;
 			}
 			.summaries > div > div:first-child {
