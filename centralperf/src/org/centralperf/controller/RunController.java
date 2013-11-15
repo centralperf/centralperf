@@ -215,12 +215,15 @@ public class RunController {
     	if(run.isRunning()){
 	    	JMeterJob job = scriptLauncherService.getJob(run.getId());
 	    	if(job != null){
-		    	result.setJobOutput(job.getProcessOutput());		
-		    	try {
-					result.setCSVResult(FileUtils.readFileToString(job.getResultFile()));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+		    	result.setJobOutput(job.getProcessOutput());
+		    	// Check that result file exists (not yet if script has just been launched)
+	    		if(job.getResultFile().exists()){
+			    	try {
+						result.setCSVResult(FileUtils.readFileToString(job.getResultFile()));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+	    		}
 				summary = job.getPartialResults();
 	    	}
     	}
