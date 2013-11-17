@@ -2,6 +2,10 @@
 <#import 'macros/script/script-variables.macro.ftl' as script_variable>
 <#import "spring.ftl" as spring />
 
+<@layout.head>
+	<script type="text/javascript" src="${rc.contextPath}/resources/js/jstree/jstree.min.js"></script>
+</@layout.head>
+
 <@layout.main title="Script detail" menu="scripts">
     <div class="page-header page-title">
         <strong><a href="${rc.contextPath}/project/${project.id}/detail">${project.name}</a> 
@@ -17,8 +21,14 @@
         <div class="page-section">
         	<legend>Version ${version.number} (${version.description})</legend>
         	<h2><small>JMX content</small></h2>
-        	<div class="scroll scroll-collapsed"><pre>${version.jmx?xml}</pre></div></li>
-        	<@script_variable.main version true false/>
+        	<#-- additionnal div is necessary cause of a jstree bug -->
+        	<div>
+        		<div id="JMXTreeView"/>
+	        	<script>
+	        		$('#JMXTreeView').load('${rc.contextPath}/script/${script.id}/version/${version.number}/preview');
+	        	</script>        	
+        	</div>
+			<@script_variable.main version true false/>
         </div>
     </#list>
 </@layout.main>

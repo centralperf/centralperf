@@ -1,10 +1,15 @@
 package org.centralperf.controller;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.dom.DOMSource;
 
 import org.centralperf.model.Project;
 import org.centralperf.model.Run;
@@ -30,6 +35,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 @Controller
 @SessionAttributes
@@ -152,4 +160,32 @@ public class ScriptController {
         scriptRepository.save(script);
         return valueToReturn;
     }    
+    
+    @RequestMapping(value = "/script/{scriptId}/version/{versionNumber}/preview")
+    public String previewScript(
+    			Model model,
+    			@PathVariable("scriptId") Long scriptId,
+    			@PathVariable("versionNumber") int versionNumber
+    		) {
+    	Script script = scriptRepository.findOne(scriptId);
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder;
+		try {
+			builder = factory.newDocumentBuilder();
+			Document doc = builder.parse(new InputSource(new StringReader(script.getVersions().get(versionNumber - 1).getJmx())));    	
+			model.addAttribute("obj", doc);
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		// Parse JMX File
+        return "jmeter-test-plan-preview.xsl";
+    }     
 }

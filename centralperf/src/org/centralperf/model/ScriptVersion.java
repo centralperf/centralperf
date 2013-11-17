@@ -1,6 +1,7 @@
 package org.centralperf.model;
 
 import javax.persistence.*;
+
 import java.util.List;
 
 /**
@@ -31,7 +32,7 @@ public class ScriptVersion {
     private List<ScriptVariableSet> scriptVariableSets;
 
     @Lob
-    @Column( length = 100000 )
+    @Column( length = 100000000 )
     public String jmx;
 
     @ManyToOne(fetch = FetchType.LAZY)
