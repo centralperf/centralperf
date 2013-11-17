@@ -1,8 +1,9 @@
-<#macro main title>
+<#macro main title customHeaders="">
 	    <head>
 	        <title>CENTRAL PERF - ${title}</title>
 
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
             <#-- jQuery -->
 	        <script src="${rc.contextPath}/resources/js/jquery.min.js"></script>
@@ -41,5 +42,7 @@
 				    setEditable('#runCommentEditable');
 				});
             </script>
+            
+            ${customHeaders}
 	    </head>
 </#macro>

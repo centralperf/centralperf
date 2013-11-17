@@ -4,24 +4,26 @@
 <#import 'macros/script/script-variables.macro.ftl' as script_variable>
 <#import "spring.ftl" as spring />
 
-<script type="text/javascript">
-	// Live update of a variable value
-	function updateRunVariable(inputRef, defaultValue){
-		$.ajax({
-		  type: "POST",
-		  url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/variables/update",
-		  data: {
-		  		name : $(inputRef).attr('name'),
-		  		value : $(inputRef).val()
-		  	}
-		});
-		
-		// display default value  if not already displayed
-		if($(inputRef).next("span").length == 0){
-			$(inputRef).after('<span class="input-group-addon">' + defaultValue + '</span>');
+<@layout.head>
+	<script type="text/javascript">
+		// Live update of a variable value
+		function updateRunVariable(inputRef, defaultValue){
+			$.ajax({
+			  type: "POST",
+			  url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/variables/update",
+			  data: {
+			  		name : $(inputRef).attr('name'),
+			  		value : $(inputRef).val()
+			  	}
+			});
+			
+			// display default value  if not already displayed
+			if($(inputRef).next("span").length == 0){
+				$(inputRef).after('<span class="input-group-addon">' + defaultValue + '</span>');
+			}
 		}
-	}
-</script>
+	</script>
+</@layout.head>
 
 <@layout.main title="Run detail" menu="runs">
     <div class="page-header page-title">

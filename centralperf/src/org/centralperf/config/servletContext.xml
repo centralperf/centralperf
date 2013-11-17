@@ -44,20 +44,21 @@
 <!--     </bean> -->
     
     <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+    	<property name="order" value="2" />
 	  <property name="mediaTypes">
 	    <map>
-	      <entry key="html" value="text/html"/>
 	      <entry key="json" value="application/json"/>
+	      <entry key="xsl" value="application/xml"/>
 	    </map>
 	  </property>
 	  <property name="viewResolvers">
 	    <list>
-		    <bean id="viewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
-		      <property name="cache" value="true"/>
-		      <property name="prefix" value=""/>
-		      <property name="suffix" value=".ftl"/>
-		      <property name="requestContextAttribute" value="rc"/>
-		    </bean>
+			<bean id="XSLTViewResolver" class="org.springframework.web.servlet.view.xslt.XsltViewResolver">
+			    <property name="prefix" value="/WEB-INF/views/xsl/" />
+			    <property name="contentType" value="application/xml" />
+			    <!-- only for development -->
+			    <property name="cacheTemplates" value="false" />
+			</bean>		    
 	    </list>
 	  </property>    
 	  <property name="defaultViews">
@@ -69,4 +70,12 @@
 	  </property>
 	</bean>
 	
+ 	<bean id="FreemarkerViewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+ 		<property name="order" value="1" />
+		<property name="cache" value="true"/>
+		<property name="prefix" value=""/>
+		<property name="suffix" value=".ftl"/>
+		<property name="requestContextAttribute" value="rc"/>
+		<property name="contentType" value="text/html;charset=UTF-8" />
+	</bean>	
 </beans>

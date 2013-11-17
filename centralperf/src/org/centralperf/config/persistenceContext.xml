@@ -45,6 +45,8 @@
 				<entry key="hibernate.format_sql" value="${db.hibernate.format_sql}" />
 				<entry key="hibernate.dialect" value="${db.sqlDialect}" />
 				<entry key="hibernate.hbm2ddl.auto" value="update"/>
+            	<entry key="hibernate.connection.useUnicode" value="true" />
+            	<entry key="hibernate.connection.characterEncoding" value="UTF-8" />				
 			</map>
 		</property>
 	</bean>
