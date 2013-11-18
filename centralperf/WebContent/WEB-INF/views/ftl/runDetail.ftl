@@ -75,13 +75,15 @@
                                 $("#summaryMaxUsers").html(data.summary.maxUsers);
                                 $("#summaryCurrentBandwith").html(Math.round(data.summary.currentBandwith / 1024) + " ko");
                                 $("#summaryTotalBandwith").html(Math.round(data.summary.totalBandwith / 1024) + " ko");
-                                $("#summaryAverageResponseTime").html(data.summary.averageResponseTime + " ms");
-                                $("#summaryAverageLatency").html(data.summary.averageLatency + " ms");
-                                $("#summaryRequestPerSeconds").html(data.summary.requestPerSeconds);
+                                $("#summaryAverageResponseTime").html(data.summary.averageResponseTime);
+                                $("#summaryAverageLatency").html(data.summary.averageLatency);
+                                $("#summaryRequestPerSeconds").html(Math.round(data.summary.numberOfSample / data.summary.duration * 100000)/100);
                                 $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
-                                $("#summaryErrorRate").html(data.summary.errorRate);
                                 $("#summaryLastSampleDate").html(data.summary.lastSampleDate);
-                                $("#summaryDuration").html(Math.round(data.summary.duration / 1000) + " s");
+                                $("#summaryLaunchedTime").html("${run.startDate?time}");
+                                <#if !run.running>
+                                	$("#summaryDuration").html(Math.round(data.summary.duration / 1000) + " s");
+                               	</#if>
                             }
                             if(data.running == false && running == true){
                             	location.reload(); 
@@ -92,8 +94,18 @@
                         }
                       });
                     }
+
+					var runStartTime = parseInt("${run.startDate?long}".replace(/\s/g,''));
+                    function refreshDuration(){
+                    	// TODO : have to be based on server clock, not local client clock
+                    	 $("#summaryDuration").html(Math.round((new Date() - runStartTime) / 1000) + " s");
+                    	 setTimeout(refreshDuration, 1000);
+                    }
                     jQuery(document).ready(function(){
                         refreshOuput();
+                        <#if run.running>
+							setTimeout(refreshDuration, 1000);
+						</#if>                       
                     });
                 </script>
             </#if>

@@ -50,11 +50,11 @@
 			<div>
 				<div><span class="glyphicon glyphicon-stats"></span>&nbsp;Response times</div>					
 				<div>
-					<div class="col-xs-7">Avg. resp. time</div>
+					<div class="col-xs-7">Avg. resp. time (ms)</div>
 					<div id="summaryAverageResponseTime" class="col-xs-5">-</div>
 				</div>
 				<div>
-					<div class="col-xs-7">Avg. latency</div>
+					<div class="col-xs-7">Avg. lat. (ms)</div>
 					<div id="summaryAverageLatency" class="col-xs-5">-</div>
 				</div>			
 			</div>
@@ -79,12 +79,12 @@
 			<div>
 				<div><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Timing</div>				
 				<div>
-					<div class="col-xs-8">Launched time</div>
-					<div id="summaryLaunchedTime" class="col-xs-4">-</div>
+					<div class="col-xs-7">Launched time</div>
+					<div id="summaryLaunchedTime" class="col-xs-5">-</div>
 				</div>
 				<div>
-					<div class="col-xs-8">Duration</div>
-					<div id="summaryDuration" class="col-xs-4">-</div>
+					<div class="col-xs-7">Duration</div>
+					<div id="summaryDuration" class="col-xs-5">-</div>
 				</div>	
 			</div>	
 			<div class="clearfix" style="float:none"></div>

@@ -32,8 +32,11 @@
                             <#if !readonly>
                                 <input type="text" name="${variable.name}" value="${variableValue}" onchange="updateRunVariable(this,'${variableValue}')" class="form-control"/>
                             </#if>
-                            <#if readonly || isCustom>
-                                <span class="input-group-addon">${readonly?string(variableValue,variable.defaultValue)}</span>
+                            <#if isCustom>
+                                <span class="input-group-addon">${variableValue}</span>
+                            </#if>
+                            <#if readonly>
+                            	<input type="text" value="${variable.defaultValue}" class="form-control" disabled title="${variable.defaultValue}"/>
                             </#if>
                         </div>
                     </div>

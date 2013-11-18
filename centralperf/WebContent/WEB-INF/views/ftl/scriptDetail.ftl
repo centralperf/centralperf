@@ -19,7 +19,11 @@
 	
     <#list script.versions as version>
         <div class="page-section">
-        	<legend>Version ${version.number} (${version.description})</legend>
+        	<legend style="line-height: 40px">Version ${version.number} (${version.description})
+				<span style="float: right">
+        			<a data-toggle="modal" href="#script-modal-new-version" class="btn btn-primary">New version</a>
+        		</span>
+        	</legend>
         	<h2><small>JMX content</small></h2>
         	<#-- additionnal div is necessary cause of a jstree bug -->
         	<div>

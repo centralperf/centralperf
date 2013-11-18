@@ -267,6 +267,7 @@ public class RunResultService {
 		summary.setLastSampleDate(lastSampleDate);
 		summary.setCurrentUsers(currentUsers);
 		summary.setMaxUsers(maxUsers);
+		summary.setTotalBandwith(totalBandwith);
 		return summary;
 	}
 
