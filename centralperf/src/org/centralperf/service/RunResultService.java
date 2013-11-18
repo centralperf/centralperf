@@ -8,12 +8,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
+import org.centralperf.helper.CSVHeaderInfo;
 import org.centralperf.model.Run;
 import org.centralperf.model.RunResultSummary;
 import org.centralperf.model.Sample;
@@ -44,7 +44,7 @@ public class RunResultService {
     
     private CSVHeaderInfo headerInfo;
     
-    private static final String JTL_CSV_SEPARATOR = ",";
+    public static final String JTL_CSV_SEPARATOR = ",";
 
 	private static final Logger log = LoggerFactory.getLogger(RunResultService.class);
 	
@@ -103,6 +103,9 @@ public class RunResultService {
      * @return	a sample
      */
     public Sample buildSampleFromCSVLine(CSVHeaderInfo headerInfo, String[] CSVline){
+    	if(isHeaderLine(CSVline)){
+    		return null;
+    	}
     	Sample sample = new Sample();
         try{
             // Try first to get a timestamp
@@ -118,10 +121,13 @@ public class RunResultService {
             }
         }
 
-        sample.setElapsed(new Long(headerInfo.getValue("elapsed",CSVline)));
+        try{
+        	sample.setElapsed(new Long(headerInfo.getValue("elapsed",CSVline)));
+        }
+        catch (NumberFormatException e) {}
         sample.setSampleName(headerInfo.getValue("label",CSVline));
         sample.setStatus(headerInfo.getValue("responseCode",CSVline));
-        sample.setAssertResult(new Boolean(headerInfo.getValue("assertionResult",CSVline)));
+        //sample.setAssertResult(new Boolean(headerInfo.getValue("Error",CSVline)));
         String sizeString = headerInfo.getValue("bytes", CSVline);
         
         // TODO : manage format errors
@@ -141,9 +147,16 @@ public class RunResultService {
         	}
         	catch(NumberFormatException exception){}
         }
+        
+        sample.setGrpThreads(new Long(headerInfo.getValue("grpThreads", CSVline)));
+        sample.setAllThreads(new Long(headerInfo.getValue("allThreads", CSVline)));
+       
         return sample;
     }
     
+    public Sample buildSampleFromCSVLine(CSVHeaderInfo headerInfos, String CSVlineAsString){
+    	return buildSampleFromCSVLine(headerInfos, CSVlineAsString.split(JTL_CSV_SEPARATOR));
+    }    
     
     public Sample buildSampleFromCSVLine(String[] CSVlineAsArray){
     	return buildSampleFromCSVLine(getCSVHeaderInfo(), CSVlineAsArray);
@@ -207,6 +220,8 @@ public class RunResultService {
 		long totalLatency = 0;
 		long numberOfErrors = 0;
 		long duration = 0;
+		long currentUsers = 0;
+		long maxUsers = 0;
 		
 		summary.setNumberOfSample(lines.size());
 		for (int i=0; i<lines.size(); i++){
@@ -231,9 +246,13 @@ public class RunResultService {
 				numberOfErrors ++;
 			}
 			
+			if(maxUsers < sample.getAllThreads())
+				maxUsers = sample.getAllThreads();
+			
 			if(i == lines.size() - 1){
 				lastSampleDate = sample.getTimestamp();
 				duration = lastSampleDate.getTime() - startDate.getTime();
+				currentUsers = sample.getAllThreads();
 			}
 		}
 		summary.setNumberOfSample(numberOfSample);
@@ -242,9 +261,12 @@ public class RunResultService {
 		if(duration > 0){
 			summary.setCurrentBandwith(totalBandwith / (duration / 1000));
 			summary.setRequestPerSecond(numberOfSample / (duration / 1000F));
+			summary.setDuration(duration);
 		}
 		summary.setErrorRate((100 * numberOfErrors) / numberOfSample);
 		summary.setLastSampleDate(lastSampleDate);
+		summary.setCurrentUsers(currentUsers);
+		summary.setMaxUsers(maxUsers);
 		return summary;
 	}
 
@@ -259,25 +281,11 @@ public class RunResultService {
 		return headerInfo;
 	}
 	
-	private boolean isHeaderLine(String[] line){
+	public boolean isHeaderLine(String line){
+        return isHeaderLine(line.split(JTL_CSV_SEPARATOR));
+	}	
+	
+	public boolean isHeaderLine(String[] line){
         return line.length > 0 && "timestamp".equals(line[0].trim().toLowerCase());
 	}
-	
-	/**
-	 * Allows to store the CSV headers information and retrieve their index by name 
-	 * @author Charles Le Gallic
-	 */
-    private class CSVHeaderInfo{
-        private HashMap<String, Integer> headersIndex = new HashMap<String, Integer>();
-        public CSVHeaderInfo(String[] headers){
-            for (int i=0; i<headers.length; i++){
-                headersIndex.put(headers[i].trim().toLowerCase(), i);
-            }
-        }
-
-        public String getValue(String headerName, String[] CSVline){
-            return CSVline[headersIndex.get(headerName.toLowerCase())];
-        }
-
-    }
 }

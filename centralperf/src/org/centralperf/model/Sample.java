@@ -30,6 +30,8 @@ public class Sample implements Serializable, Comparable<Sample>{
 	private long latency;
 	private long sizeInOctet;
 	private boolean assertResult;
+	private long grpThreads;
+	private long allThreads;
 	private String status;
 	
 	public Run getRun() {
@@ -92,10 +94,21 @@ public class Sample implements Serializable, Comparable<Sample>{
 	public void setAssertResult(boolean assertResult) {
 		this.assertResult = assertResult;
 	}
-	
+	public long getGrpThreads() {
+		return grpThreads;
+	}
+	public void setGrpThreads(long grpThreads) {
+		this.grpThreads = grpThreads;
+	}
+	public long getAllThreads() {
+		return allThreads;
+	}
+	public void setAllThreads(long allThreads) {
+		this.allThreads = allThreads;
+	}
 	@Override
 	public String toString() {
-		return "org.centralperf.model.Sample ["+id+"]["+run.getId()+"]["+timestamp+"]["+elapsed+"]["+sampleName+"]["+returnCode+"]["+latency+"]["+sizeInOctet+"]["+assertResult+"]["+status+"]";
+		return "org.centralperf.model.Sample ["+id+"]["+run.getId()+"]["+timestamp+"]["+elapsed+"]["+sampleName+"]["+returnCode+"]["+latency+"]["+sizeInOctet+"]["+assertResult+"]["+status+"]["+grpThreads+"]["+allThreads+"]";
 	}
 	
 	@Override

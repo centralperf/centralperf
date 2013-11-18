@@ -1,5 +1,5 @@
 
-<#if runGraphSeries?exists>
+<#if runGraphSeries?exists && (run.samples?size gt 0)>
 <script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/highcharts.js'></script>
 <script type='text/javascript'>
 $(document).ready(function () 

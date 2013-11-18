@@ -11,13 +11,14 @@ public class RunResultSummary {
 	private int numberOfSample;
 	private Date lastSampleDate;
 	private long currentUsers;
-	private long totalUsers;
+	private long maxUsers;
 	private long currentBandwith;
 	private long totalBandwith;
 	private long averageResponseTime;
 	private long averageLatency;
 	private float requestPerSecond;
 	private float errorRate;
+	private long duration;
 	
 	public int getNumberOfSample() {
 		return numberOfSample;
@@ -37,11 +38,11 @@ public class RunResultSummary {
 	public void setCurrentUsers(long currentUsers) {
 		this.currentUsers = currentUsers;
 	}
-	public long getTotalUsers() {
-		return totalUsers;
+	public long getMaxUsers() {
+		return maxUsers;
 	}
-	public void setTotalUsers(long totalUsers) {
-		this.totalUsers = totalUsers;
+	public void setMaxUsers(long maxUsers) {
+		this.maxUsers = maxUsers;
 	}
 	public long getCurrentBandwith() {
 		return currentBandwith;
@@ -79,19 +80,27 @@ public class RunResultSummary {
 	public void setErrorRate(float errorRate) {
 		this.errorRate = errorRate;
 	}
+
+	public long getDuration() {
+		return duration;
+	}
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
 	
 	@Override
 	public String toString() {
 		return "Number of samples : " + this.getNumberOfSample() + ","
 				+ "Current users :" + this.getCurrentUsers() + ", "
-				+ "Total users : " + this.getTotalUsers() + ", "
+				+ "Max users : " + this.getMaxUsers() + ", "
 				+ "Current bandwith : " + this.getCurrentBandwith() + ", "
 				+ "Total bandwith : " + this.getTotalBandwith() + ", "
 				+ "Average response time : " + this.getAverageResponseTime() + ", "
 				+ "Average latency : " + this.getAverageLatency() + ", "
 				+ "Requests per seconds : " + this.getRequestPerSecond() + ", "
 				+ "Error rate : " + this.getErrorRate() + ", "
-				+ "last sample : " + this.getLastSampleDate()
+				+ "Last sample : " + this.getLastSampleDate() + ","
+				+ "Duration : " + this.getDuration()
 				;
 	}
 }

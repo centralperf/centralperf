@@ -20,12 +20,14 @@ public class JTLFileWatcher extends FileChangeWatcher {
 	private RunResultService runResultService;
 	
 	private RunResultSummary partialResults;
+	
 	private Date startDate;
 	private long totalBandwith = 0;
 	private long totalResponseTime = 0;
 	private long totalLatency = 0;
 	private long numberOfErrors = 0;
-	private long duration = 0;	
+	private long duration = 0;
+	private CSVHeaderInfo headerInfo;
 		
 	private static final Logger log = LoggerFactory.getLogger(JTLFileWatcher.class);	
 	
@@ -45,33 +47,42 @@ public class JTLFileWatcher extends FileChangeWatcher {
 	
 	@Override
 	protected void processLine(String line) {
-		Sample sample = runResultService.buildSampleFromCSVLine(line);
-
-		int numberOfSample = partialResults.getNumberOfSample() + 1;
-		if(startDate == null){
-			startDate = sample.getTimestamp();
+		if(runResultService.isHeaderLine(line)){
+			headerInfo = new CSVHeaderInfo(line.split(RunResultService.JTL_CSV_SEPARATOR));
 		}
-		totalBandwith += sample.getSizeInOctet();
-		totalResponseTime += sample.getElapsed();
-		totalLatency += sample.getLatency();	
-		if(!sample.isAssertResult()){
-			numberOfErrors ++;
+		else{
+			Sample sample = runResultService.buildSampleFromCSVLine(headerInfo, line);
+			if(sample != null){
+				int numberOfSample = partialResults.getNumberOfSample() + 1;
+				if(startDate == null){
+					startDate = sample.getTimestamp();
+				}
+				totalBandwith += sample.getSizeInOctet();
+				totalResponseTime += sample.getElapsed();
+				totalLatency += sample.getLatency();	
+				if(!sample.isAssertResult()){
+					numberOfErrors ++;
+				}
+				duration = sample.getTimestamp().getTime() - startDate.getTime();
+				
+				// Update partial results
+				partialResults.setNumberOfSample(numberOfSample);
+				partialResults.setLastSampleDate(sample.getTimestamp());
+				partialResults.setAverageLatency(totalLatency / numberOfSample);
+				partialResults.setAverageResponseTime(totalResponseTime / numberOfSample);
+				partialResults.setTotalBandwith(totalBandwith);
+				if(duration > 0){
+					partialResults.setCurrentBandwith(totalBandwith / (duration / 1000L));
+					partialResults.setRequestPerSecond(numberOfSample / (duration / 1000F));
+					partialResults.setDuration(duration);
+				}
+				partialResults.setErrorRate((100 * numberOfErrors) / numberOfSample);
+				if(partialResults.getMaxUsers() < sample.getAllThreads()) partialResults.setMaxUsers(sample.getAllThreads());
+				partialResults.setCurrentUsers(sample.getAllThreads());
+				
+				log.debug(partialResults.toString());
+			}
 		}
-		duration = sample.getTimestamp().getTime() - startDate.getTime();
-		
-		// Update partial results
-		partialResults.setNumberOfSample(numberOfSample);
-		partialResults.setLastSampleDate(sample.getTimestamp());
-		partialResults.setAverageLatency(totalLatency / numberOfSample);
-		partialResults.setAverageResponseTime(totalResponseTime / numberOfSample);
-		partialResults.setTotalBandwith(totalBandwith);
-		if(duration > 0){
-			partialResults.setCurrentBandwith(totalBandwith / (duration / 1000L));
-			partialResults.setRequestPerSecond(numberOfSample / (duration / 1000F));
-		}
-		partialResults.setErrorRate((100 * numberOfErrors) / numberOfSample);
-		
-		log.debug(partialResults.toString());
 	}
 	
 	public RunResultSummary getPartialResults(){

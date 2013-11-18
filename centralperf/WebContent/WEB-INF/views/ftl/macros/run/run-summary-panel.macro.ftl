@@ -2,7 +2,7 @@
 		<style>
 			.summaries > div{
 				width		: 185px;
-				height		: 80px;
+				height		: 95px;
 				margin-right: 5px;
 				margin-bottom: 5px;
 				float		: left;		
@@ -32,30 +32,30 @@
 					<div id="summaryCurrentUsers" class="col-xs-4">-</div>
 				</div>
 				<div>
-					<div class="col-xs-8">Total users</div>
-					<div id="summaryTotalUsers" class="col-xs-4">-</div>
+					<div class="col-xs-8">Max users</div>
+					<div id="summaryMaxUsers" class="col-xs-4">-</div>
 				</div>
 			</div>
 			<div>
 				<div><span class="glyphicon glyphicon-signal"></span>&nbsp;Bandwith</div>			
 				<div>
-					<div class="col-xs-8">Bandwith</div>
-					<div id="summaryCurrentBandwith" class="col-xs-4">-</div>
+					<div class="col-xs-7">Bandwith</div>
+					<div id="summaryCurrentBandwith" class="col-xs-5">-</div>
 				</div>
 				<div>
-					<div class="col-xs-8">Total bandwith</div>
-					<div id="summaryTotalBandwith" class="col-xs-4">-</div>
+					<div class="col-xs-7">Total bandwith</div>
+					<div id="summaryTotalBandwith" class="col-xs-5">-</div>
 				</div>
 			</div>
 			<div>
 				<div><span class="glyphicon glyphicon-stats"></span>&nbsp;Response times</div>					
 				<div>
-					<div class="col-xs-8">Avg. resp. time</div>
-					<div id="summaryAverageResponseTime" class="col-xs-4">-</div>
+					<div class="col-xs-7">Avg. resp. time</div>
+					<div id="summaryAverageResponseTime" class="col-xs-5">-</div>
 				</div>
 				<div>
-					<div class="col-xs-8">Avg. latency</div>
-					<div id="summaryAverageLatency" class="col-xs-4">-</div>
+					<div class="col-xs-7">Avg. latency</div>
+					<div id="summaryAverageLatency" class="col-xs-5">-</div>
 				</div>			
 			</div>
 			<div>

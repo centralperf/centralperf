@@ -49,7 +49,22 @@ public class JMeterLauncher {
 				jmxFilePath,
 				"-l",
 				jtlFilePath,
-				"-Jjmeter.save.saveservice.output_format=" + jmeterLauncherOutputFormat
+				"-Jjmeter.save.saveservice.output_format=" + jmeterLauncherOutputFormat,
+				"-Jjmeter.save.saveservice.print_field_names=true",
+				"-Jjmeter.save.saveservice.assertion_results_failure_message=true",
+				"-Jjmeter.save.saveservice.data_type=true",
+				"-Jjmeter.save.saveservice.label=true",
+				"-Jjmeter.save.saveservice.response_code=true",
+				"-Jjmeter.save.saveservice.response_message=true",
+				"-Jjmeter.save.saveservice.successful=true",
+				"-Jjmeter.save.saveservice.thread_name=true",
+				"-Jjmeter.save.saveservice.time=true",
+				"-Jjmeter.save.saveservice.assertions=true",				
+				"-Jjmeter.save.saveservice.latency=true",
+				"-Jjmeter.save.saveservice.bytes=true",
+				"-Jjmeter.save.saveservice.thread_counts=true",
+				"-Jjmeter.save.saveservice.sample_count=true",
+				"-Jjmeter.save.saveservice.timestamp_format=ms"				
 				};
 		JMeterJob job = new JMeterJob(command);
 		job.setScriptLauncherService(scriptLauncherService);

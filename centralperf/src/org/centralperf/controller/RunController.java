@@ -353,7 +353,6 @@ public class RunController {
     		model.addAttribute("runGraphSeries",graphService.getSumSeries(run));
     		model.addAttribute("runGraphPie", graphService.getCodeRepartition(run));
     		model.addAttribute("runSummary",runResultService.getSummaryFromRun(run));
-    		model.addAttribute("runDurationInSeconds",(run.getEndDate().getTime() - run.getStartDate().getTime()) / 1000);
     	}    	
     }
     

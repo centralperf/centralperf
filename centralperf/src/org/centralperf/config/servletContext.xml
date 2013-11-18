@@ -17,20 +17,22 @@
 	<context:component-scan base-package="org.centralperf" />
 	<mvc:annotation-driven />
 	
-	<!-- Resolve logical view names to .jsp resources in the /WEB-INF/views directory -->
-<!-- 	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"> -->
-<!--     	<property name="prefix" value="/WEB-INF/views/" /> -->
-<!--     	<property name="suffix" value=".jsp" /> -->
-<!-- 	</bean> -->
-	
+	<!-- Public resources -->
 	<mvc:resources mapping="/resources/**" location="/public-resources/"/>
 	<mvc:resources location="/resources/favicon.ico" mapping="/favicon.ico"/>	
 	
+	<!-- Allows to upload files -->
 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
 	
-	<!-- Freemarker -->
+	<!-- Freemarker configuration -->
 	<bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
 		<property name="templateLoaderPath" value="/WEB-INF/views/ftl/"/>
+		<property name="freemarkerSettings">
+			<props>
+		    	<prop key="template_update_delay">0</prop>
+		        <prop key="default_encoding">UTF-8</prop>
+			</props>
+		</property>		
     </bean>
      
     <!-- 

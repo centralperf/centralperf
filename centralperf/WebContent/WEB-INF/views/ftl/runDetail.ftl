@@ -48,10 +48,10 @@
     </div>          
     <#if run.launched>
 	    <div id="page-section summary">
-	    	<@run_summary_panel.main run/>
+	    	<div class="clearfix"><@run_summary_panel.main run/></div>
 	    </div>
     </#if>
-    <div class="page-section clearfix">
+    <div class="page-section">
    		<a href="#" id="runCommentEditable" data-name="comment" data-type="textarea" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run comment"
    		data-placement="bottom" data-emptyText="Click to add a comment">${run.comment!}</a>
     </div>      
@@ -72,15 +72,16 @@
                                 if(running) $("#runResultCSV").html(data.csvresult);
                                 $("#summaryCurrentUsers").html(data.summary.currentUsers);
                                 $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
-                                $("#summaryTotalUsers").html(data.summary.totalUsers);
-                                $("#summaryCurrentBandwith").html(data.summary.currentBandwith);
-                                $("#summaryTotalBandwith").html(data.summary.totalBandwith);
-                                $("#summaryAverageResponseTime").html(data.summary.averageResponseTime);
-                                $("#summaryAverageLatency").html(data.summary.averageLatency);
+                                $("#summaryMaxUsers").html(data.summary.maxUsers);
+                                $("#summaryCurrentBandwith").html(Math.round(data.summary.currentBandwith / 1024) + " ko");
+                                $("#summaryTotalBandwith").html(Math.round(data.summary.totalBandwith / 1024) + " ko");
+                                $("#summaryAverageResponseTime").html(data.summary.averageResponseTime + " ms");
+                                $("#summaryAverageLatency").html(data.summary.averageLatency + " ms");
                                 $("#summaryRequestPerSeconds").html(data.summary.requestPerSeconds);
                                 $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
                                 $("#summaryErrorRate").html(data.summary.errorRate);
                                 $("#summaryLastSampleDate").html(data.summary.lastSampleDate);
+                                $("#summaryDuration").html(Math.round(data.summary.duration / 1000) + " s");
                             }
                             if(data.running == false && running == true){
                             	location.reload(); 
