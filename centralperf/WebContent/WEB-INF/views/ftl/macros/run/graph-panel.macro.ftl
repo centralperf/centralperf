@@ -2,7 +2,7 @@
 	<legend>Graphs</legend>
 	<ul class="nav nav-tabs">
   		<li class="active"><a href="#sumChart" data-toggle="tab">Summary</a></li>
-  		<li><a href="#">Response time</a></li>
+  		<li><a href="#respTimeChart" data-toggle="tab">Response time</a></li>
   		<li><a href="#">Request size</a></li>
   		<li><a href="#">Error rate</a></li>
   		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#runOuput"  class="label label-danger"  data-toggle="tab">logs</a></li>
@@ -10,6 +10,7 @@
 	</ul>
 	<div class="tab-content"> 
 		<#include "/graphs/sum.ftl">
+		<div id="respTimeChart" class="tab-pane"><#include "/graphs/respTime.ftl"></div>
 		<div id="runOuput" class="tab-pane scroll scroll-expanded terminal">${run.processOutput!}</div>
 		<div id="samples" class="tab-pane">
                 <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">

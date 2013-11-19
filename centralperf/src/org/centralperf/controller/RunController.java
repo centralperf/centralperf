@@ -352,7 +352,9 @@ public class RunController {
     	else if(run.isLaunched()){
     		model.addAttribute("runGraphSeries",graphService.getSumSeries(run));
     		model.addAttribute("runGraphPie", graphService.getCodeRepartition(run));
+    		model.addAttribute("runRTGraph",graphService.getRespTimeSeries(run));
     		model.addAttribute("runSummary",runResultService.getSummaryFromRun(run));
+
     	}    	
     }
     

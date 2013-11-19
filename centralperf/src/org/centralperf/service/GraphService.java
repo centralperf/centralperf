@@ -12,6 +12,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
 import org.centralperf.model.graphs.HttpCodeRepartition;
+import org.centralperf.model.graphs.RespTimeSeries;
 import org.centralperf.model.graphs.SumSeries;
 import org.centralperf.model.Run;
 import org.slf4j.Logger;
@@ -98,6 +99,35 @@ public class GraphService {
 
 		return hcr;
 	}
-    	
+    
+	@SuppressWarnings("rawtypes")
+	public RespTimeSeries getRespTimeSeries(Run run){
+		//SELECT AVG(ELAPSED), AVG(LATENCY) FROM SAMPLE WHERE RUN_FK=1 GROUP BY SAMPLENAME
+		Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency)  from Sample s where run_fk='"+run.getId()+"'   GROUP BY sampleName");
+		
+		Iterator results =q.getResultList().iterator();
+		StringBuilder labelSerie =   new StringBuilder("[");
+		StringBuilder downloadSerie = new StringBuilder("[");
+		StringBuilder latencySerie = new StringBuilder("[");
+		
+		Object[] row =null;
+		Double latency;
+		Double download;
+		while ( results.hasNext() ) {
+			if(row!=null){labelSerie.append(",");downloadSerie.append(",");latencySerie.append(",");}
+			row = (Object[]) results.next();
+			labelSerie.append("'").append(row[0].toString()).append("'");
+			
+			latency=Double.parseDouble(row[2].toString());
+			download=Double.parseDouble(row[1].toString())-latency;			
+			latencySerie.append(latency.longValue());
+			downloadSerie.append(download.longValue());
+		}
+		labelSerie.append("]");
+		downloadSerie.append("]");
+		latencySerie.append("]");
+		return new RespTimeSeries(labelSerie.toString(), latencySerie.toString(), downloadSerie.toString());
+	}
+	
 	
 }
