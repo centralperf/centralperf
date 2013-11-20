@@ -78,6 +78,7 @@
                                 $("#summaryAverageResponseTime").html(data.summary.averageResponseTime);
                                 $("#summaryAverageLatency").html(data.summary.averageLatency);
                                 $("#summaryRequestPerSeconds").html(Math.round(data.summary.numberOfSample / data.summary.duration * 100000)/100);
+                                $("#summaryErrorRate").html(data.summary.errorRate + "%");
                                 $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
                                 $("#summaryLastSampleDate").html(data.summary.lastSampleDate);
                                 $("#summaryLaunchedTime").html("${run.startDate?time}");

@@ -12,7 +12,7 @@
 		<#include "/graphs/sum.ftl">
 		<div id="respTimeChart" class="tab-pane"><#include "/graphs/respTime.ftl"></div>
 		<div id="reqSizeChart" class="tab-pane"><#include "/graphs/reqSize.ftl"></div>
-		<div id="runProcessOuput" class="tab-pane scroll scroll-expanded terminal">${run.processOutput}</div>
+		<div id="runProcessOuput" class="tab-pane scroll scroll-expanded terminal"></div>
 		<div id="samples" class="tab-pane">
                 <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">
 	                <#if run.samples?size gt 0>

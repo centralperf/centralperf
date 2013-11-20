@@ -127,6 +127,9 @@ public class RunResultService {
         catch (NumberFormatException e) {}
         sample.setSampleName(headerInfo.getValue("label",CSVline));
         sample.setStatus(headerInfo.getValue("responseCode",CSVline));
+        
+        String assertResult=headerInfo.getValue("success",CSVline);
+        sample.setAssertResult(new Boolean(headerInfo.getValue("success",CSVline)));
         //sample.setAssertResult(new Boolean(headerInfo.getValue("Error",CSVline)));
         String sizeString = headerInfo.getValue("bytes", CSVline);
         
@@ -242,7 +245,7 @@ public class RunResultService {
 			totalBandwith += sample.getSizeInOctet();
 			totalResponseTime += sample.getElapsed();
 			totalLatency += sample.getLatency();	
-			if(!"OK".equals(sample.getStatus())){
+			if(!sample.isAssertResult()){
 				numberOfErrors ++;
 			}
 			
