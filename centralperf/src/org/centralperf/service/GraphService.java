@@ -103,18 +103,20 @@ public class GraphService {
 	@SuppressWarnings("rawtypes")
 	public RespTimeSeries getRespTimeSeries(Run run){
 		//SELECT AVG(ELAPSED), AVG(LATENCY) FROM SAMPLE WHERE RUN_FK=1 GROUP BY SAMPLENAME
-		Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency)  from Sample s where run_fk='"+run.getId()+"'   GROUP BY sampleName");
+		Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency), avg(sizeInOctet)  from Sample s where run_fk='"+run.getId()+"'   GROUP BY sampleName");
 		
 		Iterator results =q.getResultList().iterator();
 		StringBuilder labelSerie =   new StringBuilder("[");
 		StringBuilder downloadSerie = new StringBuilder("[");
 		StringBuilder latencySerie = new StringBuilder("[");
+		StringBuilder sizeSerie = new StringBuilder("[");
 		
 		Object[] row =null;
 		Double latency;
 		Double download;
+		
 		while ( results.hasNext() ) {
-			if(row!=null){labelSerie.append(",");downloadSerie.append(",");latencySerie.append(",");}
+			if(row!=null){labelSerie.append(",");downloadSerie.append(",");latencySerie.append(",");sizeSerie.append(",");}
 			row = (Object[]) results.next();
 			labelSerie.append("'").append(row[0].toString()).append("'");
 			
@@ -122,11 +124,13 @@ public class GraphService {
 			download=Double.parseDouble(row[1].toString())-latency;			
 			latencySerie.append(latency.longValue());
 			downloadSerie.append(download.longValue());
+			sizeSerie.append(new Double(Double.parseDouble(row[3].toString())).longValue());
 		}
 		labelSerie.append("]");
 		downloadSerie.append("]");
 		latencySerie.append("]");
-		return new RespTimeSeries(labelSerie.toString(), latencySerie.toString(), downloadSerie.toString());
+		sizeSerie.append("]");
+		return new RespTimeSeries(labelSerie.toString(), latencySerie.toString(), downloadSerie.toString(),sizeSerie.toString());
 	}
 	
 	

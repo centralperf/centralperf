@@ -9,11 +9,13 @@ public class RespTimeSeries implements Serializable{
 	private String label;
 	private String latency;
 	private String download;
+	private String size;
 
-	public RespTimeSeries(String label, String latency, String download) {
+	public RespTimeSeries(String label, String latency, String download, String size) {
 		this.label = label;
 		this.latency = latency;
 		this.download = download;
+		this.size=size;
 	}
 	
 	public String getLabel() {return label;}
@@ -22,9 +24,11 @@ public class RespTimeSeries implements Serializable{
 	public void setLatency(String latency) {this.latency = latency;}
 	public String getDownload() {return download;}
 	public void setDownload(String download) {this.download = download;}
-
+	public String getSize() {return size;}
+	public void setSize(String size) {this.size = size;}
+	
 	@Override
 	public String toString() {
-		return "[ResponseTimeSeries]\n\tLabels:"+label+"\n\tLatency:"+latency+"\n\tDownload:"+download;
+		return "[ResponseTimeSeries]\n\tLabels:"+label+"\n\tLatency:"+latency+"\n\tDownload:"+download+"\n\tsize:"+size;
 	}
 }

@@ -1,4 +1,4 @@
-<#if runGraphSeries?exists && (run.samples?size gt 0)>
+<#if runRTGraph?exists && (run.samples?size gt 0)>
 <script type='text/javascript'>
 $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $('#ResponseTime').highcharts({
