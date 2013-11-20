@@ -229,6 +229,7 @@ public class RunController {
     	}
     	else if(run.isLaunched()){
     		summary = runResultService.getSummaryFromRun(run);
+    		result.setJobOutput(run.getProcessOutput());
     	}
     	result.setSummary(summary);
     	result.setRunning(run.isRunning());

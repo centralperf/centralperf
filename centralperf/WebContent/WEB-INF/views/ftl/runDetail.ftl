@@ -68,7 +68,7 @@
                         success: function(data) {
                             console.log(data);
                             if(data.summary != null){
-                                $("#runOuput").html(data.jobOutput);
+                                $("#runProcessOuput").html(data.jobOutput);
                                 if(running) $("#runResultCSV").html(data.csvresult);
                                 $("#summaryCurrentUsers").html(data.summary.currentUsers);
                                 $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
