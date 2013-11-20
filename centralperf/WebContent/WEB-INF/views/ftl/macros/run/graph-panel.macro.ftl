@@ -5,14 +5,14 @@
   		<li><a href="#respTimeChart" data-toggle="tab">Response time</a></li>
   		<li><a href="#reqSizeChart" data-toggle="tab">Request size</a></li>
   		<li><a href="#">Error rate</a></li>
-  		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#runOuput"  class="label label-danger"  data-toggle="tab">logs</a></li>
+  		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#runProcessOuput"  class="label label-danger"  data-toggle="tab">logs</a></li>
   		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#samples" class="label label-info" data-toggle="tab">samples (${run.samples?size})</a></li>
 	</ul>
 	<div class="tab-content"> 
 		<#include "/graphs/sum.ftl">
 		<div id="respTimeChart" class="tab-pane"><#include "/graphs/respTime.ftl"></div>
 		<div id="reqSizeChart" class="tab-pane"><#include "/graphs/reqSize.ftl"></div>
-		<div id="runOuput" class="tab-pane scroll scroll-expanded terminal">${run.processOutput!}</div>
+		<div id="runProcessOuput" class="tab-pane scroll scroll-expanded terminal">${run.processOutput}</div>
 		<div id="samples" class="tab-pane">
                 <div id="runResultCSV" class="scroll scroll-expanded ${(run.samples?size gt 0)?string("","terminal")}">
 	                <#if run.samples?size gt 0>
