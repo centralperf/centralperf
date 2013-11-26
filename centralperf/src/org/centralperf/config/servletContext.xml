@@ -5,13 +5,19 @@
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="
            http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+           http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/mvc 
-           http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+           http://www.springframework.org/schema/mvc/spring-mvc.xsd
 
 		http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context-3.1.xsd           
+        http://www.springframework.org/schema/context/spring-context.xsd           
            ">
+	
+	<!-- Import properties from parent context  -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="properties" ref="appProperties" />
+	</bean>
 
 	<!-- @Controller, @Service, @Configuration, etc. -->
 	<context:component-scan base-package="org.centralperf" />
@@ -29,7 +35,7 @@
 		<property name="templateLoaderPath" value="/WEB-INF/views/ftl/"/>
 		<property name="freemarkerSettings">
 			<props>
-		    	<prop key="template_update_delay">0</prop>
+		    	<prop key="template_update_delay">#{'${server.mode}' == 'dev' ? '${freemarker.template_update_delay.dev}' : '${freemarker.template_update_delay}'}</prop>
 		        <prop key="default_encoding">UTF-8</prop>
 			</props>
 		</property>		
@@ -39,12 +45,6 @@
       View resolvers can also be configured with ResourceBundles or XML files. If you need
       different view resolving based on Locale, you have to use the resource bundle resolver.
     -->
-<!--     <bean id="viewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver"> -->
-<!--       <property name="cache" value="true"/> -->
-<!--       <property name="prefix" value=""/> -->
-<!--       <property name="suffix" value=".ftl"/> -->
-<!--     </bean> -->
-    
     <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
     	<property name="order" value="2" />
 	  <property name="mediaTypes">
@@ -59,7 +59,7 @@
 			    <property name="prefix" value="/WEB-INF/views/xsl/" />
 			    <property name="contentType" value="application/xml" />
 			    <!-- only for development -->
-			    <property name="cacheTemplates" value="false" />
+			    <property name="cacheTemplates" value="#{'${server.mode}' == 'dev' ? ${xsl.cacheTemplates.dev} : ${xsl.cacheTemplates}}" />
 			</bean>		    
 	    </list>
 	  </property>    
