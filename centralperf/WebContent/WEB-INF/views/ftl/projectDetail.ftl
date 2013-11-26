@@ -17,9 +17,11 @@
     </div>
     <div class="page-section">
         <legend style="line-height: 40px">Last runs <span class="badge">${runs?size}</span>
+        	<#if project.scripts?size gt 0>
         	<span style="float: right">
         		<a data-toggle="modal" href="#run-modal-new" class="btn btn-primary">New run</a><small>&nbsp;</small><a data-toggle="modal" href="#run-modal-import" class="btn btn-primary" projectId="${project.id}">Import run</a>
         	</span>
+        	</#if>
         </legend>
         <@run_modal_new.main/>
         <@run_modal_new.main action="import"/>
