@@ -23,8 +23,10 @@
         	</span>
         	</#if>
         </legend>
-        <@run_modal_new.main/>
-        <@run_modal_new.main action="import"/>
+        <#if project.scripts?size gt 0>
+        	<@run_modal_new.main/>
+        	<@run_modal_new.main action="import"/>
+        </#if>
         <@run_list.main displayProject=false/>
     </div>
     <div class="page-section">
