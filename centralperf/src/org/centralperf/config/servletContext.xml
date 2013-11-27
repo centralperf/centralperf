@@ -18,6 +18,11 @@
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="properties" ref="appProperties" />
 	</bean>
+	
+	<!-- Allows lazy loading in views -->
+	<mvc:interceptors>
+    	<bean class="org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor"/>
+	</mvc:interceptors>
 
 	<!-- @Controller, @Service, @Configuration, etc. -->
 	<context:component-scan base-package="org.centralperf" />
