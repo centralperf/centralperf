@@ -6,9 +6,11 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 
 @Entity
 public class Sample implements Serializable, Comparable<Sample>{
@@ -16,7 +18,8 @@ public class Sample implements Serializable, Comparable<Sample>{
 	private static final long serialVersionUID = 1758196304097304496L;
 
 	@Id
-	@GeneratedValue
+    @SequenceGenerator(name = "sample_seq_gen", sequenceName = "sample_sequence")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sample_seq_gen")
 	private Long id;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
