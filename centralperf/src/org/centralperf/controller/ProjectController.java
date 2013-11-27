@@ -4,6 +4,8 @@ package org.centralperf.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Resource;
+
 import org.centralperf.model.Project;
 import org.centralperf.model.ProjectLight;
 import org.centralperf.model.Run;
@@ -13,6 +15,7 @@ import org.centralperf.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +24,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.annotation.Resource;
 
 @Controller
 public class ProjectController {
@@ -63,7 +64,8 @@ public class ProjectController {
     }
     
     @RequestMapping(value="/project/{id}/detail", method = RequestMethod.GET)
-    public String showScriptDetail(@PathVariable("id") Long id, Model model){
+    @Transactional(readOnly = true) 
+    public String showProjectDetail(@PathVariable("id") Long id, Model model){
     	log.debug("project details for project ["+id+"]");
         Project project = projectRepository.findOne(id);
     	model.addAttribute("project",project);
@@ -75,7 +77,7 @@ public class ProjectController {
     }    
     
 	@RequestMapping(value = "/project/{id}/delete", method = RequestMethod.GET)
-    public String deleteScript(@PathVariable("id") Long id, RedirectAttributes redirectAttrs) {
+    public String deleteProject(@PathVariable("id") Long id, RedirectAttributes redirectAttrs) {
         Project project = projectRepository.findOne(id);
 		if(project.getRuns() != null && project.getRuns().size() > 0){
 			redirectAttrs.addFlashAttribute("error","Unable to delete this project because it's attached to at least one run");
