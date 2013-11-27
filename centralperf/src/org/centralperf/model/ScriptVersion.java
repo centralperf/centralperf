@@ -2,6 +2,8 @@ package org.centralperf.model;
 
 import javax.persistence.*;
 
+import org.hibernate.annotations.Type;
+
 import java.util.List;
 
 /**
@@ -33,6 +35,7 @@ public class ScriptVersion {
 
     @Lob
     @Column( length = 100000000 )
+    @Type(type="text")
     public String jmx;
 
     @ManyToOne(fetch = FetchType.LAZY)

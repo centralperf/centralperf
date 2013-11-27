@@ -8,6 +8,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Type;
+
 @Entity
 public class Run {
 
@@ -41,10 +43,12 @@ public class Run {
 	
 	@Lob
 	@Column( length = 1000000 )
+	@Type(type="text")
 	private String processOutput;
 	
 	@Lob
 	@Column( length = 100000000 )
+	@Type(type="text")
 	private String runResultCSV;	
 	
 	@OneToMany(mappedBy="run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
