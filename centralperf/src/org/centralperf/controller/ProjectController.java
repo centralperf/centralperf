@@ -1,13 +1,11 @@
 package org.centralperf.controller;
 
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
 
 import org.centralperf.model.Project;
-import org.centralperf.model.ProjectLight;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
 import org.centralperf.repository.ProjectRepository;
@@ -42,18 +40,10 @@ public class ProjectController {
         projectService.addProject(project);
         return "redirect:/project/" + project.getId() + "/detail";
     }
-     
-	@RequestMapping(value ="/project/json/list", method=RequestMethod.GET)  
-	public @ResponseBody List<ProjectLight> getJsonProjectList(Model model){
-		//FIXME: Should fine a better way to have smaller object (ID/NAME only)
-		Iterable<Project> temp = projectRepository.findAll();
-		List<ProjectLight> lst = new ArrayList<ProjectLight>();
-		for (Project project : temp) {
-			if(!project.getScripts().isEmpty()){
-				lst.add(new ProjectLight(project));
-			}
-		}
-	    return lst;
+	
+	@RequestMapping(value ="/project/json/list2", method=RequestMethod.GET)  
+	public @ResponseBody List<Project> getJsonProjectList(Model model){
+		return projectRepository.findProjectsWithScript();
 	}
 	
     @RequestMapping("/project")

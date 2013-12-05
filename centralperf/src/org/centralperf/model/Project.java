@@ -3,6 +3,9 @@ package org.centralperf.model;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import java.util.List;
 
 @Entity
@@ -16,9 +19,11 @@ public class Project {
     @Size(min = 1, max = 33)
     private String name;
 
+    @JsonIgnore
     @OneToMany(cascade=CascadeType.ALL, mappedBy = "project")
     private List<Run> runs;
 
+    @JsonIgnore
     @OneToMany(cascade=CascadeType.ALL, mappedBy = "project")
     private List<Script> scripts;
    

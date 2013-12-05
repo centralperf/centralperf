@@ -9,12 +9,11 @@ import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.dom.DOMSource;
 
 import org.centralperf.model.Project;
 import org.centralperf.model.Run;
 import org.centralperf.model.Script;
-import org.centralperf.model.ScriptLight;
+import org.centralperf.model.LastScriptLabel;
 import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
@@ -95,15 +94,14 @@ public class ScriptController {
     }
     
 	@RequestMapping(value ="/project/{projectId}/script/json/list", method=RequestMethod.GET)  
-	public @ResponseBody List<ScriptLight> getJsonScriptList(@PathVariable("projectId") Long projectId, Model model){
-		//FIXME: Should fine a better way to have smaller object (ID/NAME only)
+	public @ResponseBody List<LastScriptLabel> getJsonScriptList(@PathVariable("projectId") Long projectId, Model model){
 		Project p = projectRepository.findOne(projectId);
-		List<ScriptLight> lst = new ArrayList<ScriptLight>();
+		List<LastScriptLabel> lst = new ArrayList<LastScriptLabel>();
 		for (Script s : p.getScripts()) {
 			int last = s.getVersions().size();
 			if(last>0){
 				ScriptVersion scriptVersion = s.getVersions().get(last-1);
-				lst.add(new ScriptLight(scriptVersion.getId(), s.getLabel()+" (version "+last+")"));
+				lst.add(new LastScriptLabel(scriptVersion.getId(), s.getLabel()+" (version "+last+")"));
 			}
 		}
 	    return lst;

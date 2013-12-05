@@ -1,12 +1,12 @@
 package org.centralperf.model;
 
-public class ScriptLight {
+public class LastScriptLabel {
 	private Long id;
 	private String label;
 	
 	
 	
-	public ScriptLight(Long id, String label) {
+	public LastScriptLabel(Long id, String label) {
 		super();
 		this.id = id;
 		this.label = label;
