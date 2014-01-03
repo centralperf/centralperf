@@ -76,7 +76,9 @@ public class GraphService {
 				reqSerie.append("["+timestamp+","+req+"]");
 				
 				if(results.hasNext()){rstSerie.append(','); reqSerie.append(',');}
-			} catch (ParseException pE) {log.error("Error in date convertion",pE);}
+			} 
+			catch (ParseException pE) {log.error("Error in date convertion",pE);}
+			catch (NullPointerException npE) {log.error("Missing data");}
 		}
 		
 		return new SumSeries(rstSerie.toString(),reqSerie.toString(),rstMin,rstMax,count > 0 ? rstTot/count : 0,reqMin,reqMax,count > 0 ? reqTot/count : 0);
@@ -94,7 +96,10 @@ public class GraphService {
 		HttpCodeRepartition hcr = new HttpCodeRepartition();
 		while ( results.hasNext() ) {
 			row = (Object[]) results.next();
-			hcr.setNbHttpXXX(row[0].toString(), Long.parseLong(row[1].toString()));
+			String codeValue = row[0] != null ? row[0].toString() : null;
+			String codeValueCount = row[1] != null ? row[1].toString() : null;
+			if(codeValue != null && codeValueCount != null)
+				hcr.setNbHttpXXX(codeValue, Long.parseLong(codeValueCount));
 		}
 
 		return hcr;
@@ -118,13 +123,15 @@ public class GraphService {
 		while ( results.hasNext() ) {
 			if(row!=null){labelSerie.append(",");downloadSerie.append(",");latencySerie.append(",");sizeSerie.append(",");}
 			row = (Object[]) results.next();
-			labelSerie.append("'").append(row[0].toString()).append("'");
-			
-			latency=Double.parseDouble(row[2].toString());
-			download=Double.parseDouble(row[1].toString())-latency;			
-			latencySerie.append(latency.longValue());
-			downloadSerie.append(download.longValue());
-			sizeSerie.append(new Double(Double.parseDouble(row[3].toString())).longValue());
+			if(row[0] != null){
+				labelSerie.append("'").append(row[0].toString()).append("'");
+				
+				latency=Double.parseDouble(row[2].toString());
+				download=Double.parseDouble(row[1].toString())-latency;			
+				latencySerie.append(latency.longValue());
+				downloadSerie.append(download.longValue());
+				sizeSerie.append(new Double(Double.parseDouble(row[3].toString())).longValue());
+			}
 		}
 		labelSerie.append("]");
 		downloadSerie.append("]");

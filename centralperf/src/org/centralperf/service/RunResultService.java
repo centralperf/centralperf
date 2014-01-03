@@ -134,7 +134,7 @@ public class RunResultService {
         String sizeString = headerInfo.getValue("bytes", CSVline);
         
         // TODO : manage format errors
-        if(!"".equals(sizeString.trim())){
+        if(sizeString != null && !"".equals(sizeString.trim())){
         	try{
         		sample.setSizeInOctet(new Long(headerInfo.getValue("bytes", CSVline)));
         	}
@@ -143,16 +143,19 @@ public class RunResultService {
         else{
         	sample.setSizeInOctet(0);
         }
+        
         String latencyString = headerInfo.getValue("latency", CSVline);
-        if(!"".equals(latencyString.trim())){
+        if(latencyString != null  && !"".equals(latencyString.trim())){
         	try{
         		sample.setLatency(new Long(headerInfo.getValue("latency", CSVline)));
         	}
         	catch(NumberFormatException exception){}
         }
         
-        sample.setGrpThreads(new Long(headerInfo.getValue("grpThreads", CSVline)));
-        sample.setAllThreads(new Long(headerInfo.getValue("allThreads", CSVline)));
+        String grpThreads = headerInfo.getValue("grpThreads", CSVline);
+        if(grpThreads != null) sample.setGrpThreads(new Long(grpThreads));
+        String allThreads = headerInfo.getValue("allThreads", CSVline);
+        if(allThreads != null) sample.setAllThreads(new Long(allThreads));
        
         return sample;
     }

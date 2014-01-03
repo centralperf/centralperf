@@ -15,7 +15,12 @@ public class CSVHeaderInfo{
     }
 
     public String getValue(String headerName, String[] CSVline){
-        return CSVline[headersIndex.get(headerName.toLowerCase())];
+    	try{
+    		return CSVline[headersIndex.get(headerName.toLowerCase())];
+    	}
+    	catch(ArrayIndexOutOfBoundsException aioobe){
+    		return null;
+    	}
     }
 
 }
