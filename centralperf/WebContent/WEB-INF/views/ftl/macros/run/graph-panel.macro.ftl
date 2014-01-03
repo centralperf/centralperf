@@ -29,20 +29,30 @@
 	                        </tr>
 	                    <#list run.samples as sample>
 	                        <tr>
-	                            <td>${sample.timestamp}</td>
-	                            <td>${sample.elapsed}</td>
-	                            <td title="${sample.sampleName}"><#if sample.sampleName?length gt 15>${sample.sampleName?substring(0,15)}...<#else>${sample.sampleName}</#if></td>
-	                            <td>${sample.returnCode}</td>
-	                            <td>${sample.latency}</td>
-	                            <td>${sample.sizeInOctet}</td>
-	                            <td>${sample.assertResult?string}</td>
-	                            <td>${sample.status}</td>
+	                            <td>${sample.timestamp!}</td>
+	                            <td>${sample.elapsed!}</td>
+	                            <td title="${sample.sampleName!}"><#if sample.sampleName?? && sample.sampleName?length gt 15>${sample.sampleName?substring(0,15)}...<#else>${sample.sampleName!}</#if></td>
+	                            <td>${sample.returnCode!}</td>
+	                            <td>${sample.latency!}</td>
+	                            <td>${sample.sizeInOctet!}</td>
+	                            <td>${sample.assertResult!?string}</td>
+	                            <td>${sample.status!}</td>
 	                        </tr>
 	                    </#list>
 	                    </table>
 	                </#if>
                 </div>		
-                <#if !run.running><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/results" class="btn btn-primary pull-right">Download results</a></#if>
+                <#if !run.running>
+                <div class="btn-group pull-right" style="margin-top:5px">
+				  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+				    Download results<span class="caret"></span>
+				  </button>
+				  <ul class="dropdown-menu" role="menu">
+				    <li><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/results">Comma separated (.csv)</a></li>
+                	<li><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/centralperf.xlsx">Excel 2007+ file (.xlsx)</a></li>
+				  </ul>
+				</div>
+                </#if>
           </div>
 	</div>
 </#macro>

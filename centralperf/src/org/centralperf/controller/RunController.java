@@ -7,6 +7,7 @@ import javax.validation.Valid;
 
 import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.JMeterJob;
+import org.centralperf.helper.view.ExcelView;
 import org.centralperf.model.Run;
 import org.centralperf.model.RunResultSummary;
 import org.centralperf.model.ScriptVariable;
@@ -21,7 +22,9 @@ import org.centralperf.service.RunService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 @SessionAttributes
@@ -315,6 +319,28 @@ public class RunController {
         responseHeaders.set("Content-Disposition", "attachment; filename=results.csv");
         
         return new ResponseEntity<String>(CSVContent, responseHeaders, HttpStatus.CREATED);
+    }    
+    
+    @Autowired 
+    private ApplicationContext applicationContext;
+    
+    /**
+     * Handle request to download an Excel document
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/centralperf.xlsx", method = RequestMethod.GET)
+    public ModelAndView downloadExcel(
+    		ModelAndView mav,
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("runId") Long runId) {
+    	Run run = runRepository.findOne(runId);
+    	
+    	// get the view and setup
+    	ExcelView excelView = applicationContext.getBean(ExcelView.class);
+	    excelView.setUrl("/WEB-INF/views/xlsx/centralperf_template");
+	    mav.getModel().put("run", run);
+    	mav.setView(excelView);
+        // return a view which will be resolved by an excel view resolver
+        return mav;
     }    
     
     @RequestMapping(value = "/run/{runId}", method = RequestMethod.POST)
