@@ -34,7 +34,8 @@ public class GraphService {
 	
 	@SuppressWarnings("rawtypes")
 	public SumSeries getSumSeries(Run run){
-		Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), count(*), avg(elapsed) from Sample s where run_fk='"+run.getId()+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+		Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), count(*), avg(elapsed) from Sample s where run_fk='"+run.getId()+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+		
 		SimpleDateFormat fmt = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
     	TimeZone tz = Calendar.getInstance().getTimeZone();
     	int offsetFromUTC = tz.getOffset(run.getStartDate().getTime());
