@@ -73,8 +73,9 @@
                                 $("#summaryCurrentUsers").html(data.summary.currentUsers);
                                 $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
                                 $("#summaryMaxUsers").html(data.summary.maxUsers);
-                                $("#summaryCurrentBandwith").html(Math.round(data.summary.currentBandwith / 1024) + " ko");
-                                $("#summaryTotalBandwith").html(Math.round(data.summary.totalBandwith / 1024) + " ko");
+                                
+                                $("#summaryCurrentBandwith").html(data.summary.currentBandwithWithUnit);
+                                $("#summaryTotalBandwith").html(data.summary.totalBandwithWithUnit);
                                 $("#summaryAverageResponseTime").html(data.summary.averageResponseTime);
                                 $("#summaryAverageLatency").html(data.summary.averageLatency);
                                 $("#summaryRequestPerSeconds").html(Math.round(data.summary.numberOfSample / data.summary.duration * 100000)/100);

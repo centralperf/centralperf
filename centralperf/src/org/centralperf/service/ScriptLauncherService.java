@@ -6,11 +6,11 @@ import java.util.HashMap;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.JMXScriptVariableExtractor;
-import org.centralperf.helper.JMeterJob;
-import org.centralperf.helper.JMeterLauncher;
 import org.centralperf.model.Run;
 import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.RunRepository;
+import org.centralperf.sampler.api.SamplerLauncher;
+import org.centralperf.sampler.api.SamplerRunJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,9 +25,9 @@ public class ScriptLauncherService {
 	private RunService runService;
 	
 	@Resource
-	private JMeterLauncher jMeterLauncher;
+	private SamplerLauncher samplerLauncher;
 	
-	private HashMap<Long, JMeterJob> runningJobs = new HashMap<Long, JMeterJob>();
+	private HashMap<Long, SamplerRunJob> runningJobs = new HashMap<Long, SamplerRunJob>();
 	
 	private static final Logger log = LoggerFactory.getLogger(ScriptLauncherService.class);
 	
@@ -36,7 +36,7 @@ public class ScriptLauncherService {
     	log.debug("Launching run " + run.getLabel());
     	// Replace variables by their value
     	String finalJmxContent = JMXScriptVariableExtractor.replaceVariables(scriptVersion.getJmx(), run.getCustomScriptVariables());
-    	JMeterJob job = jMeterLauncher.launch(finalJmxContent);
+    	SamplerRunJob job = samplerLauncher.launch(finalJmxContent, run);
     	runningJobs.put(run.getId(), job);
     	run.setLaunched(true);
     	run.setRunning(true);
@@ -45,7 +45,7 @@ public class ScriptLauncherService {
 		return true;
 	}
 	
-	public JMeterJob getJob(Long runId){
+	public SamplerRunJob getJob(Long runId){
 		return runningJobs.get(runId);
 	}
 	
@@ -53,7 +53,7 @@ public class ScriptLauncherService {
 	 * Called once the job finished
 	 * @param job
 	 */
-	public void endJob(JMeterJob job){
+	public void endJob(SamplerRunJob job){
 		for(Long runId:runningJobs.keySet()){
 			if(runningJobs.get(runId) == job){
 				runService.endRun(runId, job);

@@ -1,19 +1,17 @@
 package org.centralperf.service;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.apache.commons.io.FileUtils;
-import org.centralperf.helper.JMeterJob;
 import org.centralperf.model.Run;
 import org.centralperf.model.ScriptVariable;
 import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptVariableRepository;
 import org.centralperf.repository.ScriptVersionRepository;
+import org.centralperf.sampler.api.SamplerRunJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -37,18 +35,12 @@ public class RunService {
 	
 	private static final Logger log = LoggerFactory.getLogger(RunService.class);
 	
-	public void endRun(Long runId, JMeterJob job){
+	public void endRun(Long runId, SamplerRunJob job){
 		Run run = runRepository.findOne(runId);
 		log.debug("Ending run " + run.getLabel());
 		run.setRunning(false);
 		run.setEndDate(new Date());
 		run.setProcessOutput(job.getProcessOutput());
-		try {
-			run.setRunResultCSV(FileUtils.readFileToString(job.getResultFile()));
-			runResultService.saveResults(run);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		runRepository.save(run);
 	}
 	
@@ -106,12 +98,8 @@ public class RunService {
         return runRepository.findByRunning(true);
     }
 
-    public void insertResultsFromCSV(Run run, String CSVContent){
-
-        // Convert CSV to samples
-        run.setRunResultCSV(CSVContent);
-        runResultService.saveResults(run);
-
+    public void insertResultsFromCSV(Run run, String csvContent){
+        runResultService.saveResults(run, csvContent);
         runRepository.save(run);
     }
 

@@ -1,4 +1,4 @@
-package org.centralperf.helper;
+package org.centralperf.sampler.driver.jmeter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,7 +9,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import org.centralperf.model.RunResultSummary;
+import org.centralperf.model.Run;
+import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
@@ -20,9 +21,10 @@ import org.slf4j.LoggerFactory;
  * @author Charles Le Gallic
  *
  */
-public class JMeterJob implements Runnable {
+public class JMeterRunJob implements SamplerRunJob {
 
 	private String[] command;
+	private Run run;
 	private long startTime;
 	private long endTime;
 	private boolean running;
@@ -31,15 +33,16 @@ public class JMeterJob implements Runnable {
 	private File jmxFile;
 	private File resultFile;
 
-	private JTLFileWatcher fileChangeWatcher;
+	private JMeterCSVReader JMeterCSVFileReader;
 	
 	private ScriptLauncherService scriptLauncherService;
 	private RunResultService runResultService;
 
-	private static final Logger log = LoggerFactory.getLogger(JMeterJob.class);
+	private static final Logger log = LoggerFactory.getLogger(JMeterRunJob.class);
 
-	public JMeterJob(String[] command) {
+	public JMeterRunJob(String[] command, Run run) {
 		this.command = command;
+		this.run=run;
 	}
 
 	@Override
@@ -47,8 +50,7 @@ public class JMeterJob implements Runnable {
 	 * Launch the jMeter external program
 	 */
 	public void run() {
-		log.debug("Running a new jMeter job with command "
-				+ Arrays.toString(command));
+		log.debug("Running a new jMeter job with command "+ Arrays.toString(command));
 		startTime = System.currentTimeMillis();
 		ProcessBuilder pb = new ProcessBuilder(command);
 		pb = pb.redirectErrorStream(true);	
@@ -61,41 +63,29 @@ public class JMeterJob implements Runnable {
 		    StreamWriter ouputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));		
 		    
 		    // Watching for result file change
-		    fileChangeWatcher = JTLFileWatcher.newWatcher(this.getResultFile(), runResultService);
+		    JMeterCSVFileReader = JMeterCSVReader.newReader(this.getResultFile(), runResultService, run);
 		    
 		    ouputListener.start();		    
 			while (running) {
 				try {
 					p.waitFor();
+					//Stop File reader task after end of job process
 					running = false;
-					fileChangeWatcher.cancel();
+					JMeterCSVFileReader.cancel();
 					ouputListener.interrupt();
-				} catch (InterruptedException e) {
+				}catch (InterruptedException iE) {
+					log.warn("JMeter run was interrupted before normal end:"+iE.getMessage(),iE);
 					p.destroy();
 				}
 			}
 			exitStatus = p.exitValue();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		} catch (IOException iOE) {log.error("JMeter job can't read output file:"+iOE.getMessage(),iOE);}
 		endTime = System.currentTimeMillis();
 		scriptLauncherService.endJob(this);
-		fileChangeWatcher = null;
+		JMeterCSVFileReader = null;
 	}
 	
-	public String getProcessOutput() {
-		return processOutputWriter.toString();
-	}	
-	
-	public RunResultSummary getPartialResults(){
-		if(fileChangeWatcher != null){
-			return fileChangeWatcher.getPartialResults();
-		}
-		else{
-			return null;
-		}
-	}
+	public String getProcessOutput() {return processOutputWriter.toString();}	
 	
 	/**
 	 * Internal stream writer to redirect jMeter standard output to a PrintWriter

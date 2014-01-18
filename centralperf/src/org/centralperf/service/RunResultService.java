@@ -1,21 +1,16 @@
 package org.centralperf.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.CSVHeaderInfo;
 import org.centralperf.model.Run;
-import org.centralperf.model.RunResultSummary;
 import org.centralperf.model.Sample;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.SampleRepository;
@@ -28,7 +23,7 @@ import au.com.bytecode.opencsv.CSVReader;
 
 /**
  * Service treating 
- * @author charles
+ * @author clegallic, dclairac
  */
 @Service
 public class RunResultService {
@@ -48,15 +43,7 @@ public class RunResultService {
 
 	private static final Logger log = LoggerFactory.getLogger(RunResultService.class);
 	
-	/**
-	 * Save results from CSV to persistence
-	 * @param run
-	 */
-	public void saveResults(Run run){
-		String resultInCSV = run.getRunResultCSV();
-        saveResults(run, resultInCSV);
-	}
-
+	
 	/**
 	 * Save results for a run based on a CSV string (multi line)
 	 * @param run
@@ -95,7 +82,20 @@ public class RunResultService {
         }
         runRepository.save(run);
     }
-
+	
+	/**
+	 * Save results for a run based on a sample
+	 * @param run
+	 * @param sample
+	 */
+    public void saveSample(Run run, Sample sample){
+        sample.setRun(run);
+        log.debug("Adding Sample :"+sample.getTimestamp());
+        sampleRepository.save(sample);
+    }
+    
+    
+    
     /**
      * Build a sample based on a CSV line and information about the headers names and orders
      * @param headerInfo	Information about headers
@@ -128,7 +128,6 @@ public class RunResultService {
         sample.setSampleName(headerInfo.getValue("label",CSVline));
         sample.setStatus(headerInfo.getValue("responseCode",CSVline));
         
-        String assertResult=headerInfo.getValue("success",CSVline);
         sample.setAssertResult(new Boolean(headerInfo.getValue("success",CSVline)));
         //sample.setAssertResult(new Boolean(headerInfo.getValue("Error",CSVline)));
         String sizeString = headerInfo.getValue("bytes", CSVline);
@@ -172,119 +171,12 @@ public class RunResultService {
     	return buildSampleFromCSVLine(CSVlineAsString.split(JTL_CSV_SEPARATOR));
     }    
     
-    /**
-     * Compute the main indicators for a run
-     * @param run
-     * @return a summary instance
-     */
-	public RunResultSummary getSummaryFromRun(Run run){
-		if(run.isLaunched()){
-			String runResultCVS = run.getRunResultCSV();
-			if(runResultCVS != null)
-				return getSummaryFromCSVString(runResultCVS);
-			else
-				return null;
-		}
-		else
-			return null;
-	}
-	
-	/**
-	 * Compute the main indicators from a CVS (JTL) file
-	 * @param resultFile a CSV file (Jmeter JTL format)
-	 * @return a summary instance
-	 */
-	public RunResultSummary getSummaryFromCSVFile(File resultFile) {
-		try {
-			return getSummaryFromCSVLines(FileUtils.readLines(resultFile));
-		} catch (IOException e) {
-			return null;
-		}
-	}
-
-	/**
-	 * Compute the main indicators from a CVS String
-	 * @param CSVString a CSV formatted string (Jmeter JTL format), mutliple lines
-	 * @return a summary instance
-	 */
-	public RunResultSummary getSummaryFromCSVString(String CSVString) {
-		return getSummaryFromCSVLines(Arrays.asList(CSVString.split(System.getProperty("line.separator"))));
-	}
-
-	/**
-	 * Loop over CSV lines to build a summary
-	 * @param lines
-	 * @return
-	 */
-	public RunResultSummary getSummaryFromCSVLines(List<String> lines) {
-		RunResultSummary summary = new RunResultSummary();
-		int numberOfSample = 0;
-		Date startDate = null;
-		Date lastSampleDate = null;
-		long totalBandwith = 0;
-		long totalResponseTime = 0;
-		long totalLatency = 0;
-		long numberOfErrors = 0;
-		long duration = 0;
-		long currentUsers = 0;
-		long maxUsers = 0;
-		
-		summary.setNumberOfSample(lines.size());
-		for (int i=0; i<lines.size(); i++){
-			String[] line = lines.get(i).split(JTL_CSV_SEPARATOR);
-			
-			// Skip header line if necessary
-			if(i==0 && isHeaderLine(line))
-				continue;
-			
-			Sample sample = buildSampleFromCSVLine(getCSVHeaderInfo(), line);
-			
-			if(startDate == null){
-				startDate = sample.getTimestamp();
-			}
-			
-			// update indicators
-			numberOfSample++;
-			totalBandwith += sample.getSizeInOctet();
-			totalResponseTime += sample.getElapsed();
-			totalLatency += sample.getLatency();	
-			if(!sample.isAssertResult()){
-				numberOfErrors ++;
-			}
-			
-			if(maxUsers < sample.getAllThreads())
-				maxUsers = sample.getAllThreads();
-			
-			if(i == lines.size() - 1){
-				lastSampleDate = sample.getTimestamp();
-				duration = lastSampleDate.getTime() - startDate.getTime();
-				currentUsers = sample.getAllThreads();
-			}
-		}
-		summary.setNumberOfSample(numberOfSample);
-		summary.setAverageLatency(totalLatency / numberOfSample);
-		summary.setAverageResponseTime(totalResponseTime / numberOfSample);
-		if(duration > 0){
-			summary.setCurrentBandwith(totalBandwith / (duration / 1000));
-			summary.setRequestPerSecond(numberOfSample / (duration / 1000F));
-			summary.setDuration(duration);
-		}
-		summary.setErrorRate((100 * numberOfErrors) / numberOfSample);
-		summary.setLastSampleDate(lastSampleDate);
-		summary.setCurrentUsers(currentUsers);
-		summary.setMaxUsers(maxUsers);
-		summary.setTotalBandwith(totalBandwith);
-		return summary;
-	}
-
 	/**
 	 * Get info about CSV headers
 	 * @return
 	 */
 	private CSVHeaderInfo getCSVHeaderInfo(){
-		if(this.headerInfo == null){
-			headerInfo = new CSVHeaderInfo(csvHeaders.split(JTL_CSV_SEPARATOR));
-		}
+		if(this.headerInfo == null){headerInfo = new CSVHeaderInfo(csvHeaders.split(JTL_CSV_SEPARATOR));}
 		return headerInfo;
 	}
 	

@@ -40,8 +40,6 @@ public class GraphService {
     	TimeZone tz = Calendar.getInstance().getTimeZone();
     	int offsetFromUTC = tz.getOffset(run.getStartDate().getTime());
     	
-    	
-    	
 		StringBuilder rstSerie = new StringBuilder();
 		StringBuilder reqSerie = new StringBuilder();
 		double rstMin=-1;

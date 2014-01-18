@@ -39,18 +39,18 @@
 			<div>
 				<div><span class="glyphicon glyphicon-signal"></span>&nbsp;Bandwith</div>			
 				<div>
-					<div class="col-xs-7">Bandwith</div>
-					<div id="summaryCurrentBandwith" class="col-xs-5">-</div>
+					<div class="col-xs-6">Average</div>
+					<div id="summaryCurrentBandwith" class="col-xs-6">-</div>
 				</div>
 				<div>
-					<div class="col-xs-7">Total bandwith</div>
-					<div id="summaryTotalBandwith" class="col-xs-5">-</div>
+					<div class="col-xs-6">Total</div>
+					<div id="summaryTotalBandwith" class="col-xs-6">-</div>
 				</div>
 			</div>
 			<div>
 				<div><span class="glyphicon glyphicon-stats"></span>&nbsp;Response times</div>					
 				<div>
-					<div class="col-xs-7">Avg. resp. time (ms)</div>
+					<div class="col-xs-7">Avg. RT (ms)</div>
 					<div id="summaryAverageResponseTime" class="col-xs-5">-</div>
 				</div>
 				<div>
@@ -79,7 +79,7 @@
 			<div>
 				<div><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Timing</div>				
 				<div>
-					<div class="col-xs-7">Launched time</div>
+					<div class="col-xs-7">started at</div>
 					<div id="summaryLaunchedTime" class="col-xs-5">-</div>
 				</div>
 				<div>

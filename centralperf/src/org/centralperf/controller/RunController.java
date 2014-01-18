@@ -6,19 +6,20 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import org.apache.commons.io.FileUtils;
-import org.centralperf.helper.JMeterJob;
 import org.centralperf.helper.view.ExcelView;
 import org.centralperf.model.Run;
-import org.centralperf.model.RunResultSummary;
+import org.centralperf.model.RunStatistics;
 import org.centralperf.model.ScriptVariable;
 import org.centralperf.model.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.repository.ScriptVersionRepository;
+import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.GraphService;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.RunService;
+import org.centralperf.service.RunStatisticsService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,9 @@ public class RunController {
 
 	@Resource
 	private GraphService graphService;
+	
+	@Resource
+	private RunStatisticsService runStatService;
 	
     @Resource
     private ProjectRepository projectRepository;
@@ -156,7 +160,8 @@ public class RunController {
             @PathVariable("projectId") Long projectId,
             @PathVariable("id") Long id){
     	Run run = runRepository.findOne(id);
-    	runResultService.saveResults(run);
+    	log.debug("Calling saveResult for run ["+id+"] but line is commented");
+    	//runResultService.saveResults(run);
     	return "OK";
     }    
     
@@ -214,10 +219,12 @@ public class RunController {
             @PathVariable("id") Long id,
             Model model){
     	Run run = runRepository.findOne(id);
+    	
     	RunStatus result = new RunStatus();
-    	RunResultSummary summary = null;
+    	
+    	
     	if(run.isRunning()){
-	    	JMeterJob job = scriptLauncherService.getJob(run.getId());
+	    	SamplerRunJob job = scriptLauncherService.getJob(run.getId());
 	    	if(job != null){
 		    	result.setJobOutput(job.getProcessOutput());
 		    	// Check that result file exists (not yet if script has just been launched)
@@ -228,14 +235,12 @@ public class RunController {
 						e.printStackTrace();
 					}
 	    		}
-				summary = job.getPartialResults();
 	    	}
     	}
     	else if(run.isLaunched()){
-    		summary = runResultService.getSummaryFromRun(run);
     		result.setJobOutput(run.getProcessOutput());
     	}
-    	result.setSummary(summary);
+    	result.setSummary(runStatService.getRunStatistics(id));
     	result.setRunning(run.isRunning());
     	return result;
     }
@@ -370,17 +375,17 @@ public class RunController {
      */
     private void populateModelWithRunInfo(Long runId, Model model){
     	Run run = runRepository.findOne(runId);
-    	JMeterJob job = scriptLauncherService.getJob(run.getId());
+    	SamplerRunJob job = scriptLauncherService.getJob(run.getId());
     	model.addAttribute("run", run);
     	model.addAttribute("job", job);
     	if(run.isRunning() && job != null){
-    		model.addAttribute("runSummary",runResultService.getSummaryFromCSVFile(job.getResultFile()));
+    		//model.addAttribute("runSummary",runResultService.getSummaryFromCSVFile(job.getResultFile()));
     	}
     	else if(run.isLaunched()){
     		model.addAttribute("runGraphSeries",graphService.getSumSeries(run));
     		model.addAttribute("runGraphPie", graphService.getCodeRepartition(run));
     		model.addAttribute("runRTGraph",graphService.getRespTimeSeries(run));
-    		model.addAttribute("runSummary",runResultService.getSummaryFromRun(run));
+    		//model.addAttribute("runSummary",runResultService.getSummaryFromRun(run));
 
     	}    	
     }
@@ -390,7 +395,7 @@ public class RunController {
     	private String jobOutput = "";
     	private String CSVResult = "";
     	private boolean running = false;
-    	private RunResultSummary summary;
+    	private RunStatistics summary;
     	
 		public String getJobOutput() {
 			return jobOutput;
@@ -410,10 +415,10 @@ public class RunController {
 		public void setRunning(boolean running) {
 			this.running = running;
 		}
-		public RunResultSummary getSummary() {
+		public RunStatistics getSummary() {
 			return summary;
 		}
-		public void setSummary(RunResultSummary summary) {
+		public void setSummary(RunStatistics summary) {
 			this.summary = summary;
 		}
     }

@@ -1,4 +1,4 @@
-package org.centralperf.helper;
+package org.centralperf.sampler.driver.jmeter;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,13 +7,16 @@ import java.util.UUID;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
+import org.centralperf.model.Run;
+import org.centralperf.sampler.api.SamplerLauncher;
+import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JMeterLauncher {
+public class JMeterLauncher implements SamplerLauncher{
 	
 	@Value("#{appProperties['jmeter.launcher.script.path']}")
 	private String jmeterLauncherScriptPath;
@@ -27,7 +30,7 @@ public class JMeterLauncher {
 	@Resource
 	private RunResultService runResultService;
 	
-	public JMeterJob launch(String jmxContent) {
+	public SamplerRunJob launch(String script, Run run) {
 		
 		// Create temporary JMX file
 		UUID uuid = UUID.randomUUID();
@@ -36,7 +39,7 @@ public class JMeterLauncher {
 		
 		File jmxFile = new File(jmxFilePath);
 		try {
-			FileUtils.writeStringToFile(jmxFile, jmxContent);
+			FileUtils.writeStringToFile(jmxFile, script);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -66,7 +69,7 @@ public class JMeterLauncher {
 				"-Jjmeter.save.saveservice.sample_count=true",
 				"-Jjmeter.save.saveservice.timestamp_format=ms"				
 				};
-		JMeterJob job = new JMeterJob(command);
+		JMeterRunJob job = new JMeterRunJob(command, run);
 		job.setScriptLauncherService(scriptLauncherService);
 		job.setRunResultService(runResultService);
 		job.setJmxFile(jmxFile);
