@@ -1,4 +1,4 @@
-package org.centralperf.model;
+package org.centralperf.model.dao;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;

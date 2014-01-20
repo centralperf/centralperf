@@ -1,12 +1,11 @@
-
-<#if runGraphSeries?exists && (run.samples?size gt 0)>
 <script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/highcharts.js'></script>
 <script type='text/javascript'>
+
+var sChart; 
 $(document).ready(function () 
 {
-    $('#sumChart').highcharts(
-    	{
-	        chart: {zoomType: 'x', spacingRight: 20},
+    sChart = new Highcharts.Chart({
+	        chart: {renderTo: 'sumChart',zoomType: 'x', spacingRight: 20},
 	        title: {text: 'Summary graph for run ${run.label}[${run.id}]'},
 	        subtitle: {
 	            text: document.ontouchstart === undefined ?
@@ -38,12 +37,12 @@ $(document).ready(function ()
         		yAxis: 0,
 	            type: 'area',
 	            name: 'Response time (ms)',
-	            data: [${runGraphSeries.rstSerie}]
+	            data: [[0,0],[0,0]]
         	},{
         		yAxis: 1,
                 type: 'spline',
                 name: 'Request/s',
-                data: [${runGraphSeries.reqSerie}],
+                data: [[0,0],[0,0]],
                 marker: {
                 	lineWidth: 2,
                 	lineColor: Highcharts.getOptions().colors[3],
@@ -55,27 +54,27 @@ $(document).ready(function ()
                 tooltip: {valueSuffix: '%'},
                 data: [{
                     name: '1xx',
-                    y: ${runGraphPie.http1xxRatio?string("0.##")},
+                    y: 1,
                     color: Highcharts.getOptions().colors[0]
                 }, {
                     name: '2xx',
-                    y: ${runGraphPie.http2xxRatio?string("0.##")},
+                    y: 0,
                     color: Highcharts.getOptions().colors[2]
                 }, {
                     name: '3xx',
-                    y: ${runGraphPie.http3xxRatio?string("0.##")},
+                    y: 0,
                     color: Highcharts.getOptions().colors[4]
                 }, {
                     name: '4xx',
-                    y: ${runGraphPie.http4xxRatio?string("0.##")},
+                    y: 0,
                     color: Highcharts.getOptions().colors[6]
                 }, {
                     name: '5xx',
-                    y: ${runGraphPie.http5xxRatio?string("0.##")},
+                    y: 0,
                     color: Highcharts.getOptions().colors[8]
                 }, {
                     name: 'ERR',
-                    y: ${runGraphPie.httpErrRatio?string("0.##")},
+                    y: 0,
                     color: Highcharts.getOptions().colors[1]
                 }],
                 center: [150, 0],
@@ -94,4 +93,4 @@ $(document).ready(function ()
 });
 </script>
 <div id="sumChart" class="tab-pane active"></div>
-</#if>
+

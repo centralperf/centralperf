@@ -8,8 +8,8 @@ import java.util.Scanner;
 import javax.annotation.Resource;
 
 import org.centralperf.model.Configuration;
-import org.centralperf.model.Project;
-import org.centralperf.model.Run;
+import org.centralperf.model.dao.Project;
+import org.centralperf.model.dao.Run;
 import org.centralperf.repository.RunRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

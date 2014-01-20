@@ -1,7 +1,7 @@
 package org.centralperf.service;
 
-import org.centralperf.model.Project;
-import org.centralperf.model.Run;
+import org.centralperf.model.dao.Project;
+import org.centralperf.model.dao.Run;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.slf4j.Logger;
@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
 import java.util.List;
 
 /**

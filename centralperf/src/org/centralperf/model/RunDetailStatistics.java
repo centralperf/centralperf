@@ -5,9 +5,9 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RunStatistics {
+public class RunDetailStatistics {
 
-	private static final Logger log = LoggerFactory.getLogger(RunStatistics.class);
+	private static final Logger log = LoggerFactory.getLogger(RunDetailStatistics.class);
 	
 	private int numberOfSample;
 	private Date firstSampleDate;
@@ -22,7 +22,7 @@ public class RunStatistics {
 	private float errorRate;
 	private long  duration;
 	
-	public RunStatistics(Object[] parameters){
+	public RunDetailStatistics(Object[] parameters){
 		try{
 			this.numberOfSample=Integer.parseInt(parameters[0].toString());
 			this.totalBandwith=Integer.parseInt(parameters[1].toString());

@@ -1,4 +1,4 @@
-package org.centralperf.model;
+package org.centralperf.model.dao;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

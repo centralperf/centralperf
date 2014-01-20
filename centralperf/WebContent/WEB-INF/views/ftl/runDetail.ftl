@@ -67,29 +67,49 @@
                         url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/output",
                         success: function(data) {
                             console.log(data);
-                            if(data.summary != null){
+                            if(data.runDetailStatistics != null){
                                 $("#runProcessOuput").html(data.jobOutput);
-                                if(running) $("#runResultCSV").html(data.csvresult);
-                                $("#summaryCurrentUsers").html(data.summary.currentUsers);
-                                $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
-                                $("#summaryMaxUsers").html(data.summary.maxUsers);
+                                <!-- if(running) $("#runResultCSV").html(data.csvresult); -->
+                                $("#summaryCurrentUsers").html(data.runDetailStatistics.currentUsers);
+                                $("#summaryNumberOfSamples").html(data.runDetailStatistics.numberOfSample);
+                                $("#summaryMaxUsers").html(data.runDetailStatistics.maxUsers);
                                 
-                                $("#summaryCurrentBandwith").html(data.summary.currentBandwithWithUnit);
-                                $("#summaryTotalBandwith").html(data.summary.totalBandwithWithUnit);
-                                $("#summaryAverageResponseTime").html(data.summary.averageResponseTime);
-                                $("#summaryAverageLatency").html(data.summary.averageLatency);
-                                $("#summaryRequestPerSeconds").html(Math.round(data.summary.numberOfSample / data.summary.duration * 100000)/100);
-                                $("#summaryErrorRate").html(data.summary.errorRate + "%");
-                                $("#summaryNumberOfSamples").html(data.summary.numberOfSample);
-                                $("#summaryLastSampleDate").html(data.summary.lastSampleDate);
+                                $("#summaryCurrentBandwith").html(data.runDetailStatistics.currentBandwithWithUnit);
+                                $("#summaryTotalBandwith").html(data.runDetailStatistics.totalBandwithWithUnit);
+                                $("#summaryAverageResponseTime").html(data.runDetailStatistics.averageResponseTime);
+                                $("#summaryAverageLatency").html(data.runDetailStatistics.averageLatency);
+                                $("#summaryRequestPerSeconds").html(Math.round(data.runDetailStatistics.numberOfSample / data.runDetailStatistics.duration * 100000)/100);
+                                $("#summaryErrorRate").html(data.runDetailStatistics.errorRate + "%");
+                                $("#summaryNumberOfSamples").html(data.runDetailStatistics.numberOfSample);
+                                $("#summaryLastSampleDate").html(data.runDetailStatistics.lastSampleDate);
                                 $("#summaryLaunchedTime").html("${run.startDate?time}");
                                 <#if !run.running>
-                                	$("#summaryDuration").html(Math.round(data.summary.duration / 1000) + " s");
+                                	$("#summaryDuration").html(Math.round(data.runDetailStatistics.duration / 1000) + " s");
                                	</#if>
+                            }
+                            if(data.runDetailGraphSum != null){
+                                sChart.series[0].setData(JSON.parse(data.runDetailGraphSum.rstSerie));
+                                sChart.series[1].setData(JSON.parse(data.runDetailGraphSum.reqSerie));
+                            }
+                            if(data.runDetailGraphRc != null){
+                                sChart.series[2].data[0].update(y=data.runDetailGraphRc.http1xxRatio);
+                                sChart.series[2].data[1].update(y=data.runDetailGraphRc.http2xxRatio);
+                                sChart.series[2].data[2].update(y=data.runDetailGraphRc.http3xxRatio);
+                                sChart.series[2].data[3].update(y=data.runDetailGraphRc.http4xxRatio);
+                                sChart.series[2].data[4].update(y=data.runDetailGraphRc.http5xxRatio);
+                                sChart.series[2].data[5].update(y=data.runDetailGraphRc.httpErrRatio);
+                            }
+                            if(data.runDetailGraphRt != null){
+                            	rtChart.xAxis[0].setCategories(JSON.parse(data.runDetailGraphRt.label));
+                                rtChart.series[0].setData(JSON.parse(data.runDetailGraphRt.download));
+                                rtChart.series[1].setData(JSON.parse(data.runDetailGraphRt.latency));
+                                rsChart.xAxis[0].setCategories(JSON.parse(data.runDetailGraphRt.label));
+                                rsChart.series[0].setData(JSON.parse(data.runDetailGraphRt.size));
                             }
                             if(data.running == false && running == true){
                             	location.reload(); 
                             }
+                            
                         },
                         complete: function() {
                             if(running) setTimeout(refreshOuput,3000);

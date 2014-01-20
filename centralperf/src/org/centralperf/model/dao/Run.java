@@ -1,4 +1,4 @@
-package org.centralperf.model;
+package org.centralperf.model.dao;
 
 import java.util.ArrayList;
 import java.util.Date;

@@ -2,7 +2,7 @@ package org.centralperf.repository;
 
 import java.util.List;
 
-import org.centralperf.model.Project;
+import org.centralperf.model.dao.Project;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
