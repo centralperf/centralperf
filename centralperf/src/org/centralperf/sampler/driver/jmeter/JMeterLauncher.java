@@ -7,7 +7,7 @@ import java.util.UUID;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
-import org.centralperf.model.Run;
+import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerLauncher;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunResultService;

@@ -1,7 +1,7 @@
 package org.centralperf.controller;
 
-import org.centralperf.model.Project;
-import org.centralperf.model.Run;
+import org.centralperf.model.dao.Project;
+import org.centralperf.model.dao.Run;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.service.BootstrapService;

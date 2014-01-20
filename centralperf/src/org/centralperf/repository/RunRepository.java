@@ -2,7 +2,7 @@ package org.centralperf.repository;
 
 import java.util.List;
 
-import org.centralperf.model.Run;
+import org.centralperf.model.dao.Run;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface RunRepository extends PagingAndSortingRepository<Run, Long> {

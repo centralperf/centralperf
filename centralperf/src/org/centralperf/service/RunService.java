@@ -5,9 +5,9 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.centralperf.model.Run;
-import org.centralperf.model.ScriptVariable;
-import org.centralperf.model.ScriptVersion;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.ScriptVariable;
+import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptVariableRepository;
 import org.centralperf.repository.ScriptVersionRepository;

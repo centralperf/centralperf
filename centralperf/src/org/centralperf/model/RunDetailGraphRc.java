@@ -1,8 +1,9 @@
-package org.centralperf.model.graphs;
+package org.centralperf.model;
 
 import java.io.Serializable;
+import java.util.Iterator;
 
-public class HttpCodeRepartition implements Serializable{
+public class RunDetailGraphRc implements Serializable{
 	
 	private static final long serialVersionUID = -5234221824650236119L;
 	
@@ -14,6 +15,17 @@ public class HttpCodeRepartition implements Serializable{
 	private long nbHttpErr;
 	private long nbSamples;
 
+	public RunDetailGraphRc(Iterator<Object[]> datas) {
+		Object[] row =null;
+		while ( datas.hasNext() ) {
+			row = (Object[]) datas.next();
+			String codeValue = row[0] != null ? row[0].toString() : null;
+			String codeValueCount = row[1] != null ? row[1].toString() : null;
+			if(codeValue != null && codeValueCount != null)
+				this.setNbHttpXXX(codeValue, Long.parseLong(codeValueCount));
+		}
+	}
+	
 	public void setNbHttpXXX(String codeFirstChar, long count){
 		if(codeFirstChar.length() > 0){
 			switch (codeFirstChar.charAt(0)) {

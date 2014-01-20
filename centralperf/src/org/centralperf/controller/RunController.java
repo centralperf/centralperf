@@ -5,18 +5,16 @@ import java.io.IOException;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 
-import org.apache.commons.io.FileUtils;
 import org.centralperf.helper.view.ExcelView;
-import org.centralperf.model.Run;
-import org.centralperf.model.RunStatistics;
-import org.centralperf.model.ScriptVariable;
-import org.centralperf.model.ScriptVersion;
+import org.centralperf.model.RunDetail;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.ScriptVariable;
+import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.repository.ScriptVersionRepository;
 import org.centralperf.sampler.api.SamplerRunJob;
-import org.centralperf.service.GraphService;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.RunService;
 import org.centralperf.service.RunStatisticsService;
@@ -64,9 +62,6 @@ public class RunController {
 
 	@Resource
 	private RunService runService;
-
-	@Resource
-	private GraphService graphService;
 	
 	@Resource
 	private RunStatisticsService runStatService;
@@ -214,35 +209,11 @@ public class RunController {
      */
     @RequestMapping(value = "/project/{projectId}/run/{id}/output", method = RequestMethod.GET)
     @ResponseBody
-    public RunStatus getRunOutput(
+    public RunDetail getRunOutput(
             @PathVariable("projectId") Long projectId,
             @PathVariable("id") Long id,
             Model model){
-    	Run run = runRepository.findOne(id);
-    	
-    	RunStatus result = new RunStatus();
-    	
-    	
-    	if(run.isRunning()){
-	    	SamplerRunJob job = scriptLauncherService.getJob(run.getId());
-	    	if(job != null){
-		    	result.setJobOutput(job.getProcessOutput());
-		    	// Check that result file exists (not yet if script has just been launched)
-	    		if(job.getResultFile().exists()){
-			    	try {
-						result.setCSVResult(FileUtils.readFileToString(job.getResultFile()));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-	    		}
-	    	}
-    	}
-    	else if(run.isLaunched()){
-    		result.setJobOutput(run.getProcessOutput());
-    	}
-    	result.setSummary(runStatService.getRunStatistics(id));
-    	result.setRunning(run.isRunning());
-    	return result;
+    	return runStatService.getRunDetail(id);
     }
 
     /**
@@ -378,48 +349,5 @@ public class RunController {
     	SamplerRunJob job = scriptLauncherService.getJob(run.getId());
     	model.addAttribute("run", run);
     	model.addAttribute("job", job);
-    	if(run.isRunning() && job != null){
-    		//model.addAttribute("runSummary",runResultService.getSummaryFromCSVFile(job.getResultFile()));
-    	}
-    	else if(run.isLaunched()){
-    		model.addAttribute("runGraphSeries",graphService.getSumSeries(run));
-    		model.addAttribute("runGraphPie", graphService.getCodeRepartition(run));
-    		model.addAttribute("runRTGraph",graphService.getRespTimeSeries(run));
-    		//model.addAttribute("runSummary",runResultService.getSummaryFromRun(run));
-
-    	}    	
-    }
-    
-    // Inner class to return run results
-    class RunStatus{
-    	private String jobOutput = "";
-    	private String CSVResult = "";
-    	private boolean running = false;
-    	private RunStatistics summary;
-    	
-		public String getJobOutput() {
-			return jobOutput;
-		}
-		public void setJobOutput(String jobOutput) {
-			this.jobOutput = jobOutput;
-		}
-		public String getCSVResult() {
-			return CSVResult;
-		}
-		public void setCSVResult(String cSVResult) {
-			CSVResult = cSVResult;
-		}
-		public boolean isRunning() {
-			return running;
-		}
-		public void setRunning(boolean running) {
-			this.running = running;
-		}
-		public RunStatistics getSummary() {
-			return summary;
-		}
-		public void setSummary(RunStatistics summary) {
-			this.summary = summary;
-		}
     }
 }

@@ -1,4 +1,4 @@
-package org.centralperf.model;
+package org.centralperf.model.dao;
 
 import java.io.Serializable;
 import java.util.Date;

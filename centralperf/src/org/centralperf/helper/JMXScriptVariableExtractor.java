@@ -28,8 +28,8 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.centralperf.model.ScriptVariable;
-import org.centralperf.model.ScriptVariableSet;
+import org.centralperf.model.dao.ScriptVariable;
+import org.centralperf.model.dao.ScriptVariableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;

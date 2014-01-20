@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import org.centralperf.model.Run;
+import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;

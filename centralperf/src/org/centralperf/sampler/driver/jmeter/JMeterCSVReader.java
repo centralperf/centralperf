@@ -8,8 +8,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.centralperf.helper.CSVHeaderInfo;
-import org.centralperf.model.Run;
-import org.centralperf.model.Sample;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.Sample;
 import org.centralperf.service.RunResultService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

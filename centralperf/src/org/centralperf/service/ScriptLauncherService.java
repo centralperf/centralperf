@@ -6,8 +6,8 @@ import java.util.HashMap;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.JMXScriptVariableExtractor;
-import org.centralperf.model.Run;
-import org.centralperf.model.ScriptVersion;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.sampler.api.SamplerLauncher;
 import org.centralperf.sampler.api.SamplerRunJob;

@@ -10,11 +10,11 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.centralperf.model.Project;
-import org.centralperf.model.Run;
-import org.centralperf.model.Script;
 import org.centralperf.model.LastScriptLabel;
-import org.centralperf.model.ScriptVersion;
+import org.centralperf.model.dao.Project;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.Script;
+import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;

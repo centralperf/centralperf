@@ -5,9 +5,9 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.centralperf.model.Project;
-import org.centralperf.model.Run;
-import org.centralperf.model.Script;
+import org.centralperf.model.dao.Project;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.Script;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.service.ProjectService;
 import org.slf4j.Logger;

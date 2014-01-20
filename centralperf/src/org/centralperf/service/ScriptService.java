@@ -5,10 +5,10 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.JMXScriptVariableExtractor;
-import org.centralperf.model.Project;
-import org.centralperf.model.Script;
-import org.centralperf.model.ScriptVariableSet;
-import org.centralperf.model.ScriptVersion;
+import org.centralperf.model.dao.Project;
+import org.centralperf.model.dao.Script;
+import org.centralperf.model.dao.ScriptVariableSet;
+import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ScriptRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

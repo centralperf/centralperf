@@ -10,8 +10,8 @@ import java.util.Date;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.CSVHeaderInfo;
-import org.centralperf.model.Run;
-import org.centralperf.model.Sample;
+import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.Sample;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.SampleRepository;
 import org.slf4j.Logger;

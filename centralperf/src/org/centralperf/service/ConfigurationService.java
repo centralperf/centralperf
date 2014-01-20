@@ -2,7 +2,7 @@ package org.centralperf.service;
 
 import javax.annotation.Resource;
 
-import org.centralperf.model.KeyValue;
+import org.centralperf.model.dao.KeyValue;
 import org.centralperf.repository.KeyValueRepository;
 import org.springframework.stereotype.Service;
 
