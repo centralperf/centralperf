@@ -5,7 +5,6 @@ import org.centralperf.model.dao.Run;
 public class RunDetail {
 	private boolean running = false;
 	private String jobOutput = "";
-	private String CSVResult = "";
 	private RunDetailStatistics runDetailStatistics;
 	private RunDetailGraphRt 	runDetailGraphRt;
 	private RunDetailGraphSum 	runDetailGraphSum;
@@ -14,7 +13,6 @@ public class RunDetail {
 	public RunDetail(Run run) {
 		this.running=run.isRunning();
 		this.jobOutput=run.getProcessOutput();
-		this.CSVResult=run.getRunResultCSV();
 	}
 	
 	public String getJobOutput() {
@@ -22,12 +20,6 @@ public class RunDetail {
 	}
 	public void setJobOutput(String jobOutput) {
 		this.jobOutput = jobOutput;
-	}
-	public String getCSVResult() {
-		return CSVResult;
-	}
-	public void setCSVResult(String cSVResult) {
-		CSVResult = cSVResult;
 	}
 	public boolean isRunning() {
 		return running;

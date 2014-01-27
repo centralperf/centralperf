@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import org.centralperf.helper.view.ExcelView;
 import org.centralperf.model.RunDetail;
 import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.Sample;
 import org.centralperf.model.dao.ScriptVariable;
 import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
@@ -71,6 +72,9 @@ public class RunController {
 
     @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
     private String csvHeaders;
+
+    @Value("#{appProperties['csv.export.field_separator']}")
+    private String csvSeparator;
     
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
 
@@ -285,16 +289,26 @@ public class RunController {
     		) {
 
         Run run = runRepository.findOne(runId);
-
-        // Get the CSV file content
-        String CSVContent=run.getRunResultCSV();
-        // Add headers
-        CSVContent = csvHeaders + "\r\n" + CSVContent; 
-        
+        StringBuilder CSVContent=new StringBuilder("timestamp"+csvSeparator+"elapsed"+csvSeparator+"sampleName"+csvSeparator+"status"+csvSeparator+"returnCode"+csvSeparator+"assertResult"+csvSeparator+"sizeInOctet"+csvSeparator+"grpThreads"+csvSeparator+"allThreads"+csvSeparator+"latency"+csvSeparator+"sampleId"+csvSeparator+"runId\r\n");
+        for (Sample sample : run.getSamples()) {
+			CSVContent.append(""+
+					sample.getTimestamp()+csvSeparator+
+					sample.getElapsed()+csvSeparator+
+					sample.getSampleName()+csvSeparator+
+					sample.getStatus()+csvSeparator+ 
+					sample.getReturnCode()+csvSeparator+ 
+					sample.isAssertResult()+csvSeparator+ 
+					sample.getSizeInOctet()+csvSeparator+ 
+					sample.getGrpThreads()+csvSeparator+
+					sample.getAllThreads()+csvSeparator+
+					sample.getLatency()+csvSeparator+
+					sample.getId()+csvSeparator+
+					run.getId()+"\r\n");
+		}
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Content-Disposition", "attachment; filename=results.csv");
         
-        return new ResponseEntity<String>(CSVContent, responseHeaders, HttpStatus.CREATED);
+        return new ResponseEntity<String>(CSVContent.toString(), responseHeaders, HttpStatus.CREATED);
     }    
     
     @Autowired 

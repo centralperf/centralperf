@@ -46,11 +46,6 @@ public class Run {
 	@Type(type="text")
 	private String processOutput;
 	
-	@Lob
-	@Column( length = 100000000 )
-	@Type(type="text")
-	private String runResultCSV;	
-	
 	@OneToMany(mappedBy="run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Sample> samples;
 	
@@ -117,14 +112,6 @@ public class Run {
 
 	public void setProcessOutput(String processOutput) {
 		this.processOutput = processOutput;
-	}
-
-	public String getRunResultCSV() {
-		return runResultCSV;
-	}
-
-	public void setRunResultCSV(String runResultCSV) {
-		this.runResultCSV = runResultCSV;
 	}
 	
 	public List<Sample> getSamples() {
