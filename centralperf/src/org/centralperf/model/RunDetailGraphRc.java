@@ -48,12 +48,12 @@ public class RunDetailGraphRc implements Serializable{
 	public long getNbHttpErr() {return this.nbHttpErr;}
 	public long getNbSamples() {return this.nbSamples;}
 	
-	public float getHttp1xxRatio() {return (this.nbHttp1xx*100/this.nbSamples);}
-	public float getHttp2xxRatio() {return (this.nbHttp2xx*100/this.nbSamples);}
-	public float getHttp3xxRatio() {return (this.nbHttp3xx*100/this.nbSamples);}
-	public float getHttp4xxRatio() {return (this.nbHttp4xx*100/this.nbSamples);}
-	public float getHttp5xxRatio() {return (this.nbHttp5xx*100/this.nbSamples);}
-	public float getHttpErrRatio() {return (this.nbHttpErr*100/this.nbSamples);}
+	public float getHttp1xxRatio() {return (this.nbSamples != 0 ? this.nbHttp1xx*100/this.nbSamples : 0);}
+	public float getHttp2xxRatio() {return (this.nbSamples != 0 ?this.nbHttp2xx*100/this.nbSamples : 0);}
+	public float getHttp3xxRatio() {return (this.nbSamples != 0 ?this.nbHttp3xx*100/this.nbSamples : 0);}
+	public float getHttp4xxRatio() {return (this.nbSamples != 0 ?this.nbHttp4xx*100/this.nbSamples : 0);}
+	public float getHttp5xxRatio() {return (this.nbSamples != 0 ?this.nbHttp5xx*100/this.nbSamples : 0);}
+	public float getHttpErrRatio() {return (this.nbSamples != 0 ?this.nbHttpErr*100/this.nbSamples : 0);}
 	
 	@Override
 	public String toString() {
