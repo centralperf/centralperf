@@ -11,6 +11,7 @@ import org.centralperf.model.Configuration;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
 import org.centralperf.repository.RunRepository;
+import org.centralperf.sampler.driver.jmeter.JMeterSampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -69,7 +70,7 @@ public class BootstrapService implements InitializingBean  {
 		String jmxContent;
 		try {
 			jmxContent = new Scanner(bootstrapServiceFiles.getSampleJMXFile().getFile()).useDelimiter("\\Z").next();
-			scriptService.addScript(sampleProject,"Sample script", "Central Perf sample script. Queries a single URL with few scenario's parameters", jmxContent);
+			scriptService.addScript(sampleProject,JMeterSampler.UID, "Sample script", "Central Perf sample script. Queries a single URL with few scenario's parameters", jmxContent);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

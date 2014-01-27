@@ -5,11 +5,10 @@ import java.util.HashMap;
 
 import javax.annotation.Resource;
 
-import org.centralperf.helper.JMXScriptVariableExtractor;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.RunRepository;
-import org.centralperf.sampler.api.SamplerLauncher;
+import org.centralperf.sampler.api.Sampler;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +21,10 @@ public class ScriptLauncherService {
 	private RunRepository runRepository;
 	
 	@Resource
-	private RunService runService;
+	private SamplerService samplerService;	
 	
 	@Resource
-	private SamplerLauncher samplerLauncher;
+	private RunService runService;
 	
 	private HashMap<Long, SamplerRunJob> runningJobs = new HashMap<Long, SamplerRunJob>();
 	
@@ -33,10 +32,15 @@ public class ScriptLauncherService {
 	
 	public boolean launchRun(Run run){
     	ScriptVersion scriptVersion = run.getScriptVersion();
+    	
+    	// Get the sampler type
+    	Sampler sampler = samplerService.getSamplerByUID(run.getScriptVersion().getScript().getSamplerUID());
+    	
     	log.debug("Launching run " + run.getLabel());
     	// Replace variables by their value
-    	String finalJmxContent = JMXScriptVariableExtractor.replaceVariables(scriptVersion.getJmx(), run.getCustomScriptVariables());
-    	SamplerRunJob job = samplerLauncher.launch(finalJmxContent, run);
+    	String finalScriptContent = sampler.getScriptProcessor().replaceVariablesInScript(scriptVersion.getContent(), run.getCustomScriptVariables());
+    	   	
+    	SamplerRunJob job = sampler.getLauncher().launch(finalScriptContent, run);
     	runningJobs.put(run.getId(), job);
     	run.setLaunched(true);
     	run.setRunning(true);
@@ -58,7 +62,7 @@ public class ScriptLauncherService {
 			if(runningJobs.get(runId) == job){
 				runService.endRun(runId, job);
 				runningJobs.remove(runId);
-				job.getJmxFile().delete();
+				job.getSimulationFile().delete();
 				job.getResultFile().delete();
 				break;
 			}

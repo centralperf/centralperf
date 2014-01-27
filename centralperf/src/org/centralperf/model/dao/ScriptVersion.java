@@ -36,7 +36,7 @@ public class ScriptVersion {
     @Lob
     @Column( length = 100000000 )
     @Type(type="text")
-    public String jmx;
+    public String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scriptId")
@@ -74,11 +74,19 @@ public class ScriptVersion {
         this.scriptVariableSets = scriptVariableSets;
     }
 
-    public String getJmx() {
-        return jmx;
+    public String getContent() {
+        return content;
     }
 
-    public void setJmx(String jmx) {
-        this.jmx = jmx;
+    public void setContent(String content) {
+        this.content = content;
     }
+    
+    public Script getScript() {
+		return script;
+	}
+    
+    public void setScript(Script script) {
+		this.script = script;
+	}
 }

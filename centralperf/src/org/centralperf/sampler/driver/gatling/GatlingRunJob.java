@@ -1,4 +1,4 @@
-package org.centralperf.sampler.driver.jmeter;
+package org.centralperf.sampler.driver.gatling;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Map;
 
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
@@ -17,11 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A thread to handle external jMeter job launcher and watcher
+ * A thread to handle external Gatling job launcher and watcher
  * @author Charles Le Gallic
  *
  */
-public class JMeterRunJob implements SamplerRunJob {
+public class GatlingRunJob implements SamplerRunJob {
 
 	private String[] command;
 	private Run run;
@@ -30,17 +31,19 @@ public class JMeterRunJob implements SamplerRunJob {
 	private boolean running;
 	private int exitStatus;
 	private StringWriter processOutputWriter = new StringWriter();
-	private File jmxFile;
+	private File simulationFile;
 	private File resultFile;
 
-	private JMeterCSVReader JMeterCSVFileReader;
+	private GatlingLogReader gatlingLogReader;
 	
 	private ScriptLauncherService scriptLauncherService;
 	private RunResultService runResultService;
 
-	private static final Logger log = LoggerFactory.getLogger(JMeterRunJob.class);
+	private String gatlingLauncherPath;	
+	
+	private static final Logger log = LoggerFactory.getLogger(GatlingRunJob.class);
 
-	public JMeterRunJob(String[] command, Run run) {
+	public GatlingRunJob(String[] command, Run run) {
 		this.command = command;
 		this.run=run;
 	}
@@ -50,20 +53,22 @@ public class JMeterRunJob implements SamplerRunJob {
 	 * Launch the jMeter external program
 	 */
 	public void run() {
-		log.debug("Running a new jMeter job with command "+ Arrays.toString(command));
+		log.debug("Running a new Gatling job with command "+ Arrays.toString(command));
 		startTime = System.currentTimeMillis();
 		ProcessBuilder pb = new ProcessBuilder(command);
 		pb = pb.redirectErrorStream(true);	
+		Map<String, String> env = pb.environment();
+		env.put("GATLING_HOME", gatlingLauncherPath);
 		Process p;
 		try {
 			p = pb.start();
-			// JMeter is launched
+			// Gatling is launched
 			running = true;
-			// Listening to jMeter standard output
+			// Listening to Gatling standard output
 		    StreamWriter ouputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));		
 		    
 		    // Watching for result file change
-		    JMeterCSVFileReader = JMeterCSVReader.newReader(this.getResultFile(), runResultService, run);
+		    gatlingLogReader = GatlingLogReader.newReader(this.getResultFile(), runResultService, run);
 		    
 		    ouputListener.start();		    
 			while (running) {
@@ -71,24 +76,25 @@ public class JMeterRunJob implements SamplerRunJob {
 					p.waitFor();
 					//Stop File reader task after end of job process
 					running = false;
-					JMeterCSVFileReader.cancel();
+					gatlingLogReader.cancel();
 					ouputListener.interrupt();
 				}catch (InterruptedException iE) {
-					log.warn("JMeter run was interrupted before normal end:"+iE.getMessage(),iE);
+					log.warn("Gatling run was interrupted before normal end:"+iE.getMessage(),iE);
 					p.destroy();
 				}
 			}
 			exitStatus = p.exitValue();
-		} catch (IOException iOE) {log.error("JMeter job can't read output file:"+iOE.getMessage(),iOE);}
+		} catch (IOException iOE) {log.error("Gatling job can't read output file:"+iOE.getMessage(),iOE);}
 		endTime = System.currentTimeMillis();
 		scriptLauncherService.endJob(this);
-		JMeterCSVFileReader = null;
+		gatlingLogReader = null;
 	}
 	
 	public String getProcessOutput() {return processOutputWriter.toString();}	
 	
 	/**
-	 * Internal stream writer to redirect jMeter standard output to a PrintWriter
+	 * Internal stream writer to redirect Gatling standard output to a PrintWriter
+	 * TODO : export to an utility class...
 	 * @author charles
 	 */
 	class StreamWriter extends Thread {
@@ -171,11 +177,11 @@ public class JMeterRunJob implements SamplerRunJob {
 	}
 
 	public File getSimulationFile() {
-		return jmxFile;
+		return simulationFile;
 	}
 
-	public void setJmxFile(File jmxFile) {
-		this.jmxFile = jmxFile;
+	public void setSimulationFile(File simulationFile) {
+		this.simulationFile = simulationFile;
 	}
 
 	public File getResultFile() {
@@ -194,5 +200,7 @@ public class JMeterRunJob implements SamplerRunJob {
 		this.runResultService = runResultService;
 	}
 	
-	
+	public void setGatlingLauncherPath(String gatlingLauncherPath) {
+		this.gatlingLauncherPath = gatlingLauncherPath;
+	}	
 }

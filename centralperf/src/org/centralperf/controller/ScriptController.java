@@ -18,6 +18,7 @@ import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
+import org.centralperf.service.SamplerService;
 import org.centralperf.service.ScriptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,9 @@ public class ScriptController {
 
 	@Resource
 	private ScriptService scriptService;
+
+	@Resource
+	private SamplerService samplerService;	
 	
 	@Resource
 	private RunRepository runRepository;
@@ -61,10 +65,17 @@ public class ScriptController {
         return exception.getMessage();
     }
 
+    /**
+     * Form to create a new Script
+     * @param projectId
+     * @param model
+     * @return
+     */
     @RequestMapping(value = "/project/{projectId}/script/new", method = RequestMethod.GET)
     public String createScript(@PathVariable("projectId") Long projectId, Model model) {
         model.addAttribute("newScript",new Script());
         model.addAttribute("project",projectRepository.findOne(projectId));
+        model.addAttribute("samplers",samplerService.getSamplers());
         return "macros/script/new-script-form.macro";
     }
 
@@ -74,14 +85,14 @@ public class ScriptController {
     						@ModelAttribute("script") Script script,
                             @RequestParam("jmxFile") MultipartFile file,
                             BindingResult result) {
-    	String jmxContent = null;
+    	String scriptContent = null;
 
 		// Get the jmx File
 		try {
-			jmxContent = new String(file.getBytes());
+			scriptContent = new String(file.getBytes());
 		} catch (IOException e) {
 		}
-		Script newScript = scriptService.addScript(script.getProject(), script.getLabel(), script.getDescription(), jmxContent);
+		Script newScript = scriptService.addScript(script.getProject(), script.getSamplerUID(), script.getLabel(), script.getDescription(), scriptContent);
         return "redirect:/project/" + projectId + "/script/" + newScript.getId() + "/detail";
     }
      
@@ -170,7 +181,7 @@ public class ScriptController {
 		DocumentBuilder builder;
 		try {
 			builder = factory.newDocumentBuilder();
-			Document doc = builder.parse(new InputSource(new StringReader(script.getVersions().get(versionNumber - 1).getJmx())));    	
+			Document doc = builder.parse(new InputSource(new StringReader(script.getVersions().get(versionNumber - 1).getContent())));    	
 			model.addAttribute("obj", doc);
 		} catch (ParserConfigurationException e) {
 			// TODO Auto-generated catch block

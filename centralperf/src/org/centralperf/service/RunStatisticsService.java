@@ -16,6 +16,7 @@ import org.centralperf.model.RunDetailGraphSum;
 import org.centralperf.model.RunDetailStatistics;
 import org.centralperf.model.dao.Run;
 import org.centralperf.repository.RunRepository;
+import org.centralperf.sampler.api.SamplerRunJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,9 @@ public class RunStatisticsService {
 	
 	@PersistenceContext
 	private EntityManager em;
+	
+	@Resource
+	private ScriptLauncherService scriptLauncherService;
 	
 	private static final Logger log = LoggerFactory.getLogger(RunStatisticsService.class);
 	
@@ -131,6 +135,12 @@ public class RunStatisticsService {
 		
 		if(run!=null){
 			runDetail=new RunDetail(run);
+			if(run.isRunning()){
+				SamplerRunJob runJob = scriptLauncherService.getJob(run.getId());
+				if(runJob != null){
+					runDetail.setJobOutput(runJob.getProcessOutput());
+				}
+			}
 			try{
 				runDetail.setRunDetailStatistics(runDetailStatisticsCache.get(runId));
 				runDetail.setRunDetailGraphRt(runDetailGraphRtCache.get(runId));
