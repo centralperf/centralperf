@@ -26,9 +26,20 @@
 				            	<@spring.showErrors "<br/>", "cssError"/>
 							</div>
 				
+							<#-- INPUT SCRIPT TYPE -->
+							<div class="form-group">
+								<@spring.bind "newScript.samplerUID" />
+								<label for="${spring.status.expression}">Type</label></td>
+								<select name="${spring.status.expression}" class="form-control">
+									<#list samplers as sampler>
+										<option value="${sampler.UID}">${sampler.name}</option>
+									</#list>
+								</select>
+							</div>				
+				
 							<#-- INPUT SCRIPT JMX FILE -->
 							<div class="form-group">
-				            	<label for="jmxFile">JMX File</label>
+				            	<label for="jmxFile">File</label>
 			            		<input type="file" name="jmxFile" id="jmxFile" class="form-control"/>
 							</div>
 				            

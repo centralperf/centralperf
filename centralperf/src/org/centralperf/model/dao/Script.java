@@ -30,6 +30,11 @@ public class Script{
     @OrderColumn(name="INDEX")
     private List<ScriptVersion> versions = new ArrayList<ScriptVersion>();
 
+    /**
+     * Reference to the kind of sampler associated to this script
+     */
+    private String samplerUID;
+    
 	public Long getId() {
 		return id;
 	}
@@ -69,4 +74,12 @@ public class Script{
     public void setVersions(List<ScriptVersion> versions) {
         this.versions = versions;
     }
+
+	public String getSamplerUID() {
+		return samplerUID;
+	}
+
+	public void setSamplerUID(String samplerUID) {
+		this.samplerUID = samplerUID;
+	}
 }

@@ -1,4 +1,4 @@
-package org.centralperf.helper;
+package org.centralperf.sampler.driver.jmeter.helper;
 
 import java.io.File;
 import java.io.FileInputStream;

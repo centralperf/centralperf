@@ -20,7 +20,7 @@
 		</property>
 	</bean>
 
-	<!-- Chargement des proprietes -->
+	<!-- Loading properties -->
 	<bean id="appProperties"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
 		<property name="singleton" value="true" />
@@ -50,4 +50,6 @@
 
 	<import resource="bootstrapContext.xml" />
 	<import resource="persistenceContext.xml" />
+	
+	
 </beans>

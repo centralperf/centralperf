@@ -10,6 +10,7 @@ import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Script;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.service.ProjectService;
+import org.centralperf.service.SamplerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,9 @@ public class ProjectController {
     @Resource
     private ProjectService projectService;
 
+	@Resource
+	private SamplerService samplerService;	    
+    
     @Resource
     private ProjectRepository projectRepository;
 
@@ -61,6 +65,7 @@ public class ProjectController {
     	model.addAttribute("project",project);
         model.addAttribute("runs",projectService.getLastRuns(project));
         model.addAttribute("scripts",project.getScripts());
+        model.addAttribute("samplers",samplerService.getSamplers());
         model.addAttribute("newScript",new Script());
         model.addAttribute("newRun",new Run());
         return "projectDetail";
