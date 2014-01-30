@@ -45,7 +45,7 @@ public class ProjectController {
         return "redirect:/project/" + project.getId() + "/detail";
     }
 	
-	@RequestMapping(value ="/project/json/list2", method=RequestMethod.GET)  
+	@RequestMapping(value ="/project/json/list", method=RequestMethod.GET)  
 	public @ResponseBody List<Project> getJsonProjectList(Model model){
 		return projectRepository.findProjectsWithScript();
 	}
