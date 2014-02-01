@@ -112,7 +112,7 @@ public class ScriptController {
 			int last = s.getVersions().size();
 			if(last>0){
 				ScriptVersion scriptVersion = s.getVersions().get(last-1);
-				lst.add(new LastScriptLabel(scriptVersion.getId(), s.getLabel()+" (version "+last+")"));
+				lst.add(new LastScriptLabel(scriptVersion.getId(), s.getLabel()+" (version "+last+")" + " - " + scriptVersion.getScript().getSamplerUID()));
 			}
 		}
 	    return lst;

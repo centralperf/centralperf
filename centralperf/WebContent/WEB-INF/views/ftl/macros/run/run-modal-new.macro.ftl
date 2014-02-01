@@ -24,7 +24,7 @@
 							<label for="${spring.status.expression}">Script</label></td>
 							<select name="${spring.status.expression}" class="form-control">
 								<#list project.scripts as script>
-									<option value="${script.versions[script.versions?size -1].id}">${script.label} (version ${script.versions?size})</option>
+									<option value="${script.versions[script.versions?size -1].id}">${script.label} (version ${script.versions?size}) - ${script.samplerUID}</option>
 								</#list>
 							</select>
 						</div>

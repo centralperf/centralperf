@@ -29,7 +29,7 @@
     <div class="page-header page-title">
         <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> ></strong> 
         <a href="#" id="runLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run name">${run.label}</a>
-        (script : <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>)
+        <small><em>(<a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail" title="type : ${run.scriptVersion.script.samplerUID}">${run.scriptVersion.script.label}</a>)</em></small>
         <span class="pull-right" style="vertical-align:middle">
         <#if !run.running>
             <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn btn-success">
@@ -43,7 +43,7 @@
         	<span id="runningIndicator">
         		<img src="${rc.contextPath}/resources/img/lemming_running.gif" style="border: 0px" title="Running...."/>
         		<a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/stop" class="btn btn-danger">
-        			<span class="glyphicon glyphicon-flash"></span><b> Stop</b>
+        			<span class="glyphicon glyphicon-flash"></span><b> Abort</b>
         		</a>
         	</span>
         </#if>

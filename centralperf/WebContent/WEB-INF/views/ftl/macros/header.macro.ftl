@@ -28,6 +28,9 @@
 			<link href="${rc.contextPath}/resources/css/bootstrap-editable.css" rel="stylesheet">
       		<script src="${rc.contextPath}/resources/js/bootstrap-editable.min.js"></script>      		
 
+			<#-- Moment JS -->
+			<script src="${rc.contextPath}/resources/js/moment/moment-with-langs.min.js"></script>
+			
             <#-- Central Perf -->
             <link rel="stylesheet" type="text/css" href="${rc.contextPath}/resources/css/main.css">
             <script src="${rc.contextPath}/resources/js/centralperfs.js"></script>

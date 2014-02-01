@@ -24,8 +24,8 @@
 							<div class="control-group">
 								<@spring.bind "newRun.label" />
 								<label class="control-label" for="${spring.status.expression}">Label</label>
-								<div class="controls">
-									<@spring.formInput "newRun.label", "class=input-xlarge style=height:30px"/>
+								<div class="controls"">
+									<@spring.formInput "newRun.label", "class=form-control style=height:30px"/>
 								</div>
 								<@spring.showErrors "<br/>", "cssError"/>
 							</div>

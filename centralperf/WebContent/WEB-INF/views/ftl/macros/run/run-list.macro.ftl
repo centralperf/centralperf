@@ -20,9 +20,11 @@
                 <td><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail">${run.label}</a></td>
                 <td><#if run.running><img src="${rc.contextPath}/resources/img/lemming_running.gif" style="border: 0px"></#if></td>
                 <#if displayProject><td>${run.project.name}</td></#if>
-                <td>${run.launched?string} <#if run.launched>(${run.startDate?string})</#if></td>
+                <td><#if run.launched><script>document.write(moment("${run.startDate?iso_utc}").fromNow())</script><#else><em>Not yet</em></#if>
+                
+                </td>
                 <td>
-                    <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.id}/detail">${run.scriptVersion.number}</a>
+                    <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail">${run.scriptVersion.script.label}</a>
                 </td>
                 <td>
                     <#if !run.running>
