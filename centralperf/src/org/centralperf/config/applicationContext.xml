@@ -35,8 +35,8 @@
 				<value>classpath*:/org/centralperf/config/centralperf-*.properties
 				</value>
 				<!-- Configurations surchargées de manière générale (généralement dans le répertoire /shared/classes/ du serveur) -->
-				<value>classpath*:/centralperf/centralperf-*.properties
-				</value>				
+				<value>classpath*:/centralperf/centralperf-*.properties</value>				
+				<value>classpath*:/centralperf-*.properties</value>
 			</list>
 		</property>
 	</bean>
