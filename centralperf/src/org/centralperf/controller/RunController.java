@@ -144,6 +144,21 @@ public class RunController {
     	scriptLauncherService.launchRun(run);
     	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
+    
+    @RequestMapping(value = "/project/{projectId}/run/{id}/stop", method = RequestMethod.GET)
+    public String stopRun(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id){
+    	Run run = runRepository.findOne(id);
+    	// If the run has already been launched, then create a new run and
+    	if(run.isLaunched()){
+    		scriptLauncherService.stopRun(run);
+    		String temp=(run.getComment()==null)?"INTERRUPTED BY USER !!!":"INTERRUPTED BY USER !!!\r\n"+run.getComment();
+    		run.setComment(temp);
+    		runRepository.save(run);
+    	}
+    	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
+    }
 
     @RequestMapping(value = "/project/{projectId}/run/{id}/copy", method = RequestMethod.GET)
     public String copyRun(

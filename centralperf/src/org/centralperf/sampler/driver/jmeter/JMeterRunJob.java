@@ -32,6 +32,7 @@ public class JMeterRunJob implements SamplerRunJob {
 	private StringWriter processOutputWriter = new StringWriter();
 	private File jmxFile;
 	private File resultFile;
+	private Process p;
 
 	private JMeterCSVReader JMeterCSVFileReader;
 	
@@ -46,6 +47,12 @@ public class JMeterRunJob implements SamplerRunJob {
 	}
 
 	@Override
+	public void stopProcess() {
+		log.debug("Killing jMeter process");
+		p.destroy();
+	}
+	
+	@Override
 	/**
 	 * Launch the jMeter external program
 	 */
@@ -54,25 +61,24 @@ public class JMeterRunJob implements SamplerRunJob {
 		startTime = System.currentTimeMillis();
 		ProcessBuilder pb = new ProcessBuilder(command);
 		pb = pb.redirectErrorStream(true);	
-		Process p;
 		try {
 			p = pb.start();
 			// JMeter is launched
 			running = true;
 			// Listening to jMeter standard output
-		    StreamWriter ouputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));		
+			StreamWriter outputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));		
 		    
 		    // Watching for result file change
 		    JMeterCSVFileReader = JMeterCSVReader.newReader(this.getResultFile(), runResultService, run);
 		    
-		    ouputListener.start();		    
+		    outputListener.start();		    
 			while (running) {
 				try {
 					p.waitFor();
 					//Stop File reader task after end of job process
 					running = false;
 					JMeterCSVFileReader.cancel();
-					ouputListener.interrupt();
+					outputListener.interrupt();
 				}catch (InterruptedException iE) {
 					log.warn("JMeter run was interrupted before normal end:"+iE.getMessage(),iE);
 					p.destroy();
@@ -83,13 +89,14 @@ public class JMeterRunJob implements SamplerRunJob {
 		endTime = System.currentTimeMillis();
 		scriptLauncherService.endJob(this);
 		JMeterCSVFileReader = null;
+		log.debug("Jmeter process ended at "+endTime+" with exit status ["+exitStatus+"]");
 	}
 	
 	public String getProcessOutput() {return processOutputWriter.toString();}	
 	
 	/**
 	 * Internal stream writer to redirect jMeter standard output to a PrintWriter
-	 * @author charles
+	 * @author clegallic,dclairac 
 	 */
 	class StreamWriter extends Thread {
 		private InputStream in;
@@ -106,17 +113,13 @@ public class JMeterRunJob implements SamplerRunJob {
 			try {
 				br = new BufferedReader(new InputStreamReader(in));
 				String line = null;
-				while ((line = br.readLine()) != null) {
-					pw.println(line);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				while ((line = br.readLine()) != null) {pw.println(line);}
+			}
+			catch (IOException ioE) {log.warn("JMeter run Output was interrupted:"+ioE.getMessage());}
+			catch (Exception e) {log.error("Error while reading JMeter run output:"+e.getMessage(),e);} 
+			finally {
+				try {br.close();}
+				catch (IOException ioE) {log.warn("JMeter run Output BufferedReader was not close:"+ioE.getMessage());}
 			}
 		}
 	}
@@ -193,6 +196,5 @@ public class JMeterRunJob implements SamplerRunJob {
 	public void setRunResultService(RunResultService runResultService) {
 		this.runResultService = runResultService;
 	}
-	
 	
 }

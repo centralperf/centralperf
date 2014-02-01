@@ -24,20 +24,20 @@ public class RunDetailStatistics {
 	
 	public RunDetailStatistics(Object[] parameters){
 		try{
-			this.numberOfSample=Integer.parseInt(parameters[0].toString());
-			this.totalBandwith=Integer.parseInt(parameters[1].toString());
-			this.firstSampleDate=(Date)parameters[2];
-			this.lastSampleDate=(Date)parameters[3];
-			this.averageResponseTime= (long)Double.parseDouble(parameters[4].toString());
-			this.averageLatency= (long)Double.parseDouble(parameters[5].toString());
-			this.maxUsers=Integer.parseInt(parameters[6].toString());
-			this.duration=this.lastSampleDate.getTime()-this.firstSampleDate.getTime();
-			this.requestPerSecond=this.numberOfSample/(this.duration/1000F);
-			this.currentBandwith=this.totalBandwith/(this.duration/1000L);
-			long numberOfErrors=Integer.parseInt(parameters[7].toString());
-			this.errorRate=(100 * numberOfErrors) / this.numberOfSample;
+			this.numberOfSample=(parameters[0]==null)?0:Integer.parseInt(parameters[0].toString());
+			this.totalBandwith=(parameters[1]==null)?0:Integer.parseInt(parameters[1].toString());
+			this.firstSampleDate=(parameters[2]==null)?null:(Date)parameters[2];
+			this.lastSampleDate=(parameters[3]==null)?null:(Date)parameters[3];
+			this.averageResponseTime=(parameters[4]==null)?0:(long)Double.parseDouble(parameters[4].toString());
+			this.averageLatency=(parameters[5]==null)?0:(long)Double.parseDouble(parameters[5].toString());
+			this.maxUsers=(parameters[6]==null)?0:Integer.parseInt(parameters[6].toString());
+			this.duration=(this.lastSampleDate==null||this.firstSampleDate==null)?0:this.lastSampleDate.getTime()-this.firstSampleDate.getTime();
+			this.requestPerSecond=(this.duration==0)?0:this.numberOfSample/(this.duration/1000F);
+			this.currentBandwith=(this.duration/1000L==0)?this.totalBandwith:this.totalBandwith/(this.duration/1000L);
+			long numberOfErrors=(parameters[7]==null)?0:Integer.parseInt(parameters[7].toString());
+			this.errorRate=(this.numberOfSample==0)?0:(100 * numberOfErrors) / this.numberOfSample;
 		}
-		catch (NullPointerException npE) {log.error("Missing data");}
+		catch (NullPointerException npE) {log.error("Missing data",npE);}
 	}
 	
 	public int getNumberOfSample() {return numberOfSample;}

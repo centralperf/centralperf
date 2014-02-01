@@ -42,6 +42,9 @@
         <#else>
         	<span id="runningIndicator">
         		<img src="${rc.contextPath}/resources/img/lemming_running.gif" style="border: 0px" title="Running...."/>
+        		<a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/stop" class="btn btn-danger">
+        			<span class="glyphicon glyphicon-flash"></span><b> Stop</b>
+        		</a>
         	</span>
         </#if>
         </span>

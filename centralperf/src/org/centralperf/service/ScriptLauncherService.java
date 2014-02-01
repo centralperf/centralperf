@@ -49,6 +49,14 @@ public class ScriptLauncherService {
 		return true;
 	}
 	
+	public void stopRun(Run run){
+		if(run.isRunning()){
+			log.debug("Stopping run ["+run.getId()+"]:" + run.getLabel());
+			SamplerRunJob job = getJob(run.getId());
+			if(job!=null){job.stopProcess();}
+		}
+	}
+	
 	public SamplerRunJob getJob(Long runId){
 		return runningJobs.get(runId);
 	}

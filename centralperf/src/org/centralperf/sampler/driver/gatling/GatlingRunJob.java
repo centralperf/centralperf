@@ -33,6 +33,7 @@ public class GatlingRunJob implements SamplerRunJob {
 	private StringWriter processOutputWriter = new StringWriter();
 	private File simulationFile;
 	private File resultFile;
+	private Process p;
 
 	private GatlingLogReader gatlingLogReader;
 	
@@ -48,6 +49,12 @@ public class GatlingRunJob implements SamplerRunJob {
 		this.run=run;
 	}
 
+	@Override
+	public void stopProcess() {
+		log.debug("Killing jMeter process");
+		p.destroy();
+	}
+	
 	@Override
 	/**
 	 * Launch the jMeter external program
@@ -88,6 +95,7 @@ public class GatlingRunJob implements SamplerRunJob {
 		endTime = System.currentTimeMillis();
 		scriptLauncherService.endJob(this);
 		gatlingLogReader = null;
+		log.debug("Gatling process ended at "+endTime+" with exit status ["+exitStatus+"]");
 	}
 	
 	public String getProcessOutput() {return processOutputWriter.toString();}	
@@ -115,14 +123,12 @@ public class GatlingRunJob implements SamplerRunJob {
 				while ((line = br.readLine()) != null) {
 					pw.println(line);
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			} 			
+			catch (IOException ioE) {log.warn("Gatling run Output was interrupted:"+ioE.getMessage());}
+			catch (Exception e) {log.error("Error while reading Gatling run output:"+e.getMessage(),e);} 
+			finally {
+				try {br.close();}
+				catch (IOException ioE) {log.warn("Gatling run Output BufferedReader was not close:"+ioE.getMessage());}
 			}
 		}
 	}
