@@ -42,6 +42,16 @@ public class ScriptVariable {
 	}
 	
 	@Override
+	public ScriptVariable clone() {
+		ScriptVariable scriptVariable = new ScriptVariable();
+		scriptVariable.setName(this.getName());
+		scriptVariable.setValue(this.getValue());
+		scriptVariable.setDescription(this.getDescription());
+		scriptVariable.setDefaultValue(this.getDefaultValue());
+		return scriptVariable;
+	};
+	
+	@Override
 	public String toString() {
 		return "ScriptVariable. Name = " + this.getName() 
 				+ ", value = " + this.getValue()				

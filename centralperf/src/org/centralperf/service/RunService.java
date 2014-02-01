@@ -1,5 +1,6 @@
 package org.centralperf.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -57,7 +58,14 @@ public class RunService {
 			newRun.setRunning(false);
 			newRun.setScriptVersion(run.getScriptVersion());
             newRun.setProject(run.getProject());
-            // TODO : Copy script variables
+            List<ScriptVariable> scriptVariables = run.getCustomScriptVariables();
+            if(scriptVariables != null && scriptVariables.size() > 0){
+            	List<ScriptVariable> customScriptVariables = new ArrayList<ScriptVariable>();
+	            for(ScriptVariable scriptVariable:run.getCustomScriptVariables()){
+	            	customScriptVariables.add(scriptVariable.clone());
+				}
+	            newRun.setCustomScriptVariables(customScriptVariables);
+            }
 			runRepository.save(newRun);
 			return newRun;
 		} else {

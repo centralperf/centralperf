@@ -80,7 +80,7 @@ public class BootstrapService implements InitializingBean  {
 		}
 		
 		// Import sample resuts
-		// TODO
+		// TODO : Import sample result
 	}
 
 	/**
