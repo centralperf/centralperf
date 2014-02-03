@@ -1,6 +1,7 @@
 package org.centralperf.controller;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -224,6 +225,34 @@ public class RunController {
     	return runStatService.getRunDetail(id);
     }
 
+    
+    /**
+     * Returns the local start time of a run.
+     * Local client make request and give it's timestamp.
+     * Server compute delta between it's timestamp and client timestamp, and return run start time based on local time
+     * @param projectId id of Centraperf project
+     * @param id run Id
+     * @param ts local timestamp (from client browser)
+     * @return Run start time based on local time (compute delta from local and server time if there are not sync)
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{id}/startat/{ts}", method = RequestMethod.GET)
+    @ResponseBody
+    public Long getLocalStartTime(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("id") Long id,
+            @PathVariable("ts") Long ts,
+            Model model){
+    	Run run = runRepository.findOne(id);
+    	long duration = 0;
+    	long lastTime=(new Date()).getTime();
+    	if(run!=null && run.isLaunched()){
+    		if(!run.isRunning()){lastTime=run.getEndDate().getTime();}
+    		duration=lastTime-run.getStartDate().getTime();	
+    	}
+    	return ts-duration;
+    }
+    
+    
     /**
      * Import run from JTL file (action)
      * @param projectId

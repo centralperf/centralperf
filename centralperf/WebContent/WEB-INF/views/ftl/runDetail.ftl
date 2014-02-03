@@ -118,19 +118,22 @@
                             if(running) setTimeout(refreshOuput,3000);
                         }
                       });
-                    }
-
-					var runStartTime = parseInt("${run.startDate?long}".replace(/\s/g,''));
-                    function refreshDuration(){
-                    	// TODO : have to be based on server clock, not local client clock
-                    	 $("#summaryDuration").html(Math.round((new Date() - runStartTime) / 1000) + " s");
-                    	 setTimeout(refreshDuration, 1000);
+                    }                    
+                    function refreshDuration(startAt){
+                    	$("#summaryDuration").html(Math.round((new Date() - startAt) / 1000) + " s");
+                    	setTimeout(function(){refreshDuration(startAt);}, 1000);
                     }
                     jQuery(document).ready(function(){
                         refreshOuput();
                         <#if run.running>
-							setTimeout(refreshDuration, 1000);
-						</#if>                       
+							$.ajax({
+                        		type: "GET",
+                        		url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/startat/"+(new Date()).getTime(),
+                        		success: function(data) {
+                        			setTimeout(function(){refreshDuration(data);}, 1000);
+                        		}
+							});  							
+						</#if>   
                     });
                 </script>
             </#if>
