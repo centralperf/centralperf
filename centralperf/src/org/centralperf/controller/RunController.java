@@ -168,17 +168,6 @@ public class RunController {
         return "redirect:/project/" + projectId + "/run/" + newRun.getId() + "/detail";
     }
     
-    @RequestMapping(value = "/project/{projectId}/run/{id}/saveResults", method = RequestMethod.GET)
-    @ResponseBody
-    public String saveRunResults(
-            @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id){
-    	Run run = runRepository.findOne(id);
-    	log.debug("Calling saveResult for run ["+id+"] but line is commented");
-    	//runResultService.saveResults(run);
-    	return "OK";
-    }    
-    
     @RequestMapping(value = "/project/{projectId}/run/{id}/detail", method = RequestMethod.GET)
     public String showRunDetail(
             @PathVariable("projectId") Long projectId,

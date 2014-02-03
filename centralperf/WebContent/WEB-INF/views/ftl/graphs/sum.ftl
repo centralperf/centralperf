@@ -43,11 +43,7 @@ $(document).ready(function ()
                 type: 'spline',
                 name: 'Request/s',
                 data: [[0,0],[0,0]],
-                marker: {
-                	lineWidth: 2,
-                	lineColor: Highcharts.getOptions().colors[3],
-                	fillColor: 'white'
-                }
+                marker: {enabled: false}
             },{
                 type: 'pie',
                 name: 'HTTP responses',
