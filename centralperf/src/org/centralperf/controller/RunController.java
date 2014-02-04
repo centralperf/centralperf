@@ -77,6 +77,9 @@ public class RunController {
     @Value("#{appProperties['csv.export.field_separator']}")
     private String csvSeparator;
     
+    @Value("#{appProperties['report.cache.delay.seconds']}")
+    private Long cacheRefreshDelay;
+    
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
 
     @RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.GET)
@@ -177,6 +180,7 @@ public class RunController {
     	log.debug("Run details for run ["+id+"]");
     	populateModelWithRunInfo(id, model);
     	model.addAttribute("page","sum");
+    	model.addAttribute("refreshDelay",cacheRefreshDelay*1000);
     	return "runDetail";
     } 
     //FIXME: Use only one with {page} optional
@@ -189,6 +193,7 @@ public class RunController {
     	log.debug("Run details for run ["+id+"]");
     	populateModelWithRunInfo(id, model);
     	model.addAttribute("page",page);
+    	model.addAttribute("refreshDelay",cacheRefreshDelay*1000);
     	return "runDetail";
     }    
     

@@ -115,7 +115,7 @@
                             
                         },
                         complete: function() {
-                            if(running) setTimeout(refreshOuput,3000);
+                            if(running) setTimeout(refreshOuput,${refreshDelay?c});
                         }
                       });
                     }                    

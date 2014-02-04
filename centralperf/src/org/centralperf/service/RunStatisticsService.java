@@ -19,6 +19,7 @@ import org.centralperf.repository.RunRepository;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.cache.CacheBuilder;
@@ -46,6 +47,15 @@ public class RunStatisticsService {
 	@Resource
 	private ScriptLauncherService scriptLauncherService;
 	
+    @Value("#{appProperties['report.cache.delay.seconds']}")
+    private Long cacheRefreshDelay;
+	
+    //Cache can't be load on object construction as refresh delay is not yet set
+    private LoadingCache<Long, RunDetailStatistics> runDetailStatisticsCache;
+    private LoadingCache<Long, RunDetailGraphRt> runDetailGraphRtCache;
+    private LoadingCache<Run, RunDetailGraphSum> runDetailGraphSumCache;
+    private LoadingCache<Long, RunDetailGraphRc> runDetailGraphRcCache;
+    
 	private static final Logger log = LoggerFactory.getLogger(RunStatisticsService.class);
 	
 	/*
@@ -57,7 +67,6 @@ public class RunStatisticsService {
 	    public RunDetailStatistics load(Long runId) throws Exception {
 	    	//Load stats from database
 	    	Query q = em.createQuery("SELECT count(*), sum(sizeInOctet), min(timestamp), max(timestamp), sum(elapsed)/count(*), sum(latency)/count(*), max(allThreads),sum(case when assertResult=true then 0 else 1 end) from Sample s where run_fk='"+runId+"'");
-	    	
 	    	@SuppressWarnings("rawtypes")
 			Iterator results =q.getResultList().iterator();
 
@@ -68,13 +77,6 @@ public class RunStatisticsService {
 	    	return runDetailStatistics;
 	    }
 	};
-	//TODO: Nb of second should be a parameter
-	private LoadingCache<Long, RunDetailStatistics> runDetailStatisticsCache = CacheBuilder
-			.newBuilder()
-			.expireAfterWrite(1, TimeUnit.SECONDS) //Data expire 1 second after Bdd access
-			.build(runDetailStatisticsLoader);
-	
-	
 	private CacheLoader<Long, RunDetailGraphRt> runDetailGraphRtLoader = new CacheLoader<Long, RunDetailGraphRt>() {
 	    @SuppressWarnings("unchecked")
 		@Override
@@ -83,14 +85,7 @@ public class RunStatisticsService {
 	    	Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency), avg(sizeInOctet)  from Sample s where run_fk='"+runId+"'   GROUP BY sampleName");
 	    	return new RunDetailGraphRt(q.getResultList().iterator());
 	    }
-	};
-	//TODO: Nb of second should be a parameter
-	private LoadingCache<Long, RunDetailGraphRt> runDetailGraphRtCache = CacheBuilder
-			.newBuilder()
-			.expireAfterWrite(1, TimeUnit.SECONDS) //Data expire 1 second after Bdd access
-			.build(runDetailGraphRtLoader);	
-
-	
+	};	
 	private CacheLoader<Run, RunDetailGraphSum> runDetailGraphSumLoader = new CacheLoader<Run, RunDetailGraphSum>() {
 	    @SuppressWarnings("unchecked")
 		@Override
@@ -100,13 +95,6 @@ public class RunStatisticsService {
 			return new RunDetailGraphSum(q.getResultList().iterator(), run.getStartDate());
 	    }
 	};
-	//TODO: Nb of second should be a parameter
-	private LoadingCache<Run, RunDetailGraphSum> runDetailGraphSumCache = CacheBuilder
-			.newBuilder()
-			.expireAfterWrite(1, TimeUnit.SECONDS) //Data expire 1 second after Bdd access
-			.build(runDetailGraphSumLoader);	
-
-	
 	private CacheLoader<Long, RunDetailGraphRc> runDetailGraphRcLoader = new CacheLoader<Long, RunDetailGraphRc>() {
 	    @SuppressWarnings("unchecked")
 		@Override
@@ -116,12 +104,28 @@ public class RunStatisticsService {
 	    	return new RunDetailGraphRc(q.getResultList().iterator());
 	    }
 	};
-	//TODO: Nb of second should be a parameter
-	private LoadingCache<Long, RunDetailGraphRc> runDetailGraphRcCache = CacheBuilder
-			.newBuilder()
-			.expireAfterWrite(1, TimeUnit.SECONDS) //Data expire 1 second after Bdd access
-			.build(runDetailGraphRcLoader);	
 	
+	public LoadingCache<Long, RunDetailStatistics> getRunDetailStatisticsCache() {
+		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
+		builder.expireAfterWrite(cacheRefreshDelay, TimeUnit.SECONDS);
+		return builder.build(runDetailStatisticsLoader);
+    }
+	public LoadingCache<Long, RunDetailGraphRt> getRunDetailGraphRtCache() {
+		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
+		builder.expireAfterWrite(cacheRefreshDelay, TimeUnit.SECONDS);
+		return builder.build(runDetailGraphRtLoader);
+    }
+	public LoadingCache<Run, RunDetailGraphSum> getRunDetailGraphSumCache() {
+		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
+		builder.expireAfterWrite(cacheRefreshDelay, TimeUnit.SECONDS);
+		return builder.build(runDetailGraphSumLoader);
+    }
+	public LoadingCache<Long, RunDetailGraphRc> getRunDetailGraphRcCache() {
+		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
+		builder.expireAfterWrite(cacheRefreshDelay, TimeUnit.SECONDS);
+		return builder.build(runDetailGraphRcLoader);
+    }
+
 	/**
 	 * Return statistics of the run from the cache. If cache data are older than XXX seconds,
 	 * they are reload from database.
@@ -142,6 +146,11 @@ public class RunStatisticsService {
 				}
 			}
 			try{
+				if(runDetailStatisticsCache==null){runDetailStatisticsCache=this.getRunDetailStatisticsCache();}
+				if(runDetailGraphRtCache==null){runDetailGraphRtCache=this.getRunDetailGraphRtCache();}
+				if(runDetailGraphSumCache==null){runDetailGraphSumCache=this.getRunDetailGraphSumCache();}
+				if(runDetailGraphRcCache==null){runDetailGraphRcCache=this.getRunDetailGraphRcCache();}
+
 				runDetail.setRunDetailStatistics(runDetailStatisticsCache.get(runId));
 				runDetail.setRunDetailGraphRt(runDetailGraphRtCache.get(runId));
 				runDetail.setRunDetailGraphSum(runDetailGraphSumCache.get(run));
