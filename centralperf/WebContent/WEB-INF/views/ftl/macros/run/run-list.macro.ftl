@@ -24,7 +24,10 @@
                 
                 </td>
                 <td>
-                    <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail">${run.scriptVersion.script.label}</a>
+                    <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail"
+                    >${run.scriptVersion.script.label}
+                    (${run.scriptVersion.number} - ${run.scriptVersion.description})
+                    </a>
                 </td>
                 <td>
                     <#if !run.running>

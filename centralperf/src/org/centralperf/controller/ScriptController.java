@@ -18,6 +18,7 @@ import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
+import org.centralperf.repository.ScriptVersionRepository;
 import org.centralperf.service.SamplerService;
 import org.centralperf.service.ScriptService;
 import org.slf4j.Logger;
@@ -47,6 +48,9 @@ public class ScriptController {
 	private ScriptRepository scriptRepository;
 
 	@Resource
+	private ScriptVersionRepository scriptVersionRepository;
+	
+	@Resource
 	private ScriptService scriptService;
 
 	@Resource
@@ -64,21 +68,7 @@ public class ScriptController {
     public @ResponseBody String handleValidationFailure(Throwable exception) {
         return exception.getMessage();
     }
-
-    /**
-     * Form to create a new Script
-     * @param projectId
-     * @param model
-     * @return
-     */
-    @RequestMapping(value = "/project/{projectId}/script/new", method = RequestMethod.GET)
-    public String createScript(@PathVariable("projectId") Long projectId, Model model) {
-        model.addAttribute("newScript",new Script());
-        model.addAttribute("project",projectRepository.findOne(projectId));
-        model.addAttribute("samplers",samplerService.getSamplers());
-        return "macros/script/new-script-form.macro";
-    }
-
+    
     @RequestMapping(value = "/project/{projectId}/script/new", method = RequestMethod.POST)
     public String addScript(
                             @PathVariable("projectId") Long projectId,
@@ -87,7 +77,7 @@ public class ScriptController {
                             BindingResult result) {
     	String scriptContent = null;
 
-		// Get the jmx File
+		// Get the script File
 		try {
 			scriptContent = new String(file.getBytes());
 		} catch (IOException e) {
@@ -95,7 +85,25 @@ public class ScriptController {
 		Script newScript = scriptService.addScript(script.getProject(), script.getSamplerUID(), script.getLabel(), script.getDescription(), scriptContent);
         return "redirect:/project/" + projectId + "/script/" + newScript.getId() + "/detail";
     }
-     
+    
+    @RequestMapping(value = "/project/{projectId}/script/{scriptId}/version/new", method = RequestMethod.POST)
+    public String addScriptVersion(
+    					@PathVariable("projectId") Long projectId, 
+    					@PathVariable("scriptId") Long scriptId, 
+    					@ModelAttribute("scriptVersion") ScriptVersion scriptVersion,
+    					@RequestParam("scriptFile") MultipartFile file,
+                            BindingResult result) {
+    	String scriptContent = null;
+
+		// Get the script File
+		try {
+			scriptContent = new String(file.getBytes());
+		} catch (IOException e) {
+		}
+		ScriptVersion newScriptVersion = scriptService.addScriptVersion(scriptRepository.findOne(scriptId), scriptVersion.getDescription(), scriptContent);
+        return "redirect:/project/" + projectId + "/script/" + scriptId + "/detail#" + newScriptVersion.getId();
+    }    
+    
     @RequestMapping("/project/{projectId}/script")
     public String showProjectScripts(@PathVariable("projectId") Long projectId, Model model) {
         model.addAttribute("newScript",new Script());
@@ -109,11 +117,9 @@ public class ScriptController {
 		Project p = projectRepository.findOne(projectId);
 		List<LastScriptLabel> lst = new ArrayList<LastScriptLabel>();
 		for (Script s : p.getScripts()) {
-			int last = s.getVersions().size();
-			if(last>0){
-				ScriptVersion scriptVersion = s.getVersions().get(last-1);
-				lst.add(new LastScriptLabel(scriptVersion.getId(), s.getLabel()+" (version "+last+")" + " - " + scriptVersion.getScript().getSamplerUID()));
-			}
+			List<ScriptVersion> versions = scriptVersionRepository.findByScriptIdOrderByNumberDesc(s.getId());
+			ScriptVersion scriptVersion = versions.get(0);
+			lst.add(new LastScriptLabel(scriptVersion.getId(), s.getLabel()+" (version "+scriptVersion.getNumber()+")" + " - " + scriptVersion.getScript().getSamplerUID()));
 		}
 	    return lst;
 	}
@@ -126,6 +132,8 @@ public class ScriptController {
     	log.debug("script details for script ["+id+"]");
     	model.addAttribute("script",scriptRepository.findOne(id));
         model.addAttribute("project",projectRepository.findOne(projectId));
+        model.addAttribute("scriptVersions",scriptVersionRepository.findByScriptIdOrderByNumberDesc(id));
+        model.addAttribute("newScriptVersion",new ScriptVersion());        
         return "scriptDetail";
     }    
     
@@ -142,6 +150,21 @@ public class ScriptController {
 		}
         return "redirect:/project/" + projectId + "/script";
     }
+	
+	@RequestMapping(value = "/project/{projectId}/script/{scriptId}/version/{versionId}/delete", method = RequestMethod.GET)
+    public String deleteScriptVersion(
+    		@PathVariable("projectId") Long projectId,
+    		@PathVariable("scriptId") Long scriptId,
+            @PathVariable("versionId") Long versionId,
+            RedirectAttributes redirectAttrs) {
+		List<Run> runsAttached = runRepository.findByScriptVersionId(versionId);
+		if(!runsAttached.isEmpty()){
+			redirectAttrs.addFlashAttribute("error","Unable to delete this version because it's attached to at least one run");
+		} else{
+			scriptService.deleteScriptVersion(versionId);
+		}
+        return "redirect:/project/" + projectId + "/script/" + scriptId + "/detail";
+    }	
 
     @RequestMapping("/script")
     public String showScripts(Model model) {

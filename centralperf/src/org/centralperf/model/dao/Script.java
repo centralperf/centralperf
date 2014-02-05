@@ -26,7 +26,7 @@ public class Script{
     @JoinColumn(name = "projectId")
     private Project project;
 
-    @OneToMany(cascade=CascadeType.ALL)
+    @OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
     @OrderColumn(name="INDEX")
     private List<ScriptVersion> versions = new ArrayList<ScriptVersion>();
 

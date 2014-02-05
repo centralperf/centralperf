@@ -18,6 +18,11 @@
 
 			<!-- Templates -->
             <div class="container">
+            	<#if error?exists>
+            		<div class="alert alert-danger">
+            			<strong>Error</strong> : ${error!}
+            		</div>
+            	</#if>
 	            <#nested/>
             </div>
 	    </body>

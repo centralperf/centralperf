@@ -29,7 +29,13 @@
     <div class="page-header page-title">
         <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> ></strong> 
         <a href="#" id="runLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run name">${run.label}</a>
-        <small><em>(<a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail" title="type : ${run.scriptVersion.script.samplerUID}">${run.scriptVersion.script.label}</a>)</em></small>
+        <small><em>
+        (<a 
+        	href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail" 
+        	title="type : ${run.scriptVersion.script.samplerUID}, description:${run.scriptVersion.description}"
+        	>${run.scriptVersion.script.label}
+        </a>)
+        </em></small>
         <span class="pull-right" style="vertical-align:middle">
         <#if !run.running>
             <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn btn-success">
@@ -108,6 +114,11 @@
                                 rtChart.series[1].setData(JSON.parse(data.runDetailGraphRt.latency));
                                 rsChart.xAxis[0].setCategories(JSON.parse(data.runDetailGraphRt.label));
                                 rsChart.series[0].setData(JSON.parse(data.runDetailGraphRt.size));
+                            }
+                            if(data.runDetailGraphError != null){
+                            	errorChart.xAxis[0].setCategories(JSON.parse(data.runDetailGraphError.label));
+                                errorChart.series[0].setData(JSON.parse(data.runDetailGraphError.nbKo));
+                                errorChart.series[1].setData(JSON.parse(data.runDetailGraphError.nbOk));
                             }
                             if(data.running == false && running == true){
                             	location.reload(); 

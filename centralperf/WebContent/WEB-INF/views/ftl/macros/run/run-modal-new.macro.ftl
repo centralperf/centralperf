@@ -20,13 +20,47 @@
 						</div>
 									
 						<div class="form-group">
-							<@spring.bind "newRun.scriptVersion.id" />
-							<label for="${spring.status.expression}">Script</label></td>
-							<select name="${spring.status.expression}" class="form-control">
+							<label for="script">Script</label></td>
+							<select id="${action}_scriptSelect" class="form-control">
+								<option value="">Select a script</option>
+								<option value="">---------------</option>
 								<#list project.scripts as script>
-									<option value="${script.versions[script.versions?size -1].id}">${script.label} (version ${script.versions?size}) - ${script.samplerUID}</option>
+									<option value="${script.id}">${script.label} - ${script.samplerUID}</option>
 								</#list>
 							</select>
+							<script>
+								$("#${action}_scriptSelect").unbind();
+								var ${action}_previousId = -1;
+								$("#${action}_scriptSelect").change(function(){
+									var scriptId = this.value;
+									if(scriptId != ""){
+										$("#${action}_versions").show();
+										$("#${action}_version" + ${action}_previousId).hide();
+										$("#${action}_version" + scriptId).show();
+										$("#${action}_version" + scriptId).select();
+										${action}_previousId = scriptId;
+									}
+								});
+							</script>
+						</div>
+						
+						<div id="${action}_versions" class="form-group" style="display:none">
+							<@spring.bind "newRun.scriptVersion.id" />
+							<input type="hidden" id="${spring.status.expression}" name="${spring.status.expression}" value="${project.id}"/>  
+							<label>Script Version</label></td>
+							<#list project.scripts as script>						
+								<select id="${action}_version${script.id}" class="form-control"  style="display:none">
+									<#list script.versions?sort_by("number")?reverse as version>
+										<option value="${version.id}">${version.number} - ${version.description}</option>
+									</#list>		
+								</select>
+								<script>
+									$("#${action}_version${script.id}").unbind();
+									$("#${action}_version${script.id}").bind("change select", function(){
+											$("#${spring.status.expression?replace('.','\\\\.')}").val(this.value);
+									});
+								</script>								
+							</#list>
 						</div>
 						
 						<#if action == "import">
