@@ -10,6 +10,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
 import org.centralperf.model.RunDetail;
+import org.centralperf.model.RunDetailGraphError;
 import org.centralperf.model.RunDetailGraphRc;
 import org.centralperf.model.RunDetailGraphRt;
 import org.centralperf.model.RunDetailGraphSum;
@@ -55,6 +56,7 @@ public class RunStatisticsService {
     private LoadingCache<Long, RunDetailGraphRt> runDetailGraphRtCache;
     private LoadingCache<Run, RunDetailGraphSum> runDetailGraphSumCache;
     private LoadingCache<Long, RunDetailGraphRc> runDetailGraphRcCache;
+    private LoadingCache<Long, RunDetailGraphError> runDetailGraphErrorCache;
     
 	private static final Logger log = LoggerFactory.getLogger(RunStatisticsService.class);
 	
@@ -104,6 +106,19 @@ public class RunStatisticsService {
 	    	return new RunDetailGraphRc(q.getResultList().iterator());
 	    }
 	};
+	private CacheLoader<Long, RunDetailGraphError> runDetailGraphErrorLoader = new CacheLoader<Long, RunDetailGraphError>() {
+	    @SuppressWarnings("unchecked")
+		@Override
+	    public RunDetailGraphError load(Long runId) throws Exception {
+	    	//Load stats from database
+	    	
+	    	/*SELECT sampleName, count(CASE WHEN assertResult THEN 1 ELSE null END), count(CASE WHEN assertResult THEN null ELSE true END), (count(CASE WHEN assertResult THEN null ELSE true END)/(count(*)*1.00))*100 from Sample s where run_fk='"+run.getId()+"' GROUP BY sampleName;  */
+	    	
+	    	Query q = em.createQuery("SELECT sampleName, count(CASE WHEN assertResult IS true THEN 1 ELSE null END), count(CASE WHEN assertResult IS TRUE THEN null ELSE true END), (count(CASE WHEN assertResult IS TRUE THEN null ELSE true END)/(count(*)*1.00))*100 from Sample s where run_fk='"+runId+"' GROUP BY sampleName");
+	    	return new RunDetailGraphError(q.getResultList().iterator());
+	    }
+	};
+	
 	
 	public LoadingCache<Long, RunDetailStatistics> getRunDetailStatisticsCache() {
 		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
@@ -124,6 +139,11 @@ public class RunStatisticsService {
 		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
 		builder.expireAfterWrite(cacheRefreshDelay, TimeUnit.SECONDS);
 		return builder.build(runDetailGraphRcLoader);
+    }
+	public LoadingCache<Long, RunDetailGraphError> getRunDetailGraphErrorCache() {
+		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
+		builder.expireAfterWrite(cacheRefreshDelay, TimeUnit.SECONDS);
+		return builder.build(runDetailGraphErrorLoader);
     }
 
 	/**
@@ -150,11 +170,13 @@ public class RunStatisticsService {
 				if(runDetailGraphRtCache==null){runDetailGraphRtCache=this.getRunDetailGraphRtCache();}
 				if(runDetailGraphSumCache==null){runDetailGraphSumCache=this.getRunDetailGraphSumCache();}
 				if(runDetailGraphRcCache==null){runDetailGraphRcCache=this.getRunDetailGraphRcCache();}
-
+				if(runDetailGraphErrorCache==null){runDetailGraphErrorCache=this.getRunDetailGraphErrorCache();}
+				
 				runDetail.setRunDetailStatistics(runDetailStatisticsCache.get(runId));
 				runDetail.setRunDetailGraphRt(runDetailGraphRtCache.get(runId));
 				runDetail.setRunDetailGraphSum(runDetailGraphSumCache.get(run));
 				runDetail.setRunDetailGraphRc(runDetailGraphRcCache.get(runId));
+				runDetail.setRunDetailGraphError(runDetailGraphErrorCache.get(runId));
 			}
 			catch (ExecutionException eE) {log.warn("Someone ask for run statistics for a not existing run ["+runId+"]:"+eE.getMessage(),eE);}
 		}

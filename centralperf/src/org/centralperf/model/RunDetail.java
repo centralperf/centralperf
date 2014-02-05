@@ -9,6 +9,7 @@ public class RunDetail {
 	private RunDetailGraphRt 	runDetailGraphRt;
 	private RunDetailGraphSum 	runDetailGraphSum;
 	private RunDetailGraphRc    runDetailGraphRc;
+	private RunDetailGraphError runDetailGraphError;
 	
 	public RunDetail(Run run) {
 		this.running=run.isRunning();
@@ -56,5 +57,13 @@ public class RunDetail {
 
 	public void setRunDetailGraphRc(RunDetailGraphRc runDetailGraphRc) {
 		this.runDetailGraphRc = runDetailGraphRc;
+	}
+
+	public RunDetailGraphError getRunDetailGraphError() {
+		return runDetailGraphError;
+	}
+
+	public void setRunDetailGraphError(RunDetailGraphError runDetailGraphError) {
+		this.runDetailGraphError = runDetailGraphError;
 	}
 }

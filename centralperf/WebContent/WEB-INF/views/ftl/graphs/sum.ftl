@@ -1,4 +1,5 @@
 <script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/highcharts.js'></script>
+<script type='text/javascript' src='${rc.contextPath}/resources/js/highcharts/modules/exporting.js'></script>
 <script type='text/javascript'>
 
 var sChart; 
