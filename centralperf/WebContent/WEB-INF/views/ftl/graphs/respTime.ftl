@@ -4,6 +4,7 @@
 $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
 	$('#ResponseTime').highcharts().reflow();
 	$('#RequestSize').highcharts().reflow();
+	$('#ErrChart').highcharts().reflow();
 });
 
 var rtChart;

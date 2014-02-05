@@ -109,6 +109,11 @@
                                 rsChart.xAxis[0].setCategories(JSON.parse(data.runDetailGraphRt.label));
                                 rsChart.series[0].setData(JSON.parse(data.runDetailGraphRt.size));
                             }
+                            if(data.runDetailGraphError != null){
+                            	errorChart.xAxis[0].setCategories(JSON.parse(data.runDetailGraphError.label));
+                                errorChart.series[0].setData(JSON.parse(data.runDetailGraphError.nbKo));
+                                errorChart.series[1].setData(JSON.parse(data.runDetailGraphError.nbOk));
+                            }
                             if(data.running == false && running == true){
                             	location.reload(); 
                             }
