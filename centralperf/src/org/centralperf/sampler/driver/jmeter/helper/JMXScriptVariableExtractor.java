@@ -87,7 +87,7 @@ public class JMXScriptVariableExtractor {
 			// Build XSLT Factory and xpath queries
 			XPathFactory xPathFactory = XPathFactory.newInstance();
 			XPath xpath = xPathFactory.newXPath();
-			XPathExpression xPathExprArguments = xpath.compile("//Arguments");
+			XPathExpression xPathExprArguments = xpath.compile("//Arguments[@enabled='true']");
 			XPathExpression xPathExprVariables = xpath.compile("collectionProp/elementProp");
 
 			// Search "Arguments" nodes
