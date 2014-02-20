@@ -8,7 +8,9 @@ $(document).ready(function () {
             title: {text: 'Errors for run ${run.label}[${run.id}]'},
             xAxis: {
                 categories: ['Undefined'],
-                labels: { rotation: -45,align: 'right',style: {fontSize: '13px',fontFamily: 'Verdana, sans-serif'}}
+                labels: { rotation: -45,align: 'right',style: {fontSize: '13px',fontFamily: 'Verdana, sans-serif'},
+                	formatter: function() {return this.value.length > 35 ? this.value.slice(0, 35)+'...': this.value;}
+                }
             },
             yAxis: {min: 0,title: {text: 'Error rate'},stackLabels: {enabled: true,style: {fontWeight: 'bold', color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'}}},
             legend: {align: 'right',x: -70,verticalAlign: 'top',y: 20,floating: true,backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColorSolid) || 'white',borderColor: '#CCC',borderWidth: 1,shadow: false},

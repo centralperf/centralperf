@@ -8,7 +8,9 @@ $(document).ready(function () {
             title: {text: 'Request size (octet) for run ${run.label}[${run.id}]'},
             xAxis: {
                 categories: ['Undefined'],
-                labels: { rotation: -45,align: 'right',style: {fontSize: '13px',fontFamily: 'Verdana, sans-serif'}}
+                labels: { rotation: -45,align: 'right',style: {fontSize: '13px',fontFamily: 'Verdana, sans-serif'},
+                formatter: function() {return this.value.length > 35 ? this.value.slice(0, 35)+'...': this.value;}
+                }
             },
             yAxis: {min: 0,title: {text: 'Request size (octet)'}},
             legend: {enabled: false},

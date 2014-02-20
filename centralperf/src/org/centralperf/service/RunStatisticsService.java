@@ -84,7 +84,7 @@ public class RunStatisticsService {
 		@Override
 	    public RunDetailGraphRt load(Long runId) throws Exception {
 	    	//Load stats from database
-	    	Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency), avg(sizeInOctet)  from Sample s where run_fk='"+runId+"'   GROUP BY sampleName");
+	    	Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency), avg(sizeInOctet)  from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
 	    	return new RunDetailGraphRt(q.getResultList().iterator());
 	    }
 	};	
@@ -102,7 +102,7 @@ public class RunStatisticsService {
 		@Override
 	    public RunDetailGraphRc load(Long runId) throws Exception {
 	    	//Load stats from database
-	    	Query q = em.createQuery("SELECT  substring(status,1,1), count(*) from Sample s where run_fk='"+runId+"'   GROUP BY substring(status,1,1)");
+	    	Query q = em.createQuery("SELECT  substring(status,1,1), count(*) from Sample s where run_fk='"+runId+"' GROUP BY substring(status,1,1)");
 	    	return new RunDetailGraphRc(q.getResultList().iterator());
 	    }
 	};
@@ -114,7 +114,7 @@ public class RunStatisticsService {
 	    	
 	    	/*SELECT sampleName, count(CASE WHEN assertResult THEN 1 ELSE null END), count(CASE WHEN assertResult THEN null ELSE true END), (count(CASE WHEN assertResult THEN null ELSE true END)/(count(*)*1.00))*100 from Sample s where run_fk='"+run.getId()+"' GROUP BY sampleName;  */
 	    	
-	    	Query q = em.createQuery("SELECT sampleName, count(CASE WHEN assertResult IS true THEN 1 ELSE null END), count(CASE WHEN assertResult IS TRUE THEN null ELSE true END), (count(CASE WHEN assertResult IS TRUE THEN null ELSE true END)/(count(*)*1.00))*100 from Sample s where run_fk='"+runId+"' GROUP BY sampleName");
+	    	Query q = em.createQuery("SELECT sampleName, count(CASE WHEN assertResult IS true THEN 1 ELSE null END), count(CASE WHEN assertResult IS TRUE THEN null ELSE true END), (count(CASE WHEN assertResult IS TRUE THEN null ELSE true END)/(count(*)*1.00))*100 from Sample s where run_fk='"+runId+"' GROUP BY sampleName  order by sampleName");
 	    	return new RunDetailGraphError(q.getResultList().iterator());
 	    }
 	};
