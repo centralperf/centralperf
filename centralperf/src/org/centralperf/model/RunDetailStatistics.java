@@ -25,7 +25,7 @@ public class RunDetailStatistics {
 	public RunDetailStatistics(Object[] parameters){
 		try{
 			this.numberOfSample=(parameters[0]==null)?0:Integer.parseInt(parameters[0].toString());
-			this.totalBandwith=(parameters[1]==null)?0:Integer.parseInt(parameters[1].toString());
+			this.totalBandwith=(parameters[1]==null)?0:Long.parseLong(parameters[1].toString());
 			this.firstSampleDate=(parameters[2]==null)?null:(Date)parameters[2];
 			this.lastSampleDate=(parameters[3]==null)?null:(Date)parameters[3];
 			this.averageResponseTime=(parameters[4]==null)?0:(long)Double.parseDouble(parameters[4].toString());
