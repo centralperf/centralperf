@@ -38,6 +38,11 @@
         </em></small>
         <span class="pull-right" style="vertical-align:middle">
         <#if !run.running>
+			<#if run.launched>
+	            <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/copy" class="btn btn-success">
+					<span class="glyphicon glyphicon-tags"></span><b>&nbsp; copy</b>
+	            </a>            
+			</#if>        
             <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn btn-success">
                 <#if run.launched>
                 	<span class="glyphicon glyphicon-forward"></span><b> launch again</b>
