@@ -56,6 +56,21 @@ body {
 }
 /*-------------------------------------------------- */
 
+.scroll {
+    overflow: auto;
+    border: 1px solid #ddd;
+    background-color: #eeeeee;
+    padding: 10px;
+    white-space:pre;
+    font-size: 12px;
+    cursor: hand;
+    /*-webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-box-shadow: inset 4px 4px 10px 0px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 4px 4px 10px 0px rgba(0, 0, 0, 0.3);*/
+}
+
 .terminal {
     font-family: "Courier New";
 }
