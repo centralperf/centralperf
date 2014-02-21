@@ -32,21 +32,29 @@
 	background-position:center center
 }
 
-
-.scroll {
-    overflow: auto;
-    border: 1px solid #ddd;
-    background-color: #eeeeee;
-    padding: 10px;
-    white-space:pre;
-    font-size: 12px;
-    cursor: hand;
-    /*-webkit-border-radius: 6px;
-    -moz-border-radius: 6px;
-    border-radius: 6px;
-    -webkit-box-shadow: inset 4px 4px 10px 0px rgba(0, 0, 0, 0.3);
-    box-shadow: inset 4px 4px 10px 0px rgba(0, 0, 0, 0.3);*/
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
 }
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}
+#footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+  line-height: 60px
+}
+#footer .container iframe{
+	vertical-align:middle;
+}
+/*-------------------------------------------------- */
 
 .terminal {
     font-family: "Courier New";
