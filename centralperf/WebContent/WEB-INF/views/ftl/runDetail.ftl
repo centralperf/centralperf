@@ -98,7 +98,8 @@
                                 $("#summaryLastSampleDate").html(data.runDetailStatistics.lastSampleDate);
                                 $("#summaryLaunchedTime").html("${run.startDate?time}");
                                 <#if !run.running>
-                                	$("#summaryDuration").html(Math.round(data.runDetailStatistics.duration / 1000) + " s");
+                                	var duration = moment.duration(data.runDetailStatistics.duration);
+                                	$("#summaryDuration").html(duration.humanize());
                                	</#if>
                             }
                             if(data.runDetailGraphSum != null){
