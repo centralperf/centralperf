@@ -20,7 +20,7 @@
 	</appender>
 
 	<logger name="org.centralperf">
-		<level value="debug" />
+		<level value="INFO" />
 	</logger>
 
 	<root>
