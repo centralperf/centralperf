@@ -349,6 +349,28 @@ public class RunController {
         return new ResponseEntity<String>(CSVContent.toString(), responseHeaders, HttpStatus.CREATED);
     }    
     
+    /**
+     * get samples of a RUN as HTML
+     * @param projectId
+     * @param runId
+     * @return
+     */
+    @RequestMapping(
+    		value = {
+    				"/project/{projectId}/run/{runId}/samples", 
+    				"/run/{runId}/samples",
+    		}, 
+    		method = RequestMethod.GET)
+    public String getSamplesAsHTML(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("runId") Long runId,
+    		Model model
+    		) {
+    	 Run run = runRepository.findOne(runId);
+    	 model.addAttribute("run", run);
+    	 return "runSamples";
+    }
+    
     @Autowired 
     private ApplicationContext applicationContext;
     
