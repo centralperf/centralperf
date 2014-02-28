@@ -77,9 +77,13 @@
 				</div>			
 			</div>
 			<div>
-				<div><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Timing</div>				
+				<div><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Timing</div>	
 				<div>
-					<div class="col-xs-7">started at</div>
+					<div class="col-xs-7">Started</div>
+					<div id="summaryLaunchedDate" class="col-xs-5">-</div>
+				</div>
+				<div>
+					<div class="col-xs-7">At</div>
 					<div id="summaryLaunchedTime" class="col-xs-5">-</div>
 				</div>
 				<div>

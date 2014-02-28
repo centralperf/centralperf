@@ -96,10 +96,14 @@
                                 $("#summaryErrorRate").html(data.runDetailStatistics.errorRate + "%");
                                 $("#summaryNumberOfSamples").html(data.runDetailStatistics.numberOfSample);
                                 $("#summaryLastSampleDate").html(data.runDetailStatistics.lastSampleDate);
+                                $("#summaryLaunchedDate").html("${run.startDate?date?string.short}");
                                 $("#summaryLaunchedTime").html("${run.startDate?time}");
                                 <#if !run.running>
-                                	var duration = moment.duration(data.runDetailStatistics.duration);
-                                	$("#summaryDuration").html(duration.humanize());
+                                	duration = moment.duration(data.runDetailStatistics.duration);
+                                	var h = duration.hours();
+                                	var m = duration.minutes();
+                                	var s = duration.seconds();
+                                	$("#summaryDuration").text((h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s);
                                	</#if>
                             }
                             if(data.runDetailGraphSum != null){
