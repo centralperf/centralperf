@@ -21,7 +21,7 @@
                     <td>${script.description!}</td>
                     <td>${script.samplerUID!}</td>
                     <td>${script.versions?size!}</td>
-                    <td>${script.versions[script.versions?size - 1].description}</td>
+                    <td>${script.versions[0].description}</td>
                     <td class="column-with-btns" style="width:100px">
                         <a href="${rc.contextPath}/project/${project.id}/script/${script.id}/detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
                         <a href="${rc.contextPath}/project/${project.id}/script/${script.id}/delete"><span class="glyphicon glyphicon-trash"/></span></a>&nbsp;
