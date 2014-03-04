@@ -99,11 +99,7 @@
                                 $("#summaryLaunchedDate").html("${run.startDate?date?string.short}");
                                 $("#summaryLaunchedTime").html("${run.startDate?time}");
                                 <#if !run.running>
-                                	duration = moment.duration(data.runDetailStatistics.duration);
-                                	var h = duration.hours();
-                                	var m = duration.minutes();
-                                	var s = duration.seconds();
-                                	$("#summaryDuration").text((h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s);
+                                	$("#summaryDuration").text(prettyDuration(data.runDetailStatistics.duration));
                                	</#if>
                             }
                             if(data.runDetailGraphSum != null){
@@ -141,9 +137,20 @@
                       });
                     }                    
                     function refreshDuration(startAt){
-                    	$("#summaryDuration").html(Math.round((new Date() - startAt) / 1000) + " s");
+                    	$("#summaryDuration").html(prettyDuration(new Date() - startAt));
                     	setTimeout(function(){refreshDuration(startAt);}, 1000);
                     }
+                    
+                    // Display a ms duration as hh:mm:ss
+                    function prettyDuration(durationInMs){
+                    	var duration = moment.duration(durationInMs);
+                    	var h = duration.hours();
+                        var m = duration.minutes();
+                        var s = duration.seconds();
+                        return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+                    }
+                    
+                    
                     jQuery(document).ready(function(){
                         refreshOuput();
                         <#if run.running>
