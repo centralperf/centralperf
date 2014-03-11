@@ -48,13 +48,13 @@ public class BootstrapService implements InitializingBean  {
 	 * @return true if already initialized, false otherwise
 	 */
 	public boolean isAlreadyInitialized(){
-		Boolean initialized = configurationService.getConfigurationValueAsBoolean(Configuration.INITIALIZED);
+		Boolean initialized = Boolean.parseBoolean(configurationService.getConfigurationValue(Configuration.INITIALIZED));
 		return initialized != null ? initialized : false;
 	}
 	
 	public void setInitialized(){
 		// Update configuration, set as initialized
-		configurationService.updateConfigurationValue(Configuration.INITIALIZED, Boolean.TRUE);
+		configurationService.updateConfigurationValue(Configuration.INITIALIZED, Boolean.TRUE.toString());
 	}
 	
 	public void importSamples(){
