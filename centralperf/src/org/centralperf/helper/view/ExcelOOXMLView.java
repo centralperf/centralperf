@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2014  The Central Perf authors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.centralperf.helper.view;
 
 import java.io.OutputStream;
@@ -26,11 +43,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
  
 /**
- * This class builds an Excel spreadsheet document using Apache POI library.
- * @author Charles Le Gallic
+ * This kind of view allows to generate Office OpenXML spreadsheets with <a href="http://poi.apache.org/">Apache POI</a><br/>
  */
 @Component
-public class ExcelView extends AbstractPOIExcelView {
+public class ExcelOOXMLView extends AbstractPOIExcelView {
 	
 	// Name of the sheet with data in the Excel Workbook
 	private static final String DATA_SHEET_NAME = "cp_data";
@@ -41,8 +57,11 @@ public class ExcelView extends AbstractPOIExcelView {
 	private static final String START_DATE_CELL_NAME = "startDate";
 	private static final String GENERATED_ON_CELL_NAME = "generatedOn";
  
-	private static final Logger log = LoggerFactory.getLogger(ExcelView.class);
+	private static final Logger log = LoggerFactory.getLogger(ExcelOOXMLView.class);
 	
+	/**
+	 * @see AbstractPOIExcelView#buildExcelDocument(Map, Workbook, HttpServletRequest, HttpServletResponse)
+	 */
     @Override
     protected void buildExcelDocument(Map<String, Object> model,
             Workbook workbook, HttpServletRequest request, HttpServletResponse response)
@@ -103,15 +122,20 @@ public class ExcelView extends AbstractPOIExcelView {
          
     }
     
+    /**
+     * Convert unix timestamp to Excel timestamps
+     * @param unixTimestamp The unix timestamps
+     * @return A valid timestamp for Excel
+     */
     private double unixTimestamp2ExcelTimestampconvert(long unixTimestamp){
     	return (unixTimestamp / 86400000D) + 25569D;
     }
     
     /**
      * Set the value of a cell by locating it by it's name
-     * @param cellName
-     * @param cellValue
-     * @param workbook
+     * @param cellName	The name of the celle
+     * @param cellValue	The value to set
+     * @param workbook	The workbook
      */
     private void setCellValueByName(String cellName, String cellValue, Workbook workbook){
     	Cell cell = getCellByName(cellName, workbook);
@@ -122,8 +146,8 @@ public class ExcelView extends AbstractPOIExcelView {
     
     /**
      * Retrieve a cell in workbook by its name
-     * @param cellName
-     * @param workbook
+     * @param cellName	The name of the cell
+     * @param workbook	The workbook
      * @return the cell found, null if multiple cells or not found
      */
     private Cell getCellByName(String cellName, Workbook workbook){
@@ -142,6 +166,9 @@ public class ExcelView extends AbstractPOIExcelView {
         return null;
     }
 
+    /**
+     * @see AbstractPOIExcelView#createWorkbook()
+     */
 	@Override
 	protected Workbook createWorkbook() {
 		return new XSSFWorkbook();

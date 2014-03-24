@@ -7,6 +7,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.centralperf.model.dao.Run;
+import org.centralperf.model.dao.Sample;
 import org.centralperf.model.dao.ScriptVariable;
 import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.RunRepository;
@@ -15,6 +16,7 @@ import org.centralperf.repository.ScriptVersionRepository;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,9 @@ public class RunService {
 
     @Resource
     private ScriptVersionRepository scriptVersionRepository;
+    
+    @Value("#{appProperties['csv.export.field_separator']}")
+    private String csvSeparator;
 	
 	private static final Logger log = LoggerFactory.getLogger(RunService.class);
 	
@@ -111,6 +116,31 @@ public class RunService {
         runRepository.save(run);
     }
 
+    /**
+     * Get run result as a string formatted like CSV 
+     * @param run	Target run
+     * @return	All samples information as CSV format (comma separated)
+     */
+    public String getResultAsCSV(Run run){
+    	 StringBuilder CSVContent=new StringBuilder("timestamp"+csvSeparator+"elapsed"+csvSeparator+"sampleName"+csvSeparator+"status"+csvSeparator+"returnCode"+csvSeparator+"assertResult"+csvSeparator+"sizeInOctet"+csvSeparator+"grpThreads"+csvSeparator+"allThreads"+csvSeparator+"latency"+csvSeparator+"sampleId"+csvSeparator+"runId\r\n");
+         for (Sample sample : run.getSamples()) {
+ 			CSVContent.append(""+
+ 					sample.getTimestamp()+csvSeparator+
+ 					sample.getElapsed()+csvSeparator+
+ 					sample.getSampleName()+csvSeparator+
+ 					sample.getStatus()+csvSeparator+ 
+ 					sample.getReturnCode()+csvSeparator+ 
+ 					sample.isAssertResult()+csvSeparator+ 
+ 					sample.getSizeInOctet()+csvSeparator+ 
+ 					sample.getGrpThreads()+csvSeparator+
+ 					sample.getAllThreads()+csvSeparator+
+ 					sample.getLatency()+csvSeparator+
+ 					sample.getId()+csvSeparator+
+ 					run.getId()+"\r\n");
+ 		}    	
+        return CSVContent.toString();
+    }
+    
     public void importRun(Run run, String CSVContent){
 
         // Import CSV

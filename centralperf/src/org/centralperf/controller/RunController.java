@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2014  The Central Perf authors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.centralperf.controller;
 
 import java.io.IOException;
@@ -6,10 +23,10 @@ import java.util.Date;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 
-import org.centralperf.helper.view.ExcelView;
+import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.RunDetail;
+import org.centralperf.model.RunDetailGraphTypesEnum;
 import org.centralperf.model.dao.Run;
-import org.centralperf.model.dao.Sample;
 import org.centralperf.model.dao.ScriptVariable;
 import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
@@ -43,6 +60,12 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+/**
+ * The Run controller manage user interactions with the runs
+ *  
+ * @since 1.0
+ * 
+ */
 @Controller
 @SessionAttributes
 public class RunController {
@@ -70,6 +93,9 @@ public class RunController {
 	
     @Resource
     private ProjectRepository projectRepository;
+    
+    @Autowired 
+    private ApplicationContext applicationContext;    
 
     @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
     private String csvHeaders;
@@ -82,6 +108,12 @@ public class RunController {
     
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
 
+	/**
+	 * Display the form to create a new Run, for a specific project
+	 * @param projectId	ID of the project for this run (from URI)
+	 * @param model	Model prepared for the new project form view
+	 * @return The path to the new run form view
+	 */
     @RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.GET)
     public String addRunForm(
             @PathVariable("projectId") Long projectId,
@@ -92,6 +124,11 @@ public class RunController {
         return "macros/run/new-run-form.macro";
     }
     
+    /**
+	 * Display the form to create a new Run, no project specified
+	 * @param model	Model prepared for the new run form view
+     * @return
+     */
     @RequestMapping(value = "/run/new", method = RequestMethod.GET)
     public String addRunFormGlobal(
             Model model
@@ -101,6 +138,14 @@ public class RunController {
         return "macros/run/new-run-form.macro";
     }    
 
+    /**
+     * Create a new Run
+     * @param projectId ID of the project (from URI)
+     * @param run	The Run to create
+     * @param result	BindingResult to check if binding raised some errors
+     * @param model	Model prepared for the new project form view in case of errors
+     * @return Redirection to the run detail page once the run has been created 
+     */
 	@RequestMapping(value = "/project/{projectId}/run/new", method = RequestMethod.POST)
     public String addRun(
             @PathVariable("projectId") Long projectId,
@@ -118,14 +163,26 @@ public class RunController {
         return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 	
-	@RequestMapping(value = "/project/{projectId}/run/{id}/delete", method = RequestMethod.GET)
-    public String deleteRun(@PathVariable("id") Long id) {
-        Run run = runRepository.findOne(id);
-        Long projectId = run.getProject().getId();
-		runRepository.delete(id);
+	/**
+	 * Delete a run
+	 * @param projectId	ID of the project (from URI)
+	 * @param runId	ID of the run to delete  (from URI)
+	 * @return Redirection the project detail page
+	 */
+	@RequestMapping(value = "/project/{projectId}/run/{runId}/delete", method = RequestMethod.GET)
+    public String deleteRun(
+    		@PathVariable("runId") Long runId,
+            @PathVariable("projectId") Long projectId
+    		) {
+		runRepository.delete(runId);
         return "redirect:/project/" + projectId + "/detail";
     }
      
+	/**
+	 * Display all runs
+	 * @param model	Model prepared for "all runs" view
+	 * @return The "all runs" view name
+	 */
     @RequestMapping("/run")
     public String showRuns(Model model) {
     	log.debug("Displaying runs");
@@ -136,24 +193,36 @@ public class RunController {
         return "runs";
     }
     
-    @RequestMapping(value = "/project/{projectId}/run/{id}/launch", method = RequestMethod.GET)
+    /**
+     * Launch a Run
+     * @param projectId	ID of the project (from URI)
+     * @param runId	ID of the run (from URI)
+     * @return	Redirection to the Run detail page
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/launch", method = RequestMethod.GET)
     public String launchRun(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id){
-    	Run run = runRepository.findOne(id);
+            @PathVariable("runId") Long runId){
+    	Run run = runRepository.findOne(runId);
     	// If the run has already been launched, then create a new run and
     	if(run.isLaunched()){
-    		run = runService.copyRun(id);
+    		run = runService.copyRun(runId);
     	}
     	scriptLauncherService.launchRun(run);
     	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
     
-    @RequestMapping(value = "/project/{projectId}/run/{id}/stop", method = RequestMethod.GET)
+    /**
+     * Stop (abort) a running run
+     * @param projectId	ID of the project (from URI)
+     * @param runId	ID of the run (from URI)
+     * @return	Redirection to the Run detail page once the run has been stopped
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/stop", method = RequestMethod.GET)
     public String stopRun(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id){
-    	Run run = runRepository.findOne(id);
+            @PathVariable("runId") Long runId){
+    	Run run = runRepository.findOne(runId);
     	// If the run has already been launched, then create a new run and
     	if(run.isLaunched()){
     		scriptLauncherService.stopRun(run);
@@ -164,70 +233,91 @@ public class RunController {
     	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 
-    @RequestMapping(value = "/project/{projectId}/run/{id}/copy", method = RequestMethod.GET)
+    /**
+     * Copy a run
+     * @param projectId	ID of the project (from URI)
+     * @param rundId	ID of the run to copy (from URI)
+     * @return	Redirection to the "copied" run detail page
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/copy", method = RequestMethod.GET)
     public String copyRun(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id){
-        Run newRun = runService.copyRun(id);
+            @PathVariable("runId") Long rundId){
+        Run newRun = runService.copyRun(rundId);
         return "redirect:/project/" + projectId + "/run/" + newRun.getId() + "/detail";
     }
     
-    @RequestMapping(value = "/project/{projectId}/run/{id}/detail", method = RequestMethod.GET)
+    /**
+     * Display run detail
+     * @param projectId	ID of the project  (from URI)
+     * @param runId	ID of the run to display  (from URI)
+     * @param model	Model prepared for the run detail view
+     * @return	Name of the run detail view
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/detail", method = RequestMethod.GET)
     public String showRunDetail(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id,
+            @PathVariable("runId") Long runId,
             Model model){
-    	log.debug("Run details for run ["+id+"]");
-    	populateModelWithRunInfo(id, model);
-    	model.addAttribute("page","sum");
-    	model.addAttribute("refreshDelay",cacheRefreshDelay*1000);
-    	return "runDetail";
+    	return showRunDetail(projectId, runId, RunDetailGraphTypesEnum.SUMMARY.getPageName(), model);
     } 
-    //FIXME: Use only one with {page} optional
-    @RequestMapping(value = "/project/{projectId}/run/{id}/detail/{page}", method = RequestMethod.GET)
+    
+    /**
+     * Display run detail and arrive directly to a specific chart page
+     * @param projectId	ID of the project  (from URI)
+     * @param runId	ID of the run to display  (from URI)
+     * @param page	Name of the chart type (see {@link RunDetailGraphTypesEnum#pageName})
+     * @param model Model prepared for the run detail view
+     * @return Name of the run detail view
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/detail/{page}", method = RequestMethod.GET)
     public String showRunDetail(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id,
+            @PathVariable("runId") Long runId,
             @PathVariable("page") String page,
             Model model){
-    	log.debug("Run details for run ["+id+"]");
-    	populateModelWithRunInfo(id, model);
+    	log.debug("Run details for run ["+runId+"]");
+    	populateModelWithRunInfo(runId, model);
     	model.addAttribute("page",page);
     	model.addAttribute("refreshDelay",cacheRefreshDelay*1000);
     	return "runDetail";
     }    
     
-    
-    @RequestMapping(value = "/project/{projectId}/run/{id}/variables/update", method = RequestMethod.POST)
+    /**
+     * Update Run script variables set
+     * @param projectId	ID of the project  (from URI)
+     * @param runId	ID of the run to update  (from URI)
+     * @param variableName	Name of the variable to update
+     * @param variableValue	New value for the variable
+     * @return true if the variable has been updated
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/variables/update", method = RequestMethod.POST)
     @ResponseBody
     public boolean updateRunVariables(
             @PathVariable("projectId") Long projectId,
-    		@PathVariable("id") Long id, 
+    		@PathVariable("runId") Long runId, 
     		@RequestParam("name") String variableName,
-    		@RequestParam("value") String variableValue,
-    		Model model){
-    	log.debug("Update variable " + variableName + " with value " +  variableValue + " for run ["+id+"]");
+    		@RequestParam("value") String variableValue){
+    	log.debug("Update variable " + variableName + " with value " +  variableValue + " for run ["+runId+"]");
     	ScriptVariable variable = new ScriptVariable();
     	variable.setName(variableName);
     	variable.setValue(variableValue);
-
-    	runService.updateRunVariable(id, variable);
-    	
+    	runService.updateRunVariable(runId, variable);
     	return true;
     }        
     
     /**
-     * Returns the current output of a running run
-     * @param id
-     * @return
+     * Get output of a running run
+     * @param projectId ID of the project  (from URI)
+     * @param runId  ID of the run (from URI)
+     * @return A bean that will be automatically marshelled to JSON
      */
-    @RequestMapping(value = "/project/{projectId}/run/{id}/output", method = RequestMethod.GET)
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/output", method = RequestMethod.GET)
     @ResponseBody
     public RunDetail getRunOutput(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id,
-            Model model){
-    	return runStatService.getRunDetail(id);
+            @PathVariable("runId") Long runId){
+    	return runStatService.getRunDetail(runId);
     }
 
     
@@ -235,19 +325,19 @@ public class RunController {
      * Returns the local start time of a run.
      * Local client make request and give it's timestamp.
      * Server compute delta between it's timestamp and client timestamp, and return run start time based on local time
-     * @param projectId id of Centraperf project
-     * @param id run Id
+     * @param projectId ID of the project  (From URI)
+     * @param runId ID of the run
      * @param ts local timestamp (from client browser)
      * @return Run start time based on local time (compute delta from local and server time if there are not sync)
      */
-    @RequestMapping(value = "/project/{projectId}/run/{id}/startat/{ts}", method = RequestMethod.GET)
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/startat/{ts}", method = RequestMethod.GET)
     @ResponseBody
     public Long getLocalStartTime(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("id") Long id,
+            @PathVariable("runId") Long runId,
             @PathVariable("ts") Long ts,
             Model model){
-    	Run run = runRepository.findOne(id);
+    	Run run = runRepository.findOne(runId);
     	long duration = 0;
     	long lastTime=(new Date()).getTime();
     	if(run!=null && run.isLaunched()){
@@ -259,9 +349,9 @@ public class RunController {
     
     
     /**
-     * Import run from JTL file (action)
-     * @param projectId
-     * @return
+     * Create a run and import result from JTL (CSV) file
+     * @param projectId ID of the project (From URI)
+     * @return Redirection to the run detail page
      */
     @RequestMapping(value = "/project/{projectId}/run/import", method = RequestMethod.POST)
     public String importRun(
@@ -286,19 +376,17 @@ public class RunController {
     }
 
     /**
-     * Set results from an uploaded JTL file
-     * @param projectId
-     * @param runId
-     * @param file
-     * @param result
-     * @return
+     * Set results from an uploaded JTL file for an existing run
+     * @param projectId	ID of the project (From URI)
+     * @param runId	ID of the run (from URI)
+     * @param file	JTL file
+     * @return	Redirection to run detail page
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/results", method = RequestMethod.POST)
     public String uploadResults(
             @PathVariable("projectId") Long projectId,
             @ModelAttribute("runId") Long runId,
-            @RequestParam("jtlFile") MultipartFile file,
-            BindingResult result) {
+            @RequestParam("jtlFile") MultipartFile file) {
 
         Run run = runRepository.findOne(runId);
 
@@ -312,10 +400,10 @@ public class RunController {
     }
     
     /**
-     * get results from a RUN as file (CSV or other)
-     * @param projectId
-     * @param runId
-     * @return
+     * Download results from a RUN as a file (CSV or other)
+     * @param projectId	ID of the project (from URI)
+     * @param runId	ID of the run (from URI)
+     * @return The JTL/CSV file as text/csv file content type
      */
     @RequestMapping(
     		value = {"/project/{projectId}/run/{runId}/results"}, 
@@ -325,40 +413,23 @@ public class RunController {
             @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId
     		) {
-
         Run run = runRepository.findOne(runId);
-        StringBuilder CSVContent=new StringBuilder("timestamp"+csvSeparator+"elapsed"+csvSeparator+"sampleName"+csvSeparator+"status"+csvSeparator+"returnCode"+csvSeparator+"assertResult"+csvSeparator+"sizeInOctet"+csvSeparator+"grpThreads"+csvSeparator+"allThreads"+csvSeparator+"latency"+csvSeparator+"sampleId"+csvSeparator+"runId\r\n");
-        for (Sample sample : run.getSamples()) {
-			CSVContent.append(""+
-					sample.getTimestamp()+csvSeparator+
-					sample.getElapsed()+csvSeparator+
-					sample.getSampleName()+csvSeparator+
-					sample.getStatus()+csvSeparator+ 
-					sample.getReturnCode()+csvSeparator+ 
-					sample.isAssertResult()+csvSeparator+ 
-					sample.getSizeInOctet()+csvSeparator+ 
-					sample.getGrpThreads()+csvSeparator+
-					sample.getAllThreads()+csvSeparator+
-					sample.getLatency()+csvSeparator+
-					sample.getId()+csvSeparator+
-					run.getId()+"\r\n");
-		}
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Content-Disposition", "attachment; filename=results.csv");
-        
-        return new ResponseEntity<String>(CSVContent.toString(), responseHeaders, HttpStatus.CREATED);
+        String CSVContent = runService.getResultAsCSV(run);
+        return new ResponseEntity<String>(CSVContent, responseHeaders, HttpStatus.CREATED);
     }    
     
     /**
-     * get samples of a RUN as HTML
-     * @param projectId
-     * @param runId
-     * @return
+     * Display all samples of a RUN as a HTML page
+     * @param projectId	ID of the project (from URI)
+     * @param runId	ID of the run (from URI)
+     * @return	Name of the view for samples as HTML
      */
     @RequestMapping(
     		value = {
     				"/project/{projectId}/run/{runId}/samples", 
-    				"/run/{runId}/samples",
+    				"/run/{runId}/samples"
     		}, 
     		method = RequestMethod.GET)
     public String getSamplesAsHTML(
@@ -371,11 +442,13 @@ public class RunController {
     	 return "runSamples";
     }
     
-    @Autowired 
-    private ApplicationContext applicationContext;
-    
     /**
-     * Handle request to download an Excel document
+     * Get run results as an Excel document (XSLX)
+     * The file name for now is centralperf.xlsx
+     * @param mav	ModelAndView will be used to return an Excel view
+     * @param projectId ID of the project (from URI)
+     * @param runId ID of the run (from URI)
+     * @return A view that will be resolved as an Excel view by the view resolver
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/centralperf.xlsx", method = RequestMethod.GET)
     public ModelAndView downloadExcel(
@@ -385,7 +458,7 @@ public class RunController {
     	Run run = runRepository.findOne(runId);
     	
     	// get the view and setup
-    	ExcelView excelView = applicationContext.getBean(ExcelView.class);
+    	ExcelOOXMLView excelView = applicationContext.getBean(ExcelOOXMLView.class);
 	    excelView.setUrl("/WEB-INF/views/xlsx/centralperf_template");
 	    mav.getModel().put("run", run);
     	mav.setView(excelView);
@@ -393,6 +466,13 @@ public class RunController {
         return mav;
     }    
     
+    /**
+     * Update run informations (label, comment)
+     * @param runId	ID of the run (from URI)
+     * @param label	New label (not updated if null)
+     * @param comment	New comment (not updated if null)
+     * @return
+     */
     @RequestMapping(value = "/run/{runId}", method = RequestMethod.POST)
     @ResponseBody
     public String updateRun(
@@ -415,8 +495,8 @@ public class RunController {
 
     /**
      * Set model info depending on run state
-     * @param runId
-     * @param model
+     * @param runId ID of the run (from URI)
+     * @param model Model to update
      */
     private void populateModelWithRunInfo(Long runId, Model model){
     	Run run = runRepository.findOne(runId);

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2014  The Central Perf authors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.centralperf.helper.view;
 
 import java.util.Locale;
@@ -14,6 +31,11 @@ import org.springframework.core.io.support.LocalizedResourceHelper;
 import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.servlet.view.AbstractView;
 
+/**
+ * This view allows to generate Excel OOXML like files (.XLSX) and "old" Excel files (.XLS) as Spring MVC views<br/>
+ * Concrete class must implement this abstract class to provide Excel based views.<br/>
+ * Document can be build on templates, provided by their URL.
+ */
 public abstract class AbstractPOIExcelView extends AbstractView {
 
     /** The content type for an Excel response */
@@ -31,10 +53,10 @@ public abstract class AbstractPOIExcelView extends AbstractView {
 		this.url = url;
 	}    
 	
-	
-    /**
-     * Default Constructor. Sets the content type of the view for excel files.
-     */
+
+	/**
+	 * Default constructor
+	 */
     public AbstractPOIExcelView() {
     }
 
@@ -43,9 +65,6 @@ public abstract class AbstractPOIExcelView extends AbstractView {
         return true;
     }
 
-    /**
-     * Renders the Excel view, given the specified model.
-     */
     @Override
     protected final void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request,
             HttpServletResponse response) throws Exception {
