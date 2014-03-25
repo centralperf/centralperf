@@ -2,9 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.centralperf</groupId>
   <artifactId>centralperf-webapp</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0-BETA-1</version>
   <packaging>war</packaging>
-  <name>Central Perf  Webapp</name>
+  <name>Central Perf</name>
   
   <properties>
 		<spring.version>3.2.1.RELEASE</spring.version>

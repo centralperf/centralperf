@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2014  The Central Perf authors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.centralperf.sampler.driver.gatling;
 
 import java.io.File;
@@ -17,6 +34,10 @@ import org.centralperf.service.ScriptLauncherService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Gatling based Launcher
+ * @see SamplerLauncher
+ */
 @Component
 public class GatlingLauncher implements SamplerLauncher{
 	
@@ -37,6 +58,9 @@ public class GatlingLauncher implements SamplerLauncher{
 	
 	public static final String OUTPUT_PATTERN_PATH = "centralperf_gatling_output";
 	
+	/**
+	 * @see SamplerLauncher
+	 */
 	public SamplerRunJob launch(String simulation, Run run) {
 		
 		String fs = System.getProperty("file.separator");

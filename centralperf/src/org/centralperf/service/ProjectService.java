@@ -1,20 +1,35 @@
+/*
+ * Copyright (C) 2014  The Central Perf authors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.centralperf.service;
+
+import java.util.List;
+
+import javax.annotation.Resource;
 
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-
-import java.util.List;
 
 /**
  * Manage operations on projects
- * @author Charles Le Gallic
+ * @since 1.0
  *
  */
 @Service
@@ -26,13 +41,19 @@ public class ProjectService {
     @Resource
     private RunRepository runRepository;
 	
-	private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
-	
-	// Add a new project to the repository
+    /**
+     * Add a new project
+     * @param project
+     */
 	public void addProject(Project project){
         projectRepository.save(project);
 	}
 
+	/**
+	 * Get last runs for a project. In fact, new runs first
+	 * @param project
+	 * @return A list of date reverse ordered runs for this project 
+	 */
     public List<Run> getLastRuns(Project project){
         return runRepository.findByProjectIdOrderByStartDateDesc(project.getId());
     }
