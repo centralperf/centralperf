@@ -130,6 +130,14 @@ body {
     vertical-align:baseline;
 }
 
+ .editable-error-block {
+    max-width: 300px;
+    margin: 5px 0 0 0;
+    width: auto;
+    white-space: normal;
+    font-size: 12px;
+}
+
 /* Modal windows */
 #basic-modal-content {display:none;}
 #simplemodal-overlay {background-color:#000;}

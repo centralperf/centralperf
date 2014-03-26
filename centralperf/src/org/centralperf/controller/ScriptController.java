@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.model.LastScriptVersionLabel;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
@@ -66,7 +67,7 @@ import org.xml.sax.InputSource;
  */
 @Controller
 @SessionAttributes
-public class ScriptController {
+public class ScriptController extends BaseController{
 	
 	@Resource
 	private ScriptRepository scriptRepository;
@@ -282,7 +283,8 @@ public class ScriptController {
      * @param scriptId	ID of the script to update
      * @param label	New label (not updated if null)
      * @param description	New description (not updated if null)
-     * @return
+     * @return The new value of the attribute that has been updated
+     * @throws ControllerValidationException 
      */
     @RequestMapping(value = "/script/{scriptId}", method = RequestMethod.POST)
     @ResponseBody
@@ -290,7 +292,7 @@ public class ScriptController {
                             @PathVariable("scriptId") Long scriptId,
                             @RequestParam(value="label",required=false) String label,
                             @RequestParam(value="description",required=false) String description
-                            ) {
+                            ) throws ControllerValidationException {
         Script script = scriptRepository.findOne(scriptId);
         String valueToReturn = label;
         if(label != null){
@@ -301,6 +303,9 @@ public class ScriptController {
         	script.setDescription(description);
         	valueToReturn = description;
         }        
+        
+        validateBean(script);
+        
         scriptRepository.save(script);
         return valueToReturn;
     }    
