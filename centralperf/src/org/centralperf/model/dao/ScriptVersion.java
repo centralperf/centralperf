@@ -54,7 +54,7 @@ public class ScriptVersion {
     @Lob
     @Column( length = 100000000 )
     @Type(type="text")
-    public String content;
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scriptId")
