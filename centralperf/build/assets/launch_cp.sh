@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+# Replace jmeter.bat by jmeter in property file if necessary
+sed -i 's/jmeter\.bat/jmeter/g' ../config/*.properties
+
+# Launch CP
 echo "Launching Central Perf"
-cd ../tomcat/bin
-startup.sh
+../tomcat/bin/startup.sh
 

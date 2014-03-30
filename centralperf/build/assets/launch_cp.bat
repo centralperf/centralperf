@@ -49,5 +49,5 @@ exit /b 1
 :end
 echo "Launching CentralPerf"
 rem Launch application server
-cd ../tomcat/bin/
-catalina.bat start
+cd ../tomcat/
+bin/catalina.bat run

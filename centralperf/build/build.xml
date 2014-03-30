@@ -59,6 +59,12 @@
 		<get src="${jmeter.archive.url}" dest="${dist.work.path}/jmeter.zip" verbose="on"/>	
 	</target>	
 	
+	<target name="maven_package_centralperf">
+		<artifact:mvn>
+			<arg value="package"/>
+		</artifact:mvn>
+	</target>	
+		
 	<target name="create_quickstart">
 		<!-- Build target directory structure -->
 		<mkdir dir="${dist.target.path}/config"/>
@@ -71,7 +77,7 @@
 		<move file="${dist.work.path}/apache-tomcat-${tomcat.version.complete}" tofile="${dist.target.path}/tomcat"/>
 			
 		<!-- Reference the property file in the shared.loader -->
-		<echo message="shared.loader=../../config/" append="true" file="${dist.target.path}/tomcat/conf/catalina.properties"/>
+		<echo message="${line.separator}shared.loader=../config/" append="true" file="${dist.target.path}/tomcat/conf/catalina.properties"/>
 			
 		<!-- Copy CP war to webapps -->
 		<copy file="${cp.war.file.path}" todir="${dist.target.path}/tomcat/webapps"/>
@@ -89,15 +95,20 @@
 		<copy todir="${dist.target.path}/licenses">
 			<fileset dir="${cp.thirdpartylicenses.path}"/>
 		</copy>
-		
+		<fixcrlf srcdir="${dist.target.path}" includes="**/*.sh" eol="lf" eof="remove" />
 	</target>	
 	
 	<target name="create_archive_zip" description="Create the archives for download">
-		<zip basedir="${dist.target.path}" destfile="${dist.path}/centralperf-${cp.pom.version}.zip"/>
+		<zip destfile="${dist.path}/centralperf-${cp.pom.version}-tomcat-jmeter-quickstart.zip" encoding="UTF-8">
+			<zipfileset dir="${dist.target.path}" excludes="bin/*.sh, tomcat/bin/*.sh, jmeter/bin/*.sh" prefix="centralperf"/>
+			<zipfileset dir="${dist.target.path}/bin" includes="*.sh" filemode="744" prefix="centralperf/bin"/>
+			<zipfileset dir="${dist.target.path}/tomcat/bin" includes="*.sh" filemode="744" prefix="centralperf/tomcat/bin"/>
+			<zipfileset file="${dist.target.path}/jmeter/bin/jmeter" includes="*.sh" filemode="744" prefix="centralperf/jmeter/bin"/>
+		</zip>
 	</target>	
 	
 	<!-- Main target that cleans target folder and produces the quickstart archive -->
-	<target name="package_quickstart" depends="clean,init,create_quickstart,create_archive_zip" description="Generate the quickstart package">
+	<target name="package_quickstart" depends="clean,init,download_dependencies,create_quickstart,create_archive_zip" description="Generate the quickstart package">
 	</target>
 	
 	<target name="echo_version">
