@@ -64,8 +64,16 @@ public class ConfigurationService {
 				    }
 			    	else{
 			    		cnf.setFromDb(false);
-			    		cnf.setKeyValue(beanFactory.resolveEmbeddedValue("${"+key+"}"));
-			    		log.debug("Value for ["+key+"] found in properties["+cnf.getKeyValue()+"].");
+			    		try{
+			    			cnf.setKeyValue(beanFactory.resolveEmbeddedValue("${"+key+"}"));
+				    		log.debug("Value for ["+key+"] found in properties["+cnf.getKeyValue()+"].");
+			    		}
+			    		catch(IllegalArgumentException e){
+			    			// The key is not necessaraly in a property file. It may be possible to check properties that will exist at last only in the DB
+			    			// Then set configuration to null
+			    			log.debug("Value for ["+key+"] not found in properties. Set it to null.");
+			    			cnf.setKeyValue(null);			    			
+			    		}
 			    	}
 			    	return cnf;
 			    }
