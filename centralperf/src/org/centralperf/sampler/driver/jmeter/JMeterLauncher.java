@@ -51,6 +51,28 @@ public class JMeterLauncher implements SamplerLauncher{
 	@Resource
 	private RunResultService runResultService;
 	
+	/**
+	 * {@inheritDoc}<br/>
+	 * The jMeter launcher launches jMeter with the following parameters
+	 * <ul>
+	 * 		<li><pre>-Jjmeter.save.saveservice.autoflush=true</pre>: Since JMeter 2.10 is false by default for performance reasons. But we need it to flush to allow run monitoring.
+	 *		<li><pre>-Jjmeter.save.saveservice.print_field_names=true</pre> 
+	 *		<li><pre>-Jjmeter.save.saveservice.assertion_results_failure_message=true</pre> 
+	 *		<li><pre>-Jjmeter.save.saveservice.data_type=true</pre>
+	 *		<li><pre>-Jjmeter.save.saveservice.label=true</pre>
+	 *		<li><pre>-Jjmeter.save.saveservice.response_code=true</pre> 
+ 	 *		<li><pre>-Jjmeter.save.saveservice.response_message=true</pre> 
+	 *		<li><pre>-Jjmeter.save.saveservice.successful=true</pre>
+	 * 		<li><pre>-Jjmeter.save.saveservice.thread_name=true</pre> 
+	 *		<li><pre>-Jjmeter.save.saveservice.time=true</pre>
+	 *		<li><pre>-Jjmeter.save.saveservice.assertions=true</pre> 				
+	 *		<li><pre>-Jjmeter.save.saveservice.latency=true</pre>
+	 *		<li><pre>-Jjmeter.save.saveservice.bytes=true</pre>
+	 *		<li><pre>-Jjmeter.save.saveservice.thread_counts=true</pre> 
+	 *		<li><pre>-Jjmeter.save.saveservice.sample_count=true</pre> 
+	 *		<li><pre>-Jjmeter.save.saveservice.timestamp_format=ms</pre>
+	 * </ul>		
+	 */
 	public SamplerRunJob launch(String script, Run run) {
 		
 		// Create temporary JMX file
@@ -74,6 +96,7 @@ public class JMeterLauncher implements SamplerLauncher{
 				"-l",
 				jtlFilePath,
 				"-Jjmeter.save.saveservice.output_format=" + jmeterLauncherOutputFormat,
+				"-Jjmeter.save.saveservice.autoflush=true",
 				"-Jjmeter.save.saveservice.print_field_names=true",
 				"-Jjmeter.save.saveservice.assertion_results_failure_message=true",
 				"-Jjmeter.save.saveservice.data_type=true",
