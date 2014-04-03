@@ -55,12 +55,12 @@
 			<div>
 				<div><span class="glyphicon glyphicon-signal"></span>&nbsp;Bandwith</div>			
 				<div>
-					<div class="col-xs-6">Average</div>
-					<div id="summaryCurrentBandwith" class="col-xs-6">-</div>
+					<div class="col-xs-5">Average</div>
+					<div id="summaryCurrentBandwith" class="col-xs-7">-</div>
 				</div>
 				<div>
-					<div class="col-xs-6">Total</div>
-					<div id="summaryTotalBandwith" class="col-xs-6">-</div>
+					<div class="col-xs-5">Total</div>
+					<div id="summaryTotalBandwith" class="col-xs-7">-</div>
 				</div>
 			</div>
 			<div>

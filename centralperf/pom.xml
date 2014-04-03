@@ -11,6 +11,8 @@
 		<junit.version>4.11</junit.version>
 		<jdk.version>1.6</jdk.version>
 		<servlet-api.version>3.0.1</servlet-api.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  		<project.resources.sourceEncoding>UTF-8</project.resources.sourceEncoding>
   </properties>
    
   <build>
@@ -46,7 +48,8 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.9.1</version>
 		<configuration>
-			<encoding>UTF-8</encoding>
+    		<encoding>${project.build.sourceEncoding}</encoding>
+    		<sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
 		</configuration>
       </plugin>	  
     </plugins>

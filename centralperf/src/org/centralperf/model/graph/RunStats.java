@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.centralperf.model;
+package org.centralperf.model.graph;
 
 import java.util.Date;
 
@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Bean to store all statistics for a specfic run (number of sample, bandwith...)
  */
-public class RunDetailStatistics {
+public class RunStats {
 
-	private static final Logger log = LoggerFactory.getLogger(RunDetailStatistics.class);
+	private static final Logger log = LoggerFactory.getLogger(RunStats.class);
 	
 	private int numberOfSample;
 	private Date firstSampleDate;
@@ -41,8 +41,10 @@ public class RunDetailStatistics {
 	private float requestPerSecond;
 	private float errorRate;
 	private long  duration;
+	private String runOutput;
+	private boolean running;
 	
-	public RunDetailStatistics(Object[] parameters){
+	public RunStats(Object[] parameters, String runOutput, boolean running){
 		try{
 			this.numberOfSample=(parameters[0]==null)?0:Integer.parseInt(parameters[0].toString());
 			this.totalBandwith=(parameters[1]==null)?0:Long.parseLong(parameters[1].toString());
@@ -56,6 +58,8 @@ public class RunDetailStatistics {
 			this.currentBandwith=(this.duration/1000L==0)?this.totalBandwith:this.totalBandwith/(this.duration/1000L);
 			long numberOfErrors=(parameters[7]==null)?0:Integer.parseInt(parameters[7].toString());
 			this.errorRate=(this.numberOfSample==0)?0:(100 * numberOfErrors) / this.numberOfSample;
+			this.setRunOutput(runOutput);
+			this.setRunning(running);
 		}
 		catch (NullPointerException npE) {log.error("Missing data",npE);}
 	}
@@ -103,6 +107,12 @@ public class RunDetailStatistics {
 	public long getDuration() {return duration;}
 	public void setDuration(long duration) {this.duration = duration;}
 	
+	public String getRunOutput() {return runOutput;}
+	public void setRunOutput(String runOutput) {this.runOutput = runOutput;}
+	
+	public boolean isRunning() {return running;}
+	public void setRunning(boolean running) {this.running = running;}
+	
 	@Override
 	public String toString() {
 		return "Number of samples : " + this.getNumberOfSample() + ","
@@ -118,4 +128,6 @@ public class RunDetailStatistics {
 				+ "Duration : " + this.getDuration()
 				;
 	}
+
+	
 }

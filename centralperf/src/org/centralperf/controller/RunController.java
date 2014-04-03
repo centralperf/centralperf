@@ -24,7 +24,6 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import org.centralperf.helper.view.ExcelOOXMLView;
-import org.centralperf.model.RunDetail;
 import org.centralperf.model.RunDetailGraphTypesEnum;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.ScriptVariable;
@@ -305,21 +304,6 @@ public class RunController {
     	runService.updateRunVariable(runId, variable);
     	return true;
     }        
-    
-    /**
-     * Get output of a running run
-     * @param projectId ID of the project  (from URI)
-     * @param runId  ID of the run (from URI)
-     * @return A bean that will be automatically marshelled to JSON
-     */
-    @RequestMapping(value = "/project/{projectId}/run/{runId}/output", method = RequestMethod.GET)
-    @ResponseBody
-    public RunDetail getRunOutput(
-            @PathVariable("projectId") Long projectId,
-            @PathVariable("runId") Long runId){
-    	return runStatService.getRunDetail(runId);
-    }
-
     
     /**
      * Returns the local start time of a run.
