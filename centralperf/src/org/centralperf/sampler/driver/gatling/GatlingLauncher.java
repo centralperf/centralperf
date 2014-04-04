@@ -31,6 +31,8 @@ import org.centralperf.sampler.api.SamplerLauncher;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -57,6 +59,8 @@ public class GatlingLauncher implements SamplerLauncher{
 	private RunResultService runResultService;
 	
 	public static final String OUTPUT_PATTERN_PATH = "centralperf_gatling_output";
+	
+	private static final Logger log = LoggerFactory.getLogger(SamplerLauncher.class);
 	
 	/**
 	 * @see SamplerLauncher
@@ -97,8 +101,7 @@ public class GatlingLauncher implements SamplerLauncher{
 		try {
 			FileUtils.writeStringToFile(simulationFile, simulation);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			log.error("IO Error on gatling launch:"+e1.getMessage(), e1);
 		}
 		// MEMO
 		/*Usage: gatling [options]

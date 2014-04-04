@@ -89,11 +89,9 @@ public class BootstrapService implements InitializingBean  {
 			jmxContent = new Scanner(bootstrapServiceFiles.getSampleJMXFile().getFile()).useDelimiter("\\Z").next();
 			scriptService.addScript(sampleProject,JMeterSampler.UID, "Sample script", "Central Perf sample script. Queries a single URL with few scenario's parameters", jmxContent);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Error on bootstrap import:"+e.getMessage(), e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("IO Error on bootstrap import:"+e.getMessage(), e);
 		}
 		
 		// Import sample resuts

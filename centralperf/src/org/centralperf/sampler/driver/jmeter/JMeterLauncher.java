@@ -29,6 +29,8 @@ import org.centralperf.sampler.api.SamplerLauncher;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunResultService;
 import org.centralperf.service.ScriptLauncherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +53,7 @@ public class JMeterLauncher implements SamplerLauncher{
 	@Resource
 	private RunResultService runResultService;
 	
+	private static final Logger log = LoggerFactory.getLogger(JMeterLauncher.class);
 	/**
 	 * {@inheritDoc}<br/>
 	 * The jMeter launcher launches jMeter with the following parameters
@@ -84,8 +87,7 @@ public class JMeterLauncher implements SamplerLauncher{
 		try {
 			FileUtils.writeStringToFile(jmxFile, script);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			log.error("IO Error on variable replacement:"+e1.getMessage(), e1);
 		}
 		
 		String[] command = new String[] {

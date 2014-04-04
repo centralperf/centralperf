@@ -151,17 +151,13 @@ public class JMXScriptVariableExtractor {
 			
 			return variableSets;
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Parsing Error on variable extraction:"+e.getMessage(), e);
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("SAX Error on variable extraction:"+e.getMessage(), e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("IO Error on variable extraction:"+e.getMessage(), e);
 		} catch (XPathExpressionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("XPath Error on variable extraction:"+e.getMessage(), e);
 		}
 		return null;
 
@@ -250,20 +246,15 @@ public class JMXScriptVariableExtractor {
 	        transformer.transform(source, result);
 	        return stringWriter.getBuffer().toString();
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Parsing Error on variable replacement:"+e.getMessage(), e);
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("SAX Error on variable replacement:"+e.getMessage(), e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("IO Error on variable replacement:"+e.getMessage(), e);
 		} catch (XPathExpressionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("XPath Error on variable replacement:"+e.getMessage(), e);
 		} catch (TransformerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Transformer Error on variable replacement:"+e.getMessage(), e);
 		}
 		return null;		
 	}

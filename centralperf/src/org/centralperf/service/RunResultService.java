@@ -134,7 +134,7 @@ public class RunResultService {
             try {
                 sample.setTimestamp(parserSDF.parse(headerInfo.getValue("timestamp",CSVline)));
             } catch (ParseException e1) {
-                // TODO : return parsing error
+            	log.error("Error on CSV parsing:"+e.getMessage(), e1);
             }
         }
 
