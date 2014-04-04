@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Script;
@@ -47,7 +48,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * 
  */
 @Controller
-public class ProjectController {
+public class ProjectController extends BaseController{
 	
 	private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -141,6 +142,7 @@ public class ProjectController {
 	 * @param name	New name
 	 * @param description	New description
 	 * @return	
+	 * @throws ControllerValidationException 
 	 */
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.POST)
     @ResponseBody
@@ -148,7 +150,7 @@ public class ProjectController {
                             @PathVariable("projectId") Long projectId,
                             @RequestParam(value="name",required=false) String name,
                             @RequestParam(value="description",required=false) String description
-                            ) {
+                            ) throws ControllerValidationException {
         Project project = projectRepository.findOne(projectId);
         String valueToReturn = name;
         if(name != null){
@@ -158,6 +160,10 @@ public class ProjectController {
         	project.setDescription(description);
         	valueToReturn = description;
         }
+        
+        // Validate the data
+        validateBean(project);        
+        
         projectRepository.save(project);
         return valueToReturn;
     }  

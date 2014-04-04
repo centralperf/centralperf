@@ -39,24 +39,44 @@ public class GatlingSampler implements Sampler {
 	
 	public static final String UID = "GATLING_1_X";
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String getName() {
 		return "Gatling 1.x";
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String getUID() {
 		return UID;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public SamplerLauncher getLauncher() {
 		return launcher;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public SamplerScriptProcessor getScriptProcessor() {
 		return scriptProcessor;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getScriptFileExtension() {
+		return ".scala";
 	}
 
 }

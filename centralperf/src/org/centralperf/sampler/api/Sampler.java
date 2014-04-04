@@ -47,4 +47,10 @@ public interface Sampler {
 	 * @return The script processor for this sampler
 	 */
 	public SamplerScriptProcessor getScriptProcessor();
+	
+	/**
+	 * Get the file extension for a script. This allows to build a complete filename when downloading the script
+	 * @return the script file common extension (".jmx" for example)
+	 */
+	public String getScriptFileExtension();
 }

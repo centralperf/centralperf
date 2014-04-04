@@ -25,8 +25,11 @@ import org.centralperf.sampler.api.SamplerScriptProcessor;
 import org.springframework.stereotype.Component;
 
 /**
+ * @inheritDoc
+ *
  * Jmeter based Sampler
- * @see Sampler
+ * 
+ * @since 1.0
  */
 @Component
 public class JMeterSampler implements Sampler {
@@ -39,24 +42,44 @@ public class JMeterSampler implements Sampler {
 	
 	public static final String UID = "JMETER_LOCAL";
 	
+	/**
+	 * {@inheritDoc}
+	 */	
 	@Override
 	public String getName() {
 		return "JMeter local";
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */	
 	@Override
 	public String getUID() {
 		return UID;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */	
 	@Override
 	public SamplerLauncher getLauncher() {
 		return launcher;
 	}	
 	
+	/**
+	 * {@inheritDoc}
+	 */	
 	@Override
 	public SamplerScriptProcessor getScriptProcessor() {
 		return scriptProcessor;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */	
+	@Override
+	public String getScriptFileExtension() {
+		return ".jmx";
 	}	
 
 }

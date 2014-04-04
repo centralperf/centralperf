@@ -39,19 +39,24 @@
 	</div>
 	
 	<div class="panel-group" id="accordion">
+	
+	<#-- display each version details -->
     <#list scriptVersions as version>
         <div class="panel panel-default">
-        	<div class="panel-heading">
-        		<a data-toggle="collapse" data-parent="#accordion" href="#collapse${version.id}">
+        	<div class="panel-heading" style="display:table;width:100%">
+        		<a data-toggle="collapse" data-parent="#accordion" href="#collapse${version.id}" lass="pull-left" style="vertical-align: middle; display: table-cell;">
 	        		Version ${version.number} (${version.description})
 	        	</a>
-	        	<#if version_index lt scriptVersions?size -1 || scriptVersions?size gt 1 >
-		        	<span class="pull-right" style="vertical-align:middle">
-		        		<a href="${rc.contextPath}/project/${project.id}/script/${script.id}/version/${version.id}/delete" class="btn btn-danger">
+				<span class="pull-right" style="display: table-cell;">
+					<a href="${rc.contextPath}/project/${project.id}/script/${script.id}/version/${version.id}/download" class="btn btn-success" title="Download">
+		        		<span class="glyphicon glyphicon-cloud-download"></span>
+		        	</a>        	
+	        		<#if version_index lt scriptVersions?size -1 || scriptVersions?size gt 1 >
+		        		<a href="${rc.contextPath}/project/${project.id}/script/${script.id}/version/${version.id}/delete" class="btn btn-danger" title="Delete version">
 		        			<span class="glyphicon glyphicon-trash"></span>
 		        		</a>        	
-		        	</span>
-	        	</#if>
+	        		</#if>
+		        </span>
         	 </div>
         	<div id="collapse${version.id}" class="panel-collapse collapse ${(version_index == 0)?string('in','')}">
         		 <div class="panel-body">

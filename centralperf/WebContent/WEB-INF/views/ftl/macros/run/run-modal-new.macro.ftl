@@ -31,7 +31,7 @@
 						<div class="form-group">
 							<@spring.bind "newRun.label" />
 							<label for="${spring.status.expression}">Label</label>
-							<@spring.formInput "newRun.label", "class=form-control style=height:30px"/>
+							<@spring.formInput "newRun.label", "class=form-control style=height:30px maxLength=33"/>
 							<@spring.showErrors "<br/>", "cssError"/>
 						</div>
 									

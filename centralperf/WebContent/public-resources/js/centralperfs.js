@@ -41,6 +41,16 @@ function setEditable(elementName){
 				delete params.value;
 				delete params.pk;
 		    	return params;
-			}
+			},
+		    error: function(errors) {
+		    	 var msg = '';
+		    	 console.log(errors);
+		    	 if(errors && errors.responseText) { //ajax error, errors = xhr object
+		    		 msg = JSON.parse(errors.responseText).validationErrorMessage;
+		    	 } else { //validation error (client-side)
+		    		 $.each(errors, function(k, v) { msg += k+": "+v+"<br>"; });
+		    	 }
+		    	 return msg;
+		    }			
 	    });
 }

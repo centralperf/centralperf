@@ -23,6 +23,7 @@ import java.util.Date;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 
+import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.RunDetailGraphTypesEnum;
 import org.centralperf.model.dao.Run;
@@ -49,6 +50,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,6 +60,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * The Run controller manage user interactions with the runs
@@ -67,7 +70,7 @@ import org.springframework.web.servlet.ModelAndView;
  */
 @Controller
 @SessionAttributes
-public class RunController {
+public class RunController extends BaseController{
 	
 	@Resource
 	private RunRepository runRepository;
@@ -150,11 +153,16 @@ public class RunController {
             @PathVariable("projectId") Long projectId,
     		@ModelAttribute("run") @Valid Run run, 
     		BindingResult result,
-    		Model model
+    		Model model,
+    		RedirectAttributes redirectAttrs
     		) {
 		if(result.hasErrors()){
-			model.addAttribute("newRun",run);
-			return "redirect:/project/" + projectId + "/run";
+			String errorMessage = "Error creating Run : ";
+			for (FieldError error : result.getFieldErrors()) {
+				errorMessage += "Field " + error.getField() + ",  " + error.getDefaultMessage() + " ( " + error.getRejectedValue() + ")";
+			}
+			redirectAttrs.addFlashAttribute("error", errorMessage);
+			return "redirect:/project/" + projectId + "/detail";
 		}
         ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
         run.setScriptVersion(scriptVersion);
@@ -449,13 +457,14 @@ public class RunController {
         // return a view which will be resolved by an excel view resolver
         return mav;
     }    
-    
+
     /**
      * Update run informations (label, comment)
      * @param runId	ID of the run (from URI)
      * @param label	New label (not updated if null)
      * @param comment	New comment (not updated if null)
      * @return
+     * @throws ControllerValidationException 
      */
     @RequestMapping(value = "/run/{runId}", method = RequestMethod.POST)
     @ResponseBody
@@ -463,7 +472,7 @@ public class RunController {
                             @PathVariable("runId") Long runId,
                             @RequestParam(value="label", required=false) String label,
                             @RequestParam(value="comment", required=false) String comment
-                            ) {
+                            ) throws ControllerValidationException {
         Run run = runRepository.findOne(runId);
         String valueToReturn = label;
         if(label != null){
@@ -473,6 +482,10 @@ public class RunController {
         	run.setComment(comment);
         	valueToReturn = comment;
         }
+        
+        // Validate the data
+        validateBean(run);
+        
         runRepository.save(run);
         return valueToReturn;
     }       

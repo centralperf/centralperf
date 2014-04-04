@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.model.LastScriptVersionLabel;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
@@ -35,10 +36,14 @@ import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.repository.ScriptVersionRepository;
+import org.centralperf.sampler.api.Sampler;
 import org.centralperf.service.SamplerService;
 import org.centralperf.service.ScriptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -62,7 +67,7 @@ import org.xml.sax.InputSource;
  */
 @Controller
 @SessionAttributes
-public class ScriptController {
+public class ScriptController extends BaseController{
 	
 	@Resource
 	private ScriptRepository scriptRepository;
@@ -235,6 +240,32 @@ public class ScriptController {
 		}
         return "redirect:/project/" + projectId + "/script/" + scriptId + "/detail";
     }	
+	
+	/**
+	 * Download the content of a script (content is only stored on the version level)
+	 * @param projectId	ID of the project
+	 * @param scriptId	ID of the script
+	 * @param versionId	ID of the version
+	 * @return the script content as application/octet-stream content (to download it instead of displaying it in the browser)
+	 */
+	@RequestMapping(value = "/project/{projectId}/script/{scriptId}/version/{versionId}/download"
+			, method = RequestMethod.GET
+			, produces = "application/octet-stream")
+    public ResponseEntity<String> downloadScriptVersionContent(
+    		@PathVariable("projectId") Long projectId,
+    		@PathVariable("scriptId") Long scriptId,
+            @PathVariable("versionId") Long versionId) {
+		ScriptVersion scriptVersion = scriptVersionRepository.findOne(versionId);
+		Sampler sampler = samplerService.getSamplerByUID(scriptVersion.getScript().getSamplerUID());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        // Build the file name based on script label and script version number
+        responseHeaders.set("Content-Disposition", "attachment; filename=" 
+        		+ scriptVersion.getScript().getLabel().replaceAll("\\s+", "_") 
+        		+ "_" 
+        		+ scriptVersion.getNumber()  
+        		+ sampler.getScriptFileExtension());
+		return new ResponseEntity<String>(scriptVersion.getContent(), responseHeaders, HttpStatus.CREATED);
+    }		
 
 	/**
 	 * List all scripts for all projects
@@ -252,7 +283,8 @@ public class ScriptController {
      * @param scriptId	ID of the script to update
      * @param label	New label (not updated if null)
      * @param description	New description (not updated if null)
-     * @return
+     * @return The new value of the attribute that has been updated
+     * @throws ControllerValidationException 
      */
     @RequestMapping(value = "/script/{scriptId}", method = RequestMethod.POST)
     @ResponseBody
@@ -260,7 +292,7 @@ public class ScriptController {
                             @PathVariable("scriptId") Long scriptId,
                             @RequestParam(value="label",required=false) String label,
                             @RequestParam(value="description",required=false) String description
-                            ) {
+                            ) throws ControllerValidationException {
         Script script = scriptRepository.findOne(scriptId);
         String valueToReturn = label;
         if(label != null){
@@ -271,6 +303,9 @@ public class ScriptController {
         	script.setDescription(description);
         	valueToReturn = description;
         }        
+        
+        validateBean(script);
+        
         scriptRepository.save(script);
         return valueToReturn;
     }    
