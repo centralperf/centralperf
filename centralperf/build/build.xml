@@ -19,6 +19,8 @@
         Build quickstart packages
 		Maven package must have been launched before the ANT task
     </description>
+
+	<property file="build/build.properties" />
 	
 	<path id="maven-ant-tasks.classpath" path="build/lib/maven-ant-tasks-2.1.3.jar" />
 	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
@@ -38,10 +40,6 @@
 	<property name="cp.war.file.path" value="${target.path}/centralperf.war" />
 	<property name="cp.thirdpartylicenses.path" value="${target.path}/generated-resources/" />
 	
-	<property name="tomcat.version.major" value="7" />
-	<property name="tomcat.version.complete" value="7.0.52" />
-	<property name="tomcat.archive.url" value="http://mir2.ovh.net/ftp.apache.org/dist/tomcat/tomcat-${tomcat.version.major}/v${tomcat.version.complete}/bin/apache-tomcat-${tomcat.version.complete}.zip" />
-
 	<property name="jmeter.version.complete" value="2.11" />
 	<property name="jmeter.archive.url" value="http://apache.lehtivihrea.org//jmeter/binaries/apache-jmeter-${jmeter.version.complete}.zip" />
 
