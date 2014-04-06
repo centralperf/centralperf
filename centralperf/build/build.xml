@@ -51,10 +51,10 @@
 
 	<target name="download_dependencies">
 		<!-- Download application server -->
-		<get src="${tomcat.archive.url}" dest="${dist.work.path}/tomcat.zip" verbose="on"/>
+		<get src="${tomcat.archive.url}" dest="${dist.work.path}/tomcat.zip" verbose="off"/>
 				
 		<!-- Download jmeter -->
-		<get src="${jmeter.archive.url}" dest="${dist.work.path}/jmeter.zip" verbose="on"/>	
+		<get src="${jmeter.archive.url}" dest="${dist.work.path}/jmeter.zip" verbose="off"/>	
 	</target>	
 	
 	<target name="maven_package_centralperf">
