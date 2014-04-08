@@ -96,6 +96,7 @@
 					    	x : 'x',
 					        url: '${rc.contextPath}/api/getRTChartCSV/${run.id}',
 					        type: 'bar',
+					        labels: true,
 					        groups: [
 					            ['elapsed', 'latency']
 					        ]
@@ -114,6 +115,7 @@
 					    	x : 'x',
 					        url: '${rc.contextPath}/api/getRSChartCSV/${run.id}',
 					        type: 'bar',
+					        labels: true,
 					    },
 					    axis: {
 							 x: {
@@ -129,6 +131,7 @@
 					    	x : 'x',
 					        url: '${rc.contextPath}/api/getERChartCSV/${run.id}',
 					        type: 'bar',
+					        labels: true,
 					        groups: [['ok', 'errors']]
 					    },
         				color: {pattern: ['#19A319','#C13030']},

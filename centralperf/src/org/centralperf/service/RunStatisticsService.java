@@ -85,7 +85,7 @@ public class RunStatisticsService {
 	    public SummaryGraph load(Long runId) throws Exception {
 	    	//Load stats from database
 	    	log.debug("Loading SummaryGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), avg(elapsed), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+	    	Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
 	    	Run run = runRepository.findOne(runId);
 	    	return new SummaryGraph(q.getResultList().iterator(), run.getStartDate());
 	    }
@@ -96,7 +96,7 @@ public class RunStatisticsService {
 	    public ResponseTimeGraph load(Long runId) throws Exception {
 	    	//Load stats from database
 	    	log.debug("Loading ResponseTimeGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("SELECT  sampleName, avg(elapsed), avg(latency) from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
+	    	Query q = em.createQuery("SELECT  sampleName, round(avg(elapsed),0), round(avg(latency),0) from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
 	    	return new ResponseTimeGraph(q.getResultList().iterator());
 	    }
 	};
@@ -106,7 +106,7 @@ public class RunStatisticsService {
 	    public ResponseSizeGraph load(Long runId) throws Exception {
 	    	//Load stats from database
 	    	log.debug("Loading ResponseSizeGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("SELECT  sampleName, avg(sizeInOctet)  from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
+	    	Query q = em.createQuery("SELECT  sampleName, round(avg(sizeInOctet),0)  from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
 	    	return new ResponseSizeGraph(q.getResultList().iterator());
 	    }
 	};
