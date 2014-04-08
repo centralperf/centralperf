@@ -69,7 +69,8 @@
 					    axis: {
 					 		x: {
 					 			type : 'timeseries',
-					            label: 'elapsed time'
+					            label: 'elapsed time',
+					            tick: {format: '%X'}
 					        },
 					        y: {
 					            label: 'Response time (ms)'
