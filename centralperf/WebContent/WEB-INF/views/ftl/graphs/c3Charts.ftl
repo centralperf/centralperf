@@ -42,12 +42,12 @@
 		});
 	}
 
-	function generateGraph(graphId)
+	function generateGraph(chartId)
 	{
-		var graph;
-		switch(graphId){
+		var chart;
+		switch(chartId){
 				case "SUM":
-					graph=c3.generate({
+					chart=c3.generate({
 						bindto: '#summaryChart',
 		    			data: {
 		    				x: 'x',
@@ -91,7 +91,7 @@
 					});
 					break; 
 				case "RT":
-        			graph=c3.generate({
+        			chart=c3.generate({
 						bindto: '#responseTimeChart',
 					    data: {
 					    	x : 'x',
@@ -110,7 +110,7 @@
 					});
             		break; 
 				case "RS":
-        			graph=c3.generate({
+        			chart=c3.generate({
 						bindto: '#responseSizeChart',
 					    data: {
 					    	x : 'x',
@@ -126,7 +126,7 @@
 					});
             		break; 
             	case "ER":
-        			graph=c3.generate({
+        			chart=c3.generate({
 						bindto: '#errorRateChart',
 					    data: {
 					    	x : 'x',
@@ -144,6 +144,26 @@
 					});
             		break; 
         }
-        return graph;
+        return chart;
 	}
+	
+	
+	function updateChart(chart, chartId)
+	{
+		switch(chartId){
+				case "SUM":
+					chart.load({x: 'x', url: '${rc.contextPath}/api/getSumChartCSV/${run.id}'});
+            		break; 
+            	case "RT":		
+            		chart.load({url: '${rc.contextPath}/api/getRTChartCSV/${run.id}'});		
+					break; 
+            	case "RS":		
+            		chart.load({url: '${rc.contextPath}/api/getRSChartCSV/${run.id}'});		
+					break; 
+            	case "ER":		
+            		chart.load({url: '${rc.contextPath}/api/getERChartCSV/${run.id}'});		
+					break; 
+        }
+    }
+	
 </script>

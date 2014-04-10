@@ -6,7 +6,6 @@
 .c3 path, .c3 line {
   fill: none;
   stroke: #000;
-  stroke-width: 1px;
 }
 .c3 text {
   -webkit-user-select: none;
@@ -21,6 +20,23 @@
 .c3-chart-arc text {
   fill: #fff;
   font-size: 13px;
+}
+
+/*-- Axis --*/
+
+.c3-axis-x .tick {
+}
+.c3-axis-x-label {
+}
+
+.c3-axis-y .tick {
+}
+.c3-axis-y-label {
+}
+
+.c3-axis-y2 .tick {
+}
+.c3-axis-y2-label {
 }
 
 /*-- Grid --*/
@@ -98,6 +114,9 @@
 
 .c3-legend-item {
   font-size: 12px;
+}
+.c3-legend-item-hidden {
+  opacity: 0.1;
 }
 
 /*-- Tooltip --*/

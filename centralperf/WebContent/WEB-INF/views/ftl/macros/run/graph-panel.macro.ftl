@@ -72,11 +72,17 @@
 		});
 		
 		function autoRefresh() {
+			if(graphTab[newTab]==null){graphTab[newTab]=generateGraph(newTab);}
+			else{updateChart(graphTab[newTab],newTab);}
 			refreshStats();
-			graphTab[newTab]=generateGraph(newTab);
 			if(running) {setTimeout(function(){autoRefresh();}, ${refreshDelay?c});}
 		}
-		autoRefresh();
+		
+		//FIXME: If running, wait 5 second to be sure to have data in csv to avoid c3js error
+		if(running){
+			setTimeout(function(){autoRefresh();}, 5000);
+		}else{autoRefresh();}
+		
 		
 		function refreshDuration(startAt){
 			$("#summaryDuration").html(prettyDuration(new Date() - startAt));
