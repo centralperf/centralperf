@@ -66,7 +66,7 @@ public class GatlingRunJob implements SamplerRunJob {
 
 	@Override
 	public void stopProcess() {
-		log.debug("Killing jMeter process");
+		log.debug("Killing Gatling process");
 		p.destroy();
 	}
 	
@@ -98,6 +98,10 @@ public class GatlingRunJob implements SamplerRunJob {
 					p.waitFor();
 					//Stop File reader task after end of job process
 					running = false;
+					
+					// Waiting for Gatling process to flush last logs in the file
+					Thread.sleep(5000);
+					
 					gatlingLogReader.cancel();
 					ouputListener.interrupt();
 				}catch (InterruptedException iE) {
