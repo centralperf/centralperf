@@ -69,6 +69,7 @@
 					    axis: {
 					 		x: {
 					 			type : 'timeseries',
+					 			localtime : true,
 					            label: 'elapsed time',
 					            tick: {format: '%X'}
 					        },
