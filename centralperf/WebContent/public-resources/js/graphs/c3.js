@@ -212,6 +212,8 @@
             __point_focus_expand_r = getConfig(['point', 'focus', 'expand', 'r'], __point_focus_expand_enabled ? 4 : __point_r),
             __point_select_r = getConfig(['point', 'focus', 'select', 'r'], 8);
 
+        var __line_connect_null = getConfig(['line', 'connect_null'], false);
+
         // bar
         var __bar_width = getConfig(['bar', 'width']),
             __bar_width_ratio = getConfig(['bar', 'width', 'ratio'], 0.6);
@@ -1218,8 +1220,13 @@
             var xDomain = [getXDomainMin(targets), getXDomainMax(targets)],
                 firstX = xDomain[0], lastX = xDomain[1],
                 padding = getXDomainPadding(targets, xDomain),
-                min = isTimeSeries ? new Date(firstX.getTime() - padding) : firstX - padding,
+                min = 0, max = 0;
+            if (firstX || firstX === 0) {
+                min = isTimeSeries ? new Date(firstX.getTime() - padding) : firstX - padding;
+            }
+            if (lastX || lastX === 0) {
                 max = isTimeSeries ? new Date(lastX.getTime() + padding) : lastX + padding;
+            }
             return [min, max];
         }
         function diffDomain(d) {
@@ -1522,6 +1529,7 @@
                     tickValues.push(end);
                 }
             }
+            if (!isTimeSeries) { tickValues = tickValues.sort(); }
             return tickValues;
         }
         function addHiddenTargetIds(targetIds) {
@@ -2001,13 +2009,11 @@
 
         function parseDate(date) {
             var parsedDate;
-            if (!date) { throw Error(date + " can not be parsed as d3.time with format " + __data_x_format + ". Maybe 'x' of this data is not defined. See data.x or data.xs option."); }
             try {
                 parsedDate = __data_x_format ? d3.time.format(__data_x_format).parse(date) : new Date(date);
             } catch (e) {
-                parsedDate = undefined;
+                window.console.error("Failed to parse x '" + date + "' to Date with format " + __data_x_format);
             }
-            if (!parsedDate) { window.console.error("Failed to parse x '" + date + "' to Date with format " + __data_x_format); }
             return parsedDate;
         }
 
@@ -2137,8 +2143,9 @@
             var line = d3.svg.line()
                 .x(__axis_rotated ? function (d) { return getYScale(d.id)(d.value); } : xx)
                 .y(__axis_rotated ? xx : function (d) { return getYScale(d.id)(d.value); });
+            if (!__line_connect_null) { line = line.defined(function (d) { return d.value != null; }); }
             return function (d) {
-                var data = filterRemoveNull(d.values), x0, y0;
+                var data = __line_connect_null ? filterRemoveNull(d.values) : d.values, x0, y0;
                 if (isLineType(d)) {
                     isSplineType(d) ? line.interpolate("cardinal") : line.interpolate("linear");
                     return __data_regions[d.id] ? lineWithRegions(data, x, getYScale(d.id), __data_regions[d.id]) : line(data);
@@ -2998,7 +3005,7 @@
 
             // update axis tick values according to options, except for scatter plot
             if (! hasScatterType(targetsToShow)) { // TODO: fix this
-                tickValues = generateTickValues(mapTargetsToUniqueXs(targetsToShow)).sort();
+                tickValues = generateTickValues(mapTargetsToUniqueXs(targetsToShow));
                 xAxis.tickValues(tickValues);
                 subXAxis.tickValues(tickValues);
             }
@@ -3026,9 +3033,11 @@
                         break;
                     }
                 }
-                d3.selectAll('.' + CLASS.axisX + ' .tick').sort(function (e1, e2) { return e1 - e2; });
-                d3.selectAll('.' + CLASS.axisX + ' .tick text').each(function (e, i) {
-                    d3.select(this).style('display', i % intervalForCulling ? 'none' : 'block');
+                d3.selectAll('.' + CLASS.axisX + ' .tick text').each(function (e) {
+                    var index = tickValues.indexOf(e);
+                    if (index > 0) {
+                        d3.select(this).style('display', index % intervalForCulling ? 'none' : 'block');
+                    }
                 });
             }
 
@@ -4266,7 +4275,19 @@
         /*-- Load data and init chart with defined functions --*/
 
         if ('url' in config.data) {
-            d3.csv(config.data.url, function (error, data) { init(data); });
+            d3.xhr(config.data.url, function (error, data) {
+                // TODO: other mine/type
+                var rows = d3.csv.parseRows(data.response), d;
+                if (rows.length === 1) {
+                    d = [{}];
+                    rows[0].forEach(function (id) {
+                        d[0][id] = null;
+                    });
+                } else {
+                    d = d3.csv.parse(data.response);
+                }
+                init(d);
+            });
         }
         else if ('rows' in config.data) {
             init(convertRowsToData(config.data.rows));
