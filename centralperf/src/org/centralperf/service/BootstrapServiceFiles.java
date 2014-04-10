@@ -25,6 +25,7 @@ package org.centralperf.service;
 public class BootstrapServiceFiles {
 
 	private org.springframework.core.io.Resource sampleJMXFile;
+	private org.springframework.core.io.Resource sampleGatlingFile;
 		
 	public org.springframework.core.io.Resource getSampleJMXFile() {
 		return sampleJMXFile;
@@ -33,4 +34,15 @@ public class BootstrapServiceFiles {
 	public void setSampleJMXFile(org.springframework.core.io.Resource sampleJMXFile) {
 		this.sampleJMXFile = sampleJMXFile;
 	}
+
+	public org.springframework.core.io.Resource getSampleGatlingFile() {
+		return sampleGatlingFile;
+	}
+
+	public void setSampleGatlingFile(
+			org.springframework.core.io.Resource sampleGatlingFile) {
+		this.sampleGatlingFile = sampleGatlingFile;
+	}
+	
+	
 }

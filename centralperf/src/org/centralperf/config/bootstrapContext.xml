@@ -8,5 +8,6 @@
 
 	<bean id="bootstrapFiles" class="org.centralperf.service.BootstrapServiceFiles">
    		<property name="sampleJMXFile" value="/WEB-INF/resources/samples/cp_sample_script.jmx"/>
+   		<property name="sampleGatlingFile" value="/WEB-INF/resources/samples/GatlingCPSampleSimulation.scala"/>
 	</bean>
 </beans>

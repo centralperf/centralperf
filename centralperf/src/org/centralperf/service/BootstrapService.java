@@ -28,6 +28,7 @@ import org.centralperf.model.Configuration;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
 import org.centralperf.repository.RunRepository;
+import org.centralperf.sampler.driver.gatling.GatlingSampler;
 import org.centralperf.sampler.driver.jmeter.JMeterSampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,11 +84,14 @@ public class BootstrapService implements InitializingBean  {
 		projectService.addProject(sampleProject);		
 		
 		// Associate sample script
-		// Load sample JMX
+		// Load sample JMX and Gatling files
 		String jmxContent;
+		String gatlingContent;
 		try {
 			jmxContent = new Scanner(bootstrapServiceFiles.getSampleJMXFile().getFile()).useDelimiter("\\Z").next();
-			scriptService.addScript(sampleProject,JMeterSampler.UID, "Sample script", "Central Perf sample script. Queries a single URL with few scenario's parameters", jmxContent);
+			scriptService.addScript(sampleProject,JMeterSampler.UID, "JMETER Sample script", "Central Perf sample JMETER script. Queries a single URL with few scenario's parameters", jmxContent);
+			gatlingContent = new Scanner(bootstrapServiceFiles.getSampleGatlingFile().getFile()).useDelimiter("\\Z").next();
+			scriptService.addScript(sampleProject,GatlingSampler.UID, "GATLING Sample script", "Central Perf sample script. Queries Google; only for demonstration (no parameters)", gatlingContent);			
 		} catch (FileNotFoundException e) {
 			log.error("Error on bootstrap import:"+e.getMessage(), e);
 		} catch (IOException e) {
