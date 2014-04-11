@@ -130,7 +130,7 @@ public class ApiController {
 	 */
 	@RequestMapping(value ="/api/getRunStatsJSON/{runId}", method=RequestMethod.GET)  
 	@ResponseBody 
-	public RunStats getJsonProjectList(@PathVariable("runId") Long runId,Model model){
+	public RunStats getRunStatsJSON(@PathVariable("runId") Long runId,Model model){
 		RunStats temp=null;
 		try {temp=runStatService.getRunStats(runId);}
 		catch (ExecutionException ee) {

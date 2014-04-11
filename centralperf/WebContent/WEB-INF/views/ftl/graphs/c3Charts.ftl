@@ -23,6 +23,7 @@
 				$("#runProcessOuput").html(res.runOutput);
 				$("#summaryCurrentUsers").html(res.currentUsers);
 				$("#summaryNumberOfSamples").html(res.numberOfSample);
+				numberOfSample=res.numberOfSample;
 				$("#summaryMaxUsers").html(res.maxUsers);
 				$("#summaryCurrentBandwith").html(res.currentBandwithWithUnit);
 				$("#summaryTotalBandwith").html(res.totalBandwithWithUnit);             

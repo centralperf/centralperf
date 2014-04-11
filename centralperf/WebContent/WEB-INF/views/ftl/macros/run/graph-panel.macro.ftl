@@ -14,6 +14,7 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
+
 <#macro main>
 
 	<!-- Load css for c3 basic styles -->
@@ -42,10 +43,10 @@
 		</#if>  		
 	</ul>
 	<div class="tab-content"> 
-		<div id="sumChart" class="tab-pane active"><div id=summaryChart></div></div>
-		<div id="respTimeChart" class="tab-pane"><div id=responseTimeChart></div></div>
-		<div id="reqSizeChart" class="tab-pane"><div id=responseSizeChart></div></div>
-		<div id="errorChart" class="tab-pane"><div id=errorRateChart></div></div>
+		<div id="sumChart" class="tab-pane active"><div id=summaryChart><#include "/graphs/waiting.panel.ftl"></div></div>
+		<div id="respTimeChart" class="tab-pane"><div id=responseTimeChart><#include "/graphs/waiting.panel.ftl"></div></div>
+		<div id="reqSizeChart" class="tab-pane"><div id=responseSizeChart><#include "/graphs/waiting.panel.ftl"></div></div>
+		<div id="errorChart" class="tab-pane"><div id=errorRateChart><#include "/graphs/waiting.panel.ftl"></div></div>
 		<div id="runProcessOuput" class="tab-pane scroll scroll-expanded terminal"></div>
 		<div id="samplesPane" class="tab-pane"><div id="samplesContent" class="scroll scroll-expanded" style="white-space:normal"></div></div>
 	</div>
@@ -55,14 +56,17 @@
 		var running = ${run.running?string};
 		var graphTab=new Array();
 		var newTab="SUM";
+		var numberOfSample=0;
 		
 		
 		$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
 			var oldTab=e.relatedTarget.id;
 			newTab=e.target.id;
-			if(graphTab[oldTab]!=null){graphTab[oldTab].hide();}
-			if(graphTab[newTab]==null){graphTab[newTab]=generateGraph(newTab);}
-			else{graphTab[newTab].show();}
+			if(numberOfSample>0){
+				if(graphTab[oldTab]!=null){graphTab[oldTab].hide();}
+				if(graphTab[newTab]==null){graphTab[newTab]=generateGraph(newTab);}
+				else{graphTab[newTab].show();}
+			}
     	});
 
 		$('#graphsTab a[href="#samplesPane"]').click(function (e) {
@@ -72,10 +76,16 @@
 		});
 		
 		function autoRefresh() {
-			if(graphTab[newTab]==null){graphTab[newTab]=generateGraph(newTab);}
-			else{updateChart(graphTab[newTab],newTab);}
 			refreshStats();
-			if(running) {setTimeout(function(){autoRefresh();}, ${refreshDelay?c});}
+			
+			if(running){
+				if(numberOfSample>0){
+					if(graphTab[newTab]==null){graphTab[newTab]=generateGraph(newTab);}
+					else{updateChart(graphTab[newTab],newTab);}		
+				}
+				setTimeout(function(){autoRefresh();}, ${refreshDelay?c});
+			}
+			else{graphTab[newTab]=generateGraph(newTab);}
 		}
 		
 		autoRefresh();
