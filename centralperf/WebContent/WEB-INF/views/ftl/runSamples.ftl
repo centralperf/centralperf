@@ -17,14 +17,14 @@
 	<#if run.samples?size gt 0>
 		<table class="table">
 	    	<tr>
-	        	<th>timestamp</th>
-	            <th>elapsed</th>
-	            <th>sampleName</th>
-	            <th>returnCode</th>
-	            <th>latency</th>
-	            <th>sizeInOctet</th>
-	            <th>assertResult</th>
-	            <th>status</th>
+	        	<th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_TIMESTAMP}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_ELAPSED}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_SAMPLENAME}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_RESPONSECODE}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_LATENCY}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_SIZEINBYTES}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_ASSERTRESULT}</th>
+	            <th>${statics["org.centralperf.helper.CSVHeaderInfo"].CSV_HEADER_STATUS}</th>
 			</tr>
 			<#list run.samples as sample>
 				<tr>

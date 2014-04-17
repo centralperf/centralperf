@@ -39,11 +39,13 @@ import org.springframework.stereotype.Service;
 import au.com.bytecode.opencsv.CSVReader;
 
 /**
- * Service treating 
+ * Specific service to manage CSV based data for run result
+ * Useful to provide CSV based parser for samplers, to export or import results 
+ * 
  * @since 1.0
  */
 @Service
-public class RunResultService {
+public class CSVResultService {
 
 	@Resource
 	private SampleRepository sampleRepository;
@@ -56,15 +58,15 @@ public class RunResultService {
     
     private CSVHeaderInfo headerInfo;
     
-    public static final String JTL_CSV_SEPARATOR = ",";
+    @Value("#{appProperties['csv.field_separator']}")
+    private String csvSeparator;
 
-	private static final Logger log = LoggerFactory.getLogger(RunResultService.class);
-	
+	private static final Logger log = LoggerFactory.getLogger(CSVResultService.class);
 	
 	/**
-	 * Save results for a run based on a CSV string (multi line)
-	 * @param run
-	 * @param resultInCSV
+	 * Save results to a run with a provided CSV string (multi line)
+	 * @param run Run to be fullfil samples for CSV
+	 * @param resultInCSV The CSV content to use
 	 */
     public void saveResults(Run run, String resultInCSV){
         CSVReader csvReader = new CSVReader(new StringReader(resultInCSV));
@@ -95,23 +97,21 @@ public class RunResultService {
                 log.debug("Adding Sample :"+sample.getSampleName());
             }
         } catch (IOException e) {
-            // Impossible to access to the file ?!
+        	log.error("Problem while parsing CSV String");
         }
         runRepository.save(run);
     }
 	
 	/**
 	 * Save results for a run based on a sample
-	 * @param run
-	 * @param sample
+	 * @param run	Current run
+	 * @param sample	new Sample to add
 	 */
-    public void saveSample(Run run, Sample sample){
+    public void addSample(Run run, Sample sample){
         sample.setRun(run);
         log.debug("Adding Sample :"+sample.getTimestamp());
         sampleRepository.save(sample);
     }
-    
-    
     
     /**
      * Build a sample based on a CSV line and information about the headers names and orders
@@ -126,33 +126,40 @@ public class RunResultService {
     	Sample sample = new Sample();
         try{
             // Try first to get a timestamp
-            sample.setTimestamp(new Date(new Long(headerInfo.getValue("timestamp",CSVline))));
+            sample.setTimestamp(new Date(new Long(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_TIMESTAMP,CSVline))));
         }
         catch(NumberFormatException e){
             // Try to parse this format : 2012/10/30 12:47:47
             SimpleDateFormat parserSDF=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             try {
-                sample.setTimestamp(parserSDF.parse(headerInfo.getValue("timestamp",CSVline)));
+                sample.setTimestamp(parserSDF.parse(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_TIMESTAMP,CSVline)));
             } catch (ParseException e1) {
             	log.error("Error on CSV parsing:"+e.getMessage(), e1);
             }
         }
 
         try{
-        	sample.setElapsed(new Long(headerInfo.getValue("elapsed",CSVline)));
+        	sample.setElapsed(new Long(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_ELAPSED,CSVline)));
         }
         catch (NumberFormatException e) {}
-        sample.setSampleName(headerInfo.getValue("label",CSVline));
-        sample.setStatus(headerInfo.getValue("responseCode",CSVline));
+        sample.setSampleName(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_SAMPLENAME,CSVline));
         
-        sample.setAssertResult(new Boolean(headerInfo.getValue("success",CSVline)));
-        //sample.setAssertResult(new Boolean(headerInfo.getValue("Error",CSVline)));
-        String sizeString = headerInfo.getValue("bytes", CSVline);
+        String status = headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_STATUS,CSVline);
+        if(status != null){
+        	sample.setStatus(status);
+        }
+        
+        String assertResult = headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_ASSERTRESULT,CSVline);
+        if(assertResult != null){
+        	sample.setAssertResult(new Boolean(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_ASSERTRESULT,CSVline)));
+        }
+        
+        String sizeString = headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_SIZEINBYTES, CSVline);
         
         // TODO : manage format errors
         if(sizeString != null && !"".equals(sizeString.trim())){
         	try{
-        		sample.setSizeInOctet(new Long(headerInfo.getValue("bytes", CSVline)));
+        		sample.setSizeInOctet(new Long(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_SIZEINBYTES, CSVline)));
         	}
         	catch(NumberFormatException exception){}
         }
@@ -160,24 +167,24 @@ public class RunResultService {
         	sample.setSizeInOctet(0);
         }
         
-        String latencyString = headerInfo.getValue("latency", CSVline);
+        String latencyString = headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_LATENCY, CSVline);
         if(latencyString != null  && !"".equals(latencyString.trim())){
         	try{
-        		sample.setLatency(new Long(headerInfo.getValue("latency", CSVline)));
+        		sample.setLatency(new Long(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_LATENCY, CSVline)));
         	}
         	catch(NumberFormatException exception){}
         }
         
-        String grpThreads = headerInfo.getValue("grpThreads", CSVline);
+        String grpThreads = headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_GROUPTHREADS, CSVline);
         if(grpThreads != null) sample.setGrpThreads(new Long(grpThreads));
-        String allThreads = headerInfo.getValue("allThreads", CSVline);
+        String allThreads = headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_ALLTHREADS, CSVline);
         if(allThreads != null) sample.setAllThreads(new Long(allThreads));
        
         return sample;
     }
     
     public Sample buildSampleFromCSVLine(CSVHeaderInfo headerInfos, String CSVlineAsString){
-    	return buildSampleFromCSVLine(headerInfos, CSVlineAsString.split(JTL_CSV_SEPARATOR));
+    	return buildSampleFromCSVLine(headerInfos, CSVlineAsString.split(csvSeparator));
     }    
     
     public Sample buildSampleFromCSVLine(String[] CSVlineAsArray){
@@ -185,7 +192,7 @@ public class RunResultService {
     }
 
     public Sample buildSampleFromCSVLine(String CSVlineAsString){
-    	return buildSampleFromCSVLine(CSVlineAsString.split(JTL_CSV_SEPARATOR));
+    	return buildSampleFromCSVLine(CSVlineAsString.split(csvSeparator));
     }    
     
 	/**
@@ -193,15 +200,28 @@ public class RunResultService {
 	 * @return
 	 */
 	private CSVHeaderInfo getCSVHeaderInfo(){
-		if(this.headerInfo == null){headerInfo = new CSVHeaderInfo(csvHeaders.split(JTL_CSV_SEPARATOR));}
+		if(this.headerInfo == null){headerInfo = new CSVHeaderInfo(csvHeaders.split(csvSeparator));}
 		return headerInfo;
 	}
 	
+	/**
+	 * Check if the provided line contains headers or sample data  
+	 * @param line from the CSV file
+	 * @return	true if CSV headers are recognized
+	 */
 	public boolean isHeaderLine(String line){
-        return isHeaderLine(line.split(JTL_CSV_SEPARATOR));
+        return isHeaderLine(line.split(csvSeparator));
 	}	
 	
 	public boolean isHeaderLine(String[] line){
-        return line.length > 0 && "timestamp".equals(line[0].trim().toLowerCase());
+        return line.length > 0 && CSVHeaderInfo.CSV_HEADER_TIMESTAMP.equals(line[0].trim().toLowerCase());
 	}
+	
+	public String getCsvSeparator() {
+		return csvSeparator;
+	}
+
+	public void setCsvSeparator(String csvSeparator) {
+		this.csvSeparator = csvSeparator;
+	}	
 }

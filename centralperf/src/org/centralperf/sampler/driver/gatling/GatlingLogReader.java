@@ -27,7 +27,7 @@ import java.util.TimerTask;
 
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Sample;
-import org.centralperf.service.RunResultService;
+import org.centralperf.service.CSVResultService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GatlingLogReader extends TimerTask {
 
-	private RunResultService runResultService;
+	private CSVResultService runResultService;
     
 	private static final Logger log = LoggerFactory.getLogger(GatlingLogReader.class);
     
@@ -52,13 +52,13 @@ public class GatlingLogReader extends TimerTask {
     
 	private static final String GATLING_SIMULATION_LOG_FILENAME = "simulation.log";
 	
-	public GatlingLogReader(File logFilePartialPath, RunResultService runResultService, Run run) {
+	public GatlingLogReader(File logFilePartialPath, CSVResultService runResultService, Run run) {
 		this.logFilePartialPath = logFilePartialPath;
 		this.run=run;
 		this.runResultService=runResultService;
 	}
 
-	public static GatlingLogReader newReader(File logFilePartialPath, RunResultService runResultService, Run run) {
+	public static GatlingLogReader newReader(File logFilePartialPath, CSVResultService runResultService, Run run) {
 		GatlingLogReader gatlingLogReaderTask = new GatlingLogReader(logFilePartialPath, runResultService, run);
 		Timer timer = new Timer();
 		
@@ -170,7 +170,7 @@ public class GatlingLogReader extends TimerTask {
 			
 			this.nbSamples++;
 			log.debug("Saving sample ["+this.nbSamples+"] in run ["+this.run.getId()+"]");
-			runResultService.saveSample(this.run, sample);
+			runResultService.addSample(this.run, sample);
 		}
 	}
 }

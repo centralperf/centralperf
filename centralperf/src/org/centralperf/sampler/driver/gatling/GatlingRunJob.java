@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
-import org.centralperf.service.RunResultService;
+import org.centralperf.service.CSVResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class GatlingRunJob implements SamplerRunJob {
 	private GatlingLogReader gatlingLogReader;
 	
 	private ScriptLauncherService scriptLauncherService;
-	private RunResultService runResultService;
+	private CSVResultService runResultService;
 
 	private String gatlingLauncherPath;	
 	
@@ -216,11 +216,11 @@ public class GatlingRunJob implements SamplerRunJob {
 		this.resultFile = jtlFile;
 	}
 
-	public RunResultService getRunResultService() {
+	public CSVResultService getRunResultService() {
 		return runResultService;
 	}
 
-	public void setRunResultService(RunResultService runResultService) {
+	public void setRunResultService(CSVResultService runResultService) {
 		this.runResultService = runResultService;
 	}
 	

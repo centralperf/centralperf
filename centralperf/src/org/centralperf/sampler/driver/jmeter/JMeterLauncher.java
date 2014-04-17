@@ -27,7 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerLauncher;
 import org.centralperf.sampler.api.SamplerRunJob;
-import org.centralperf.service.RunResultService;
+import org.centralperf.service.CSVResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class JMeterLauncher implements SamplerLauncher{
 	private ScriptLauncherService scriptLauncherService;
 
 	@Resource
-	private RunResultService runResultService;
+	private CSVResultService runResultService;
 	
 	private static final Logger log = LoggerFactory.getLogger(JMeterLauncher.class);
 	/**

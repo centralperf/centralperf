@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.centralperf.helper.CSVHeaderInfo;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Sample;
 import org.centralperf.model.dao.ScriptVariable;
@@ -39,7 +40,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 /**
- * All services to manage runs
+ * All services to manage runs : start, end, copy, list....
+ * 
+ * @since 1.0
+ * 
  */
 @Service
 public class RunService {
@@ -48,7 +52,7 @@ public class RunService {
 	private RunRepository runRepository;
 
 	@Resource
-	private RunResultService runResultService;
+	private CSVResultService runResultService;
 	
 	@Resource
 	private ScriptVariableRepository scriptVariableRepository;
@@ -56,11 +60,16 @@ public class RunService {
     @Resource
     private ScriptVersionRepository scriptVersionRepository;
     
-    @Value("#{appProperties['csv.export.field_separator']}")
+    @Value("#{appProperties['csv.field_separator']}")
     private String csvSeparator;
 	
 	private static final Logger log = LoggerFactory.getLogger(RunService.class);
 	
+	/**
+	 * Close the run when the launcher has finished. Set the end date and gets job output logs 
+	 * @param runId Id of the run to end
+	 * @param job Job associated with current run
+	 */
 	public void endRun(Long runId, SamplerRunJob job){
 		Run run = runRepository.findOne(runId);
 		log.debug("Ending run " + run.getLabel());
@@ -72,7 +81,7 @@ public class RunService {
 	
 	/**
 	 * Create a copy of a run and save it to the persistence layer (to launch it again for example)
-	 * @param runId
+	 * @param runId Id of the job to duplicate
 	 */
 	public Run copyRun(Long runId){
 		Run run = runRepository.findOne(runId);
@@ -100,7 +109,7 @@ public class RunService {
 	
 	/**
 	 * Updates a variable for the run
-	 * @param runId			ID of the run
+	 * @param runId			ID of the run to update
 	 * @param newVariable	variable to insert or update
 	 */
 	public void updateRunVariable(Long runId, ScriptVariable newVariable){
@@ -123,14 +132,27 @@ public class RunService {
 		runRepository.save(run);
 	}
 
+	/**
+	 * Return last X runs accross all projects, ordered by startDate desc (newer first)
+	 * @return A list of run, limited to X runs
+	 */
     public List<Run> getLastRuns(){
         return runRepository.findAll(new PageRequest(0, 10, new Sort(Sort.Direction.DESC, "startDate"))).getContent();
     }
 
+    /**
+     * Get current active runs (running)
+     * @return	List of active runs
+     */
     public List<Run> getActiveRuns(){
         return runRepository.findByRunning(true);
     }
-
+    
+    /**
+     * Get a CSV file content and creates the samples from this CSV content
+     * @param run Run to fullfil with CSV content
+     * @param csvContent	CSV formatted content. Must be formatted according to csv.field_separator property and CSVHeaderInfo.CSV_HEADER_* headers
+     */
     public void insertResultsFromCSV(Run run, String csvContent){
         runResultService.saveResults(run, csvContent);
         runRepository.save(run);
@@ -142,10 +164,22 @@ public class RunService {
      * @return	All samples information as CSV format (comma separated)
      */
     public String getResultAsCSV(Run run){
-    	 StringBuilder CSVContent=new StringBuilder("timestamp"+csvSeparator+"elapsed"+csvSeparator+"sampleName"+csvSeparator+"status"+csvSeparator+"returnCode"+csvSeparator+"assertResult"+csvSeparator+"sizeInOctet"+csvSeparator+"grpThreads"+csvSeparator+"allThreads"+csvSeparator+"latency"+csvSeparator+"sampleId"+csvSeparator+"runId\r\n");
+    	 StringBuilder CSVContent=new StringBuilder(
+    			 CSVHeaderInfo.CSV_HEADER_TIMESTAMP+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_ELAPSED+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_SAMPLENAME+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_STATUS+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_RESPONSECODE+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_ASSERTRESULT+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_SIZEINBYTES+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_GROUPTHREADS+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_ALLTHREADS+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_LATENCY+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_SAMPLEID+csvSeparator+
+    			 CSVHeaderInfo.CSV_HEADER_RUNID+"\r\n");
          for (Sample sample : run.getSamples()) {
  			CSVContent.append(""+
- 					sample.getTimestamp()+csvSeparator+
+ 					sample.getTimestamp().getTime()+csvSeparator+
  					sample.getElapsed()+csvSeparator+
  					sample.getSampleName()+csvSeparator+
  					sample.getStatus()+csvSeparator+ 

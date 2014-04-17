@@ -27,7 +27,7 @@ import java.util.TimerTask;
 import org.centralperf.helper.CSVHeaderInfo;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Sample;
-import org.centralperf.service.RunResultService;
+import org.centralperf.service.CSVResultService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JMeterCSVReader extends TimerTask {
 
-	private RunResultService runResultService;
+	private CSVResultService runResultService;
     
 	private static final Logger log = LoggerFactory.getLogger(JMeterCSVReader.class);
     
@@ -50,7 +50,7 @@ public class JMeterCSVReader extends TimerTask {
     private CSVHeaderInfo headerInfo;
     private Run run;
 	
-	public JMeterCSVReader(File csvFile, RunResultService runResultService, Run run) {
+	public JMeterCSVReader(File csvFile, CSVResultService runResultService, Run run) {
 		csvFileLastLength = csvFile.length();
 		this.csvFile = csvFile;
 		this.csvFileLastTimestamp = csvFile.lastModified();
@@ -58,7 +58,7 @@ public class JMeterCSVReader extends TimerTask {
 		this.runResultService=runResultService;
 	}
 
-	public static JMeterCSVReader newReader(File csvFile, RunResultService runResultService, Run run) {
+	public static JMeterCSVReader newReader(File csvFile, CSVResultService runResultService, Run run) {
 		JMeterCSVReader jMeterCSVReaderTask = new JMeterCSVReader(csvFile, runResultService, run);
 		Timer timer = new Timer();
 		
@@ -105,13 +105,13 @@ public class JMeterCSVReader extends TimerTask {
 	
 	protected void processLine(String line) {
 		log.debug("Processing line : "+line);
-		if(runResultService.isHeaderLine(line)){headerInfo = new CSVHeaderInfo(line.split(RunResultService.JTL_CSV_SEPARATOR));}
+		if(runResultService.isHeaderLine(line)){headerInfo = new CSVHeaderInfo(line.split(runResultService.getCsvSeparator()));}
 		else{
 			Sample sample = runResultService.buildSampleFromCSVLine(headerInfo, line);
 			if(sample != null){
 				this.nbSamples++;
 				log.debug("Saving sample ["+this.nbSamples+"] in run ["+this.run.getId()+"]");
-				runResultService.saveSample(this.run, sample);
+				runResultService.addSample(this.run, sample);
 			}
 		}
 	}

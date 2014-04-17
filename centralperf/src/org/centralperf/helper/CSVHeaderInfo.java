@@ -33,6 +33,56 @@ import java.util.HashMap;
  * 
  */
 public class CSVHeaderInfo{
+	
+	/**
+	 * Name of the CSV header to use for sample execution date/time
+	 */
+	public static final String CSV_HEADER_TIMESTAMP = "timestamp";
+	/**
+	 * Name of the CSV header to use for elapsed time in ms
+	 */	
+	public static final String CSV_HEADER_ELAPSED = "elapsed";
+	/**
+	 * Name of the CSV header to use for sample name
+	 */	
+	public static final String CSV_HEADER_SAMPLENAME = "label";
+	/**
+	 * Name of the CSV header to use for sample result status
+	 */	
+	public static final String CSV_HEADER_STATUS = "responseMessage";
+	/**
+	 * Name of the CSV header to use for sample response code (HTTP Response code for example)
+	 */	
+	public static final String CSV_HEADER_RESPONSECODE = "responsecode";	
+	/**
+	 * Name of the CSV header to use for assert result
+	 */
+	public static final String CSV_HEADER_ASSERTRESULT = "success";
+	/**
+	 * Name of the CSV header to use for sample size on bytes
+	 */	
+	public static final String CSV_HEADER_SIZEINBYTES = "bytes";
+	/**
+	 * Name of the CSV header to use for number of users in group
+	 */	
+	public static final String CSV_HEADER_GROUPTHREADS = "grpthreads";
+	/**
+	 * Name of the CSV header to use for number of all current users
+	 */	
+	public static final String CSV_HEADER_ALLTHREADS = "allthreads";
+	/**
+	 * Name of the CSV header to use for latency
+	 */	
+	public static final String CSV_HEADER_LATENCY = "latency";
+	/**
+	 * Name of the CSV header to use for CP sample id
+	 */	
+	public static final String CSV_HEADER_SAMPLEID = "sampleid";
+	/**
+	 * Name of the CSV header to use for CP run id
+	 */	
+	public static final String CSV_HEADER_RUNID = "runid";
+	
     private HashMap<String, Integer> headersIndex = new HashMap<String, Integer>();
     
     /**
