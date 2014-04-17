@@ -24,7 +24,6 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import org.centralperf.controller.exception.ControllerValidationException;
-import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.RunDetailGraphTypesEnum;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.ScriptVariable;
@@ -34,19 +33,12 @@ import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.repository.ScriptVersionRepository;
 import org.centralperf.sampler.api.SamplerRunJob;
-import org.centralperf.service.RunResultService;
 import org.centralperf.service.RunService;
-import org.centralperf.service.RunStatisticsService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -59,7 +51,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -85,26 +76,11 @@ public class RunController extends BaseController{
 	private ScriptLauncherService scriptLauncherService;
 	
 	@Resource
-	private RunResultService runResultService;
-
-	@Resource
 	private RunService runService;
-	
-	@Resource
-	private RunStatisticsService runStatService;
 	
     @Resource
     private ProjectRepository projectRepository;
-    
-    @Autowired 
-    private ApplicationContext applicationContext;    
 
-    @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
-    private String csvHeaders;
-
-    @Value("#{appProperties['csv.export.field_separator']}")
-    private String csvSeparator;
-    
     @Value("#{appProperties['report.cache.delay.seconds']}")
     private Long cacheRefreshDelay;
     
@@ -391,73 +367,6 @@ public class RunController extends BaseController{
         return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
     
-    /**
-     * Download results from a RUN as a file (CSV or other)
-     * @param projectId	ID of the project (from URI)
-     * @param runId	ID of the run (from URI)
-     * @return The JTL/CSV file as text/csv file content type
-     */
-    @RequestMapping(
-    		value = {"/project/{projectId}/run/{runId}/results"}, 
-    		method = RequestMethod.GET, 
-    		produces = "text/csv")
-    public ResponseEntity<String> getResultsAsCSV(
-            @PathVariable("projectId") Long projectId,
-            @PathVariable("runId") Long runId
-    		) {
-        Run run = runRepository.findOne(runId);
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Content-Disposition", "attachment; filename=results.csv");
-        String CSVContent = runService.getResultAsCSV(run);
-        return new ResponseEntity<String>(CSVContent, responseHeaders, HttpStatus.CREATED);
-    }    
-    
-    /**
-     * Display all samples of a RUN as a HTML page
-     * @param projectId	ID of the project (from URI)
-     * @param runId	ID of the run (from URI)
-     * @return	Name of the view for samples as HTML
-     */
-    @RequestMapping(
-    		value = {
-    				"/project/{projectId}/run/{runId}/samples", 
-    				"/run/{runId}/samples"
-    		}, 
-    		method = RequestMethod.GET)
-    public String getSamplesAsHTML(
-            @PathVariable("projectId") Long projectId,
-            @PathVariable("runId") Long runId,
-    		Model model
-    		) {
-    	 Run run = runRepository.findOne(runId);
-    	 model.addAttribute("run", run);
-    	 return "runSamples";
-    }
-    
-    /**
-     * Get run results as an Excel document (XSLX)
-     * The file name for now is centralperf.xlsx
-     * @param mav	ModelAndView will be used to return an Excel view
-     * @param projectId ID of the project (from URI)
-     * @param runId ID of the run (from URI)
-     * @return A view that will be resolved as an Excel view by the view resolver
-     */
-    @RequestMapping(value = "/project/{projectId}/run/{runId}/centralperf.xlsx", method = RequestMethod.GET)
-    public ModelAndView downloadExcel(
-    		ModelAndView mav,
-            @PathVariable("projectId") Long projectId,
-            @PathVariable("runId") Long runId) {
-    	Run run = runRepository.findOne(runId);
-    	
-    	// get the view and setup
-    	ExcelOOXMLView excelView = applicationContext.getBean(ExcelOOXMLView.class);
-	    excelView.setUrl("/WEB-INF/views/xlsx/centralperf_template");
-	    mav.getModel().put("run", run);
-    	mav.setView(excelView);
-        // return a view which will be resolved by an excel view resolver
-        return mav;
-    }    
-
     /**
      * Update run informations (label, comment)
      * @param runId	ID of the run (from URI)
