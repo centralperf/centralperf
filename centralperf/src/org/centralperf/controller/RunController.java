@@ -169,7 +169,8 @@ public class RunController extends BaseController{
     @RequestMapping("/run")
     public String showRuns(Model model) {
     	log.debug("Displaying runs");
-    	model.addAttribute("runs",runRepository.findAll());
+    	Sort runSort = new Sort(Sort.Direction.DESC, "startDate");
+    	model.addAttribute("runs",runRepository.findAll(runSort));
     	Sort scriptSort = new Sort(Sort.DEFAULT_DIRECTION, "label");
     	model.addAttribute("scripts",scriptRepository.findAll(scriptSort));
     	model.addAttribute("newRun",new Run());

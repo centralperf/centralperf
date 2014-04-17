@@ -27,7 +27,7 @@
 				<div class="modal-body">
 						<fieldset>
 							<label for="name">Name</label>
-							<@spring.formInput "newProject.name", "class=input style=height:30px"/>
+							<@spring.formInput "newProject.name", "class=form-control style=height:30px"/>
 							<@spring.showErrors "<br/>", "cssError"/>
 							<label></label><#-- bug in Twitter boostrap force to add empty label -->
 						</fieldset>
