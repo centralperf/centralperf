@@ -101,7 +101,7 @@
 					        type: 'bar',
 					        labels: true,
 					        groups: [
-					            ['elapsed', 'latency']
+					            ['wait', 'download']
 					        ]
 					    },
 					    axis: {

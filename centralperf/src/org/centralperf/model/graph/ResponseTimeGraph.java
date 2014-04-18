@@ -31,13 +31,16 @@ public class ResponseTimeGraph implements Serializable{
 
 	 
 	public ResponseTimeGraph(Iterator<Object[]> datas) {
-		StringBuilder buffer = new StringBuilder("x,elapsed,latency\n");
+		StringBuilder buffer = new StringBuilder("x,elapsed,wait,download\n");
 		Object[] row =null;
 		while ( datas.hasNext() ) {
 			row = (Object[]) datas.next();
+			int elapsed=((Double)row[1]).intValue();
+			int latency=((Double)row[2]).intValue();
 			buffer.append(row[0].toString()).append(',');
-			buffer.append(row[1].toString()).append(',');
-			buffer.append(row[2].toString()).append('\n');
+			buffer.append(elapsed).append(',');
+			buffer.append(latency).append(',');
+			buffer.append(elapsed-latency).append('\n');
 		}
 		this.csvDatas=buffer.toString();
 	}
