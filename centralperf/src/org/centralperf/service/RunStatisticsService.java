@@ -63,10 +63,14 @@ public class RunStatisticsService {
 	
     @Value("#{appProperties['report.cache.delay.seconds']}")
     private Long cacheRefreshDelay;
+    
+    @Value("#{appProperties['report.scaling.level1.seconds']}")
+    private Long limitOfFisrtScaling;
+    
+    @Value("#{appProperties['report.scaling.level2.seconds']}")
+    private Long limitOfSecondScaling;
 	
     //Cache can't be load on object construction as refresh delay is not yet set
-    
-    
     private LoadingCache<Long, SummaryGraph> summaryGraphCache;
     private LoadingCache<Long, ResponseTimeGraph> responseTimeGraphCache;
     private LoadingCache<Long, ResponseSizeGraph> responseSizeGraphCache;
@@ -85,7 +89,13 @@ public class RunStatisticsService {
 	    public SummaryGraph load(Long runId) throws Exception {
 	    	//Load stats from database
 	    	log.debug("Loading SummaryGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+	    	Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+	    	int nbSeconds=q.getResultList().size();
+	    	log.debug("Check for scaling [seconds:"+nbSeconds+" - Fisrt scaling after: "+limitOfFisrtScaling+" s - second scaling after: "+limitOfSecondScaling+" s");
+	    	if(nbSeconds<limitOfFisrtScaling){q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");}
+	    	else if(nbSeconds < limitOfSecondScaling) {q = em.createQuery("select concat(substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19),'0') , round(avg(elapsed),0), count(*), substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) from Sample s where run_fk='"+runId+"'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");}
+	    	else {q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");}
+	    	
 	    	Run run = runRepository.findOne(runId);
 	    	return new SummaryGraph(q.getResultList().iterator(), run.getStartDate());
 	    }
