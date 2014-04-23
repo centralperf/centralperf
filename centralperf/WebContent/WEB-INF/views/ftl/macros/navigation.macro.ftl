@@ -36,6 +36,7 @@
                     <li<#if menu == "runs"> class="active"</#if>><a href="${rc.contextPath}/run">Runs</a></li>
                     <li<#if menu == "scripts"> class="active"</#if>><a href="${rc.contextPath}/script">Scripts</a></li>
                     <li<#if menu == "configuration"> class="active"</#if>><a href="${rc.contextPath}/configuration">Configuration</a></li>
+                    <li<#if menu == "credits"> class="active"</#if>><a href="${rc.contextPath}/credits">Credits</a></li>
                  </ul>
         </div>
         </#if>
