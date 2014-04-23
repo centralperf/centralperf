@@ -89,7 +89,7 @@
 					<div id="dbProperties" class="row">
 						<div class="col-md-12">
 					    	<form class="form-horizontal" role="form">
-					             <@conf_elem.main config.getConfigurationData("csv.export.field_separator") 1/>
+					             <@conf_elem.main config.getConfigurationData("csv.field_separator") 1/>
 					             <@conf_elem.main config.getConfigurationData("report.cache.delay.seconds") 1/>
 					        </form>
 					    </div>

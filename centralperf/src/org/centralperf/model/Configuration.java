@@ -74,9 +74,9 @@ public class Configuration {
 			this.keyToolTip="Format of Gatling result output file";
 		}
 		
-		if("csv.export.field_separator".equals(keyName)){
-			this.keyLabel="Separator for CSV export:";
-			this.keyToolTip="Separator character for CSV export";
+		if("csv.field_separator".equals(keyName)){
+			this.keyLabel="Separator for CSV export/import:";
+			this.keyToolTip="Separator character for CSV export/import";
 			this.readOnly=false;
 		}
 		if("report.cache.delay.seconds".equals(keyName)){
