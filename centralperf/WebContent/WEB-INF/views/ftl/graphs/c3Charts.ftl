@@ -72,7 +72,12 @@
 					 			type : 'timeseries',
 					 			localtime : true,
 					            label: 'elapsed time',
-					            tick: {format: '%X'}
+					            tick: {
+					            	count: 30,
+					            	format: '%X',
+					            	rotate: 75
+					            },
+					            height: 50
 					        },
 					        y: {
 					            label: 'Response time (ms)'
