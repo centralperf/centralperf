@@ -92,9 +92,21 @@ public class RunStatisticsService {
 	    	Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
 	    	int nbSeconds=q.getResultList().size();
 	    	log.debug("Check for scaling [seconds:"+nbSeconds+" - Fisrt scaling after: "+limitOfFisrtScaling+" s - second scaling after: "+limitOfSecondScaling+" s");
-	    	if(nbSeconds<limitOfFisrtScaling){q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");}
-	    	else if(nbSeconds < limitOfSecondScaling) {q = em.createQuery("select concat(substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19),'0') , round(avg(elapsed),0), count(*), substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) from Sample s where run_fk='"+runId+"'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");}
-	    	else {q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), count(*) from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");}
+	    	// First limit : a line per second, or less
+	    	if(nbSeconds<limitOfFisrtScaling){
+	    		q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s "
+	    				+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+	    	}
+	    	// Second limit : a line each 10 seconds
+	    	else if(nbSeconds < limitOfSecondScaling) {
+	    		q = em.createQuery("select concat(substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19),'0') , round(avg(elapsed),0), round(count(*)/10.0,2), substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) from Sample s "
+	    				+ "where run_fk='"+runId+"'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");
+	    	}
+	    	// greater than second limit : a line
+	    	else {
+	    		q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), count(*) from Sample s "
+	    				+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");
+	    	}
 	    	
 	    	Run run = runRepository.findOne(runId);
 	    	return new SummaryGraph(q.getResultList().iterator(), run.getStartDate());
