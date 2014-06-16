@@ -41,7 +41,7 @@
 	<property name="cp.thirdpartylicenses.path" value="${target.path}/generated-resources/" />
 	
 	<property name="jmeter.version.complete" value="2.11" />
-	<property name="jmeter.archive.url" value="http://apache.lehtivihrea.org//jmeter/binaries/apache-jmeter-${jmeter.version.complete}.zip" />
+	<property name="jmeter.archive.url" value="http://apache.crihan.fr/dist/jmeter/binaries/apache-jmeter-${jmeter.version.complete}.zip" />
 
 	
 	<target name="init">
