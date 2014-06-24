@@ -104,7 +104,7 @@ public class RunStatisticsService {
 	    	}
 	    	// greater than second limit : a line
 	    	else {
-	    		q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), count(*) from Sample s "
+	    		q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), round(count(*)/60.0,2) from Sample s "
 	    				+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");
 	    	}
 	    	
