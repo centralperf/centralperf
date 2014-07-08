@@ -30,7 +30,7 @@
   		<li><a href="#reqSizeChart" data-toggle="tab" id="RS">Request size</a></li>
   		<li><a href="#errorChart" data-toggle="tab" id="ER">Error rate</a></li>
   		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#runProcessOuput" class="label label-danger"  data-toggle="tab">logs</a></li>
-  		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#samplesPane" class="label label-info" data-toggle="tab">samples (${run.samples?size})</a></li>
+  		<li style="float:right;margin-left:10px;margin-right:0;" ><a href="#samplesPane" class="label label-info" data-toggle="tab"><div id="requestsTabLabel">Requests (${run.samples?size})</div></a></li>
 		<#if !run.running>
         <li style="float:right;margin-left:10px;margin-right:0;" class="dropdown">
 			<a href="#" class="primary dropdown-toggle" data-toggle="dropdown">
@@ -77,12 +77,12 @@
 		
 		function autoRefresh() {
 			refreshStats();
-			
 			if(running){
 				if(numberOfSample>0){
 					if(graphTab[newTab]==null){graphTab[newTab]=generateGraph(newTab);}
 					else{updateChart(graphTab[newTab],newTab);}		
 				}
+				$("#requestsTabLabel").html("Requests ("+numberOfSample+")");
 				setTimeout(function(){autoRefresh();}, ${refreshDelay?c});
 			}
 			else{graphTab[newTab]=generateGraph(newTab);}
