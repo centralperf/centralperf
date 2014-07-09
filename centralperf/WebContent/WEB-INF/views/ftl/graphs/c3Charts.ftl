@@ -111,7 +111,9 @@
 					    },
 					    axis: {
 							 x: {
-							 	type: 'categorized' // this needed to load string x value
+							 	type: 'categorized', // this needed to load string x value
+							 	tick: {rotate: 75},
+            					height: 130
 							 }
 					    },
 					});
@@ -127,7 +129,9 @@
 					    },
 					    axis: {
 							 x: {
-							 	type: 'categorized' // this needed to load string x value
+							 	type: 'categorized', // this needed to load string x value
+							 	tick: {rotate: 75},
+            					height: 130
 							 }
 					    },
 					});
@@ -145,7 +149,9 @@
         				color: {pattern: ['#19A319','#C13030']},
 					    axis: {
 							 x: {
-							 	type: 'categorized' // this needed to load string x value
+							 	type: 'categorized', // this needed to load string x value
+							 	tick: {rotate: 75},
+            					height: 130
 							 }
 					    },
 					});
