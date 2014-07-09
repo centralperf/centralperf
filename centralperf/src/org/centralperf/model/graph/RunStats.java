@@ -78,16 +78,16 @@ public class RunStats {
 	
 	public String getCurrentBandwithWithUnit(){
 		float temp = Math.round((this.currentBandwith/1024F)*100)/100F;
-		if(temp<1024){return temp+" ko";}
-		return Math.round((temp/1024F)*100)/100F+" mo";
+		if(temp<1024){return temp+" kB";}
+		return Math.round((temp/1024F)*100)/100F+" MB";
 	}
 	public long getCurrentBandwith() {return currentBandwith;}
 	public void setCurrentBandwith(long currentBandwith) {this.currentBandwith = currentBandwith;}
 	
 	public String getTotalBandwithWithUnit(){
 		float temp = Math.round((this.totalBandwith/1024F)*100)/100F;
-		if(temp<1024){return temp+" ko";}
-		return Math.round((temp/1024F)*100)/100F+" mo";
+		if(temp<1024){return temp+" kB";}
+		return Math.round((temp/1024F)*100)/100F+" MB";
 	}
 	public long getTotalBandwith() {return totalBandwith;}
 	public void setTotalBandwith(long totalBandwith) {this.totalBandwith = totalBandwith;}
