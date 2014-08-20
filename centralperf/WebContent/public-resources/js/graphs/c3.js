@@ -1,8 +1,10 @@
 (function (window) {
     'use strict';
 
+    /*global define, module, exports, require */
+
     var c3 = {
-        version: "0.1.32"
+        version: "0.2.5"
     };
 
     var CLASS = {
@@ -17,6 +19,10 @@
         chartArc: 'c3-chart-arc',
         chartArcs: 'c3-chart-arcs',
         chartArcsTitle: 'c3-chart-arcs-title',
+        chartArcsBackground: 'c3-chart-arcs-background',
+        chartArcsGaugeUnit: 'c3-chart-arcs-gauge-unit',
+        chartArcsGaugeMax: 'c3-chart-arcs-gauge-max',
+        chartArcsGaugeMin: 'c3-chart-arcs-gauge-min',
         selectedCircle: 'c3-selected-circle',
         selectedCircles: 'c3-selected-circles',
         eventRect: 'c3-event-rect',
@@ -33,14 +39,19 @@
         shape: 'c3-shape',
         shapes: 'c3-shapes',
         line: 'c3-line',
+        lines: 'c3-lines',
         bar: 'c3-bar',
         bars: 'c3-bars',
         circle: 'c3-circle',
         circles: 'c3-circles',
         arc: 'c3-arc',
+        arcs: 'c3-arcs',
         area: 'c3-area',
+        areas: 'c3-areas',
+        empty: 'c3-empty',
         text: 'c3-text',
         texts: 'c3-texts',
+        gaugeValue: 'c3-gauge-value',
         grid: 'c3-grid',
         xgrid: 'c3-xgrid',
         xgrids: 'c3-xgrids',
@@ -51,16 +62,19 @@
         ygrids: 'c3-ygrids',
         ygridLine: 'c3-ygrid-line',
         ygridLines: 'c3-ygrid-lines',
+        axis: 'c3-axis',
         axisX: 'c3-axis-x',
         axisXLabel: 'c3-axis-x-label',
         axisY: 'c3-axis-y',
         axisYLabel: 'c3-axis-y-label',
         axisY2: 'c3-axis-y2',
         axisY2Label: 'c3-axis-y2-label',
+        legendBackground: 'c3-legend-background',
         legendItem: 'c3-legend-item',
         legendItemEvent: 'c3-legend-item-event',
         legendItemTile: 'c3-legend-item-tile',
         legendItemHidden: 'c3-legend-item-hidden',
+        legendItemFocused: 'c3-legend-item-focused',
         dragarea: 'c3-dragarea',
         EXPANDED: '_expanded_',
         SELECTED: '_selected_',
@@ -72,7 +86,7 @@
      */
     c3.generate = function (config) {
 
-        var d3 = window.d3 ? window.d3 : window.require ? window.require("d3") : undefined;
+        var d3 = window.d3 ? window.d3 : 'undefined' !== typeof require ? require("d3") : undefined;
 
         var c3 = { data : {}, axis: {}, legend: {} },
             cache = {};
@@ -91,7 +105,7 @@
                 // Check next key's value
                 isLast = (i === keys.length - 1);
                 nextTarget = target[keys[i]];
-                if ((!isLast && typeof nextTarget !== 'object') || (isLast && typeof defaultValue !== 'object' && typeof nextTarget === 'object' && nextTarget !== null)) {
+                if (!isLast && typeof nextTarget !== 'object') {
                     return defaultValue;
                 }
                 target = nextTarget;
@@ -106,14 +120,19 @@
             __size_height = getConfig(['size', 'height']);
 
         var __padding_left = getConfig(['padding', 'left']),
-            __padding_right = getConfig(['padding', 'right']);
+            __padding_right = getConfig(['padding', 'right']),
+            __padding_top = getConfig(['padding', 'top']),
+            __padding_bottom = getConfig(['padding', 'bottom']);
 
         var __zoom_enabled = getConfig(['zoom', 'enabled'], false),
             __zoom_extent = getConfig(['zoom', 'extent']),
-            __zoom_privileged = getConfig(['zoom', 'privileged'], false);
+            __zoom_privileged = getConfig(['zoom', 'privileged'], false),
+            __zoom_onzoom = getConfig(['zoom', 'onzoom'], function () {});
 
-        var __onenter = getConfig(['onenter'], function () {}),
-            __onleave = getConfig(['onleave'], function () {}),
+        var __interaction_enabled = getConfig(['interaction', 'enabled'], true);
+
+        var __onmouseover = getConfig(['onmouseover'], function () {}),
+            __onmouseout = getConfig(['onmouseout'], function () {}),
             __onresize = getConfig(['onresize'], function () {}),
             __onresized = getConfig(['onresized'], function () {});
 
@@ -124,7 +143,8 @@
 
         var __data_x = getConfig(['data', 'x']),
             __data_xs = getConfig(['data', 'xs'], {}),
-            __data_x_format = getConfig(['data', 'x_format']),
+            __data_x_format = getConfig(['data', 'x_format'], '%Y-%m-%d'),
+            __data_x_localtime = getConfig(['data', 'x_localtime'], true),
             __data_id_converter = getConfig(['data', 'id_converter'], function (id) { return id; }),
             __data_names = getConfig(['data', 'names'], {}),
             __data_classes = getConfig(['data', 'classes'], {}),
@@ -133,32 +153,43 @@
             __data_type = getConfig(['data', 'type']),
             __data_types = getConfig(['data', 'types'], {}),
             __data_labels = getConfig(['data', 'labels'], {}),
-            __data_order = getConfig(['data', 'order']),
+            __data_order = getConfig(['data', 'order'], 'desc'),
             __data_regions = getConfig(['data', 'regions'], {}),
             __data_color = getConfig(['data', 'color']),
             __data_colors = getConfig(['data', 'colors'], {}),
+            __data_hide = getConfig(['data', 'hide'], false),
+            __data_filter = getConfig(['data', 'filter']),
             __data_selection_enabled = getConfig(['data', 'selection', 'enabled'], false),
             __data_selection_grouped = getConfig(['data', 'selection', 'grouped'], false),
             __data_selection_isselectable = getConfig(['data', 'selection', 'isselectable'], function () { return true; }),
             __data_selection_multiple = getConfig(['data', 'selection', 'multiple'], true),
             __data_onclick = getConfig(['data', 'onclick'], function () {}),
-            __data_onenter = getConfig(['data', 'onenter'], function () {}),
-            __data_onleave = getConfig(['data', 'onleave'], function () {}),
+            __data_onmouseover = getConfig(['data', 'onmouseover'], function () {}),
+            __data_onmouseout = getConfig(['data', 'onmouseout'], function () {}),
             __data_onselected = getConfig(['data', 'onselected'], function () {}),
             __data_onunselected = getConfig(['data', 'onunselected'], function () {}),
             __data_ondragstart = getConfig(['data', 'ondragstart'], function () {}),
             __data_ondragend = getConfig(['data', 'ondragend'], function () {});
 
+        // configuration for no plot-able data supplied.
+        var __data_empty_label_text = getConfig(['data', 'empty', 'label', 'text'], "");
+        
         // subchart
         var __subchart_show = getConfig(['subchart', 'show'], false),
-            __subchart_size_height = getConfig(['subchart', 'size', 'height'], 60);
+            __subchart_size_height = getConfig(['subchart', 'size', 'height'], 60),
+            __subchart_onbrush = getConfig(['subchart', 'onbrush'], function () {});
 
         // color
-        var __color_pattern = getConfig(['color', 'pattern'], []);
+        var __color_pattern = getConfig(['color', 'pattern'], []),
+            __color_threshold  = getConfig(['color', 'threshold'], {});
 
         // legend
         var __legend_show = getConfig(['legend', 'show'], true),
             __legend_position = getConfig(['legend', 'position'], 'bottom'),
+            __legend_inset_anchor = getConfig(['legend', 'inset', 'anchor'], 'top-left'),
+            __legend_inset_x = getConfig(['legend', 'inset', 'x'], 10),
+            __legend_inset_y = getConfig(['legend', 'inset', 'y'], 0),
+            __legend_inset_step = getConfig(['legend', 'inset', 'step']),
             __legend_item_onclick = getConfig(['legend', 'item', 'onclick']),
             __legend_item_onmouseover = getConfig(['legend', 'item', 'onmouseover']),
             __legend_item_onmouseout = getConfig(['legend', 'item', 'onmouseout']),
@@ -178,8 +209,9 @@
             __axis_x_tick_fit = getConfig(['axis', 'x', 'tick', 'fit'], true),
             __axis_x_tick_values = getConfig(['axis', 'x', 'tick', 'values'], null),
             __axis_x_tick_rotate = getConfig(['axis', 'x', 'tick', 'rotate']),
-            __axis_x_max = getConfig(['axis', 'x', 'max']),
-            __axis_x_min = getConfig(['axis', 'x', 'min']),
+            __axis_x_tick_outer = getConfig(['axis', 'x', 'tick', 'outer'], true),
+            __axis_x_max = getConfig(['axis', 'x', 'max'], null),
+            __axis_x_min = getConfig(['axis', 'x', 'min'], null),
             __axis_x_padding = getConfig(['axis', 'x', 'padding'], {}),
             __axis_x_height = getConfig(['axis', 'x', 'height']),
             __axis_x_default = getConfig(['axis', 'x', 'default']),
@@ -191,7 +223,8 @@
             __axis_y_label = getConfig(['axis', 'y', 'label'], {}),
             __axis_y_inner = getConfig(['axis', 'y', 'inner'], false),
             __axis_y_tick_format = getConfig(['axis', 'y', 'tick', 'format']),
-            __axis_y_padding = getConfig(['axis', 'y', 'padding'], {}),
+            __axis_y_tick_outer = getConfig(['axis', 'y', 'tick', 'outer'], true),
+            __axis_y_padding = getConfig(['axis', 'y', 'padding']),
             __axis_y_ticks = getConfig(['axis', 'y', 'ticks'], 10),
             __axis_y2_show = getConfig(['axis', 'y2', 'show'], false),
             __axis_y2_max = getConfig(['axis', 'y2', 'max']),
@@ -200,7 +233,8 @@
             __axis_y2_label = getConfig(['axis', 'y2', 'label'], {}),
             __axis_y2_inner = getConfig(['axis', 'y2', 'inner'], false),
             __axis_y2_tick_format = getConfig(['axis', 'y2', 'tick', 'format']),
-            __axis_y2_padding = getConfig(['axis', 'y2', 'padding'], {}),
+            __axis_y2_tick_outer = getConfig(['axis', 'y2', 'tick', 'outer'], true),
+            __axis_y2_padding = getConfig(['axis', 'y2', 'padding']),
             __axis_y2_ticks = getConfig(['axis', 'y2', 'ticks'], 10);
 
         // grid
@@ -211,50 +245,66 @@
             // not used
             // __grid_y_type = getConfig(['grid', 'y', 'type'], 'tick'),
             __grid_y_lines = getConfig(['grid', 'y', 'lines'], []),
-            __grid_y_ticks = getConfig(['grid', 'y', 'ticks'], 10);
+            __grid_y_ticks = getConfig(['grid', 'y', 'ticks'], 10),
+            __grid_focus_show = getConfig(['grid', 'focus', 'show'], true);
 
         // point - point of each data
         var __point_show = getConfig(['point', 'show'], true),
-            __point_r = __point_show ? getConfig(['point', 'r'], 2.5) : 0,
-            __point_focus_line_enabled = getConfig(['point', 'focus', 'line', 'enabled'], true),
+            __point_r = getConfig(['point', 'r'], 2.5),
             __point_focus_expand_enabled = getConfig(['point', 'focus', 'expand', 'enabled'], true),
-            __point_focus_expand_r = getConfig(['point', 'focus', 'expand', 'r'], __point_focus_expand_enabled ? 4 : __point_r),
-            __point_select_r = getConfig(['point', 'focus', 'select', 'r'], 8);
+            __point_focus_expand_r = getConfig(['point', 'focus', 'expand', 'r']),
+            __point_select_r = getConfig(['point', 'focus', 'select', 'r']);
 
         var __line_connect_null = getConfig(['line', 'connect_null'], false);
 
         // bar
         var __bar_width = getConfig(['bar', 'width']),
-            __bar_width_ratio = getConfig(['bar', 'width', 'ratio'], 0.6);
+            __bar_width_ratio = getConfig(['bar', 'width', 'ratio'], 0.6),
+            __bar_width_max = getConfig(['bar', 'width', 'max']),
+            __bar_zerobased = getConfig(['bar', 'zerobased'], true);
+
+        // area
+        var __area_zerobased = getConfig(['area', 'zerobased'], true);
 
         // pie
         var __pie_label_show = getConfig(['pie', 'label', 'show'], true),
             __pie_label_format = getConfig(['pie', 'label', 'format']),
-            __pie_expand = getConfig(['pie', 'expand'], true),
-            __pie_onclick = getConfig(['pie', 'onclick'], function () {}),
-            __pie_onmouseover = getConfig(['pie', 'onmouseover'], function () {}),
-            __pie_onmouseout = getConfig(['pie', 'onmouseout'], function () {});
+            __pie_label_threshold = getConfig(['pie', 'label', 'threshold'], 0.05),
+            __pie_sort = getConfig(['pie', 'sort'], true),
+            __pie_expand = getConfig(['pie', 'expand'], true);
+
+        // gauge
+        var __gauge_label_show = getConfig(['gauge', 'label', 'show'], true),
+            __gauge_label_format = getConfig(['gauge', 'label', 'format']),
+            __gauge_expand = getConfig(['gauge', 'expand'], true),
+            __gauge_min = getConfig(['gauge', 'min'], 0),
+            __gauge_max = getConfig(['gauge', 'max'], 100),
+            __gauge_units = getConfig(['gauge', 'units']),
+            __gauge_width = getConfig(['gauge', 'width']);
 
         // donut
         var __donut_label_show = getConfig(['donut', 'label', 'show'], true),
             __donut_label_format = getConfig(['donut', 'label', 'format']),
+            __donut_label_threshold = getConfig(['donut', 'label', 'threshold'], 0.05),
+            __donut_width = getConfig(['donut', 'width']),
+            __donut_sort = getConfig(['donut', 'sort'], true),
             __donut_expand = getConfig(['donut', 'expand'], true),
-            __donut_title = getConfig(['donut', 'title'], ""),
-            __donut_onclick = getConfig(['donut', 'onclick'], function () {}),
-            __donut_onmouseover = getConfig(['donut', 'onmouseover'], function () {}),
-            __donut_onmouseout = getConfig(['donut', 'onmouseout'], function () {});
+            __donut_title = getConfig(['donut', 'title'], "");
 
         // region - region to change style
         var __regions = getConfig(['regions'], []);
 
         // tooltip - show when mouseover on each data
         var __tooltip_show = getConfig(['tooltip', 'show'], true),
+            __tooltip_grouped = getConfig(['tooltip', 'grouped'], true),
             __tooltip_format_title = getConfig(['tooltip', 'format', 'title']),
+            __tooltip_format_name = getConfig(['tooltip', 'format', 'name']),
             __tooltip_format_value = getConfig(['tooltip', 'format', 'value']),
             __tooltip_contents = getConfig(['tooltip', 'contents'], function (d, defaultTitleFormat, defaultValueFormat, color) {
             var titleFormat = __tooltip_format_title ? __tooltip_format_title : defaultTitleFormat,
+                nameFormat = __tooltip_format_name ? __tooltip_format_name : function (name) { return name; },
                 valueFormat = __tooltip_format_value ? __tooltip_format_value : defaultValueFormat,
-                text, i, title, value, name;
+                text, i, title, value, name, bgcolor;
             for (i = 0; i < d.length; i++) {
                 if (! (d[i] && (d[i].value || d[i].value === 0))) { continue; }
 
@@ -263,11 +313,12 @@
                     text = "<table class='" + CLASS.tooltip + "'>" + (title || title === 0 ? "<tr><th colspan='2'>" + title + "</th></tr>" : "");
                 }
 
-                name = d[i].name;
-                value = valueFormat(d[i].value, d[i].ratio);
+                name = nameFormat(d[i].name);
+                value = valueFormat(d[i].value, d[i].ratio, d[i].id, d[i].index);
+                bgcolor = levelColor ? levelColor(d[i].value) : color(d[i].id);
 
                 text += "<tr class='" + CLASS.tooltipName + "-" + d[i].id + "'>";
-                text += "<td class='name'><span style='background-color:" + color(d[i].id) + "'></span>" + name + "</td>";
+                text += "<td class='name'><span style='background-color:" + bgcolor + "'></span>" + name + "</td>";
                 text += "<td class='value'>" + value + "</td>";
                 text += "</tr>";
             }
@@ -279,7 +330,8 @@
 
         /*-- Set Variables --*/
 
-        var clipId = (typeof __bindto === "string" ? __bindto.replace('#', '') : __bindto.id)  + '-clip',
+        // MEMO: clipId needs to be unique because it conflicts when multiple charts exist
+        var clipId = "c3-" + (+new Date()) + '-clip',
             clipIdForXAxis = clipId + '-xaxis',
             clipIdForYAxis = clipId + '-yaxis',
             clipPath = getClipPath(clipId),
@@ -287,41 +339,37 @@
             clipPathForYAxis = getClipPath(clipIdForYAxis);
 
         var isTimeSeries = (__axis_x_type === 'timeseries'),
-            isCategorized = (__axis_x_type === 'categorized'),
-            isCustomX = !isTimeSeries && (__data_x || notEmpty(__data_xs));
+            isCategorized = (__axis_x_type.indexOf('categor') >= 0),
+            isCustomX = function () { return !isTimeSeries && (__data_x || notEmpty(__data_xs)); };
 
-        var dragStart = null, dragging = false, cancelClick = false, mouseover = false;
+        var dragStart = null, dragging = false, cancelClick = false, mouseover = false, transiting = false;
 
-        var defaultColorPattern = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'], //same as d3.scale.category10()
-            color = generateColor(__data_colors, notEmpty(__color_pattern) ? __color_pattern : defaultColorPattern, __data_color);
+        var defaultColorPattern = d3.scale.category10().range(),
+            color = generateColor(__data_colors, notEmpty(__color_pattern) ? __color_pattern : defaultColorPattern, __data_color),
+            levelColor = notEmpty(__color_threshold) ? generateLevelColor(__color_pattern, __color_threshold) : null;
 
-        var xTimeFormat = __axis_x_localtime ? d3.time.format : d3.time.format.utc,
-            defaultTimeFormat = (function () {
-            var formats = [
-                [xTimeFormat("%Y/%-m/%-d"), function () { return true; }],
-                [xTimeFormat("%-m/%-d"), function (d) { return d.getMonth(); }],
-                [xTimeFormat("%-m/%-d"), function (d) { return d.getDate() !== 1; }],
-                [xTimeFormat("%-m/%-d"), function (d) { return d.getDay() && d.getDate() !== 1; }],
-                [xTimeFormat("%I %p"), function (d) { return d.getHours(); }],
-                [xTimeFormat("%I:%M"), function (d) { return d.getMinutes(); }],
-                [xTimeFormat(":%S"), function (d) { return d.getSeconds(); }],
-                [xTimeFormat(".%L"), function (d) { return d.getMilliseconds(); }]
-            ];
-            return function (date) {
-                var i = formats.length - 1, f = formats[i];
-                while (!f[1](date)) { f = formats[--i]; }
-                return f[0](date);
-            };
-        })();
+        var dataTimeFormat = __data_x_localtime ? d3.time.format : d3.time.format.utc,
+            axisTimeFormat = __axis_x_localtime ? d3.time.format : d3.time.format.utc,
+            defaultAxisTimeFormat = axisTimeFormat.multi([
+                [".%L", function (d) { return d.getMilliseconds(); }],
+                [":%S", function (d) { return d.getSeconds(); }],
+                ["%I:%M", function (d) { return d.getMinutes(); }],
+                ["%I %p", function (d) { return d.getHours(); }],
+                ["%-m/%-d", function (d) { return d.getDay() && d.getDate() !== 1; }],
+                ["%-m/%-d", function (d) { return d.getDate() !== 1; }],
+                ["%-m/%-d", function (d) { return d.getMonth(); }],
+                ["%Y/%-m/%-d", function () { return true; }]
+            ]);
 
         var hiddenTargetIds = [], hiddenLegendIds = [];
 
         /*-- Set Chart Params --*/
 
         var margin, margin2, margin3, width, width2, height, height2, currentWidth, currentHeight;
-        var radius, radiusExpanded, innerRadius, svgArc, svgArcExpanded, svgArcExpandedSub, pie;
+        var radius, radiusExpanded, innerRadius, arcWidth, arcHeight, svgArc, svgArcExpanded, svgArcExpandedSub, pie;
         var xMin, xMax, yMin, yMax, subXMin, subXMax, subYMin, subYMax;
-        var x, y, y2, subX, subY, subY2, xAxis, yAxis, yAxis2, subXAxis;
+        var x, y, y2, subX, subY, subY2, xAxis, yAxis, y2Axis, subXAxis;
+        var axes = {};
 
         var xOrient = __axis_rotated ? "left" : "bottom",
             yOrient = __axis_rotated ? (__axis_y_inner ? "top" : "bottom") : (__axis_y_inner ? "right" : "left"),
@@ -329,46 +377,77 @@
             subXOrient = __axis_rotated ? "left" : "bottom";
 
         var translate = {
-            main : function () { return "translate(" + margin.left + "," + margin.top + ")"; },
-            context : function () { return "translate(" + margin2.left + "," + margin2.top + ")"; },
+            main : function () { return "translate(" + asHalfPixel(margin.left) + "," + asHalfPixel(margin.top) + ")"; },
+            context : function () { return "translate(" + asHalfPixel(margin2.left) + "," + asHalfPixel(margin2.top) + ")"; },
             legend : function () { return "translate(" + margin3.left + "," + margin3.top + ")"; },
             x : function () { return "translate(0," + (__axis_rotated ? 0 : height) + ")"; },
             y : function () { return "translate(0," + (__axis_rotated ? height : 0) + ")"; },
             y2 : function () { return "translate(" + (__axis_rotated ? 0 : width) + "," + (__axis_rotated ? 1 : 0) + ")"; },
             subx : function () { return "translate(0," + (__axis_rotated ? 0 : height2) + ")"; },
-            arc: function () { return "translate(" + width / 2 + "," + height / 2 + ")"; }
+            arc: function () { return "translate(" + (arcWidth / 2) + "," + (arcHeight / 2) + ")"; }
         };
 
         var isLegendRight = __legend_position === 'right';
+        var isLegendInset = __legend_position === 'inset';
+        var isLegendTop = __legend_inset_anchor === 'top-left' || __legend_inset_anchor === 'top-right';
+        var isLegendLeft = __legend_inset_anchor === 'top-left' || __legend_inset_anchor === 'bottom-left';
         var legendStep = 0, legendItemWidth = 0, legendItemHeight = 0, legendOpacityForHidden = 0.15;
+        var currentMaxTickWidth = 0;
 
         /*-- Define Functions --*/
 
         function getClipPath(id) {
-            return "url(" + document.URL.split('#')[0] + "#" + id + ")";
+            var isIE9 = window.navigator.appVersion.toLowerCase().indexOf("msie 9.") >= 0;
+            return "url(" + (isIE9 ? "" : document.URL.split('#')[0]) + "#" + id + ")";
         }
 
-        function transformMain(withTransition) {
-            var duration = withTransition !== false ? 250 : 0;
-            main.attr("transform", translate.main);
-            main.select('.' + CLASS.axisX).transition().duration(duration).attr("transform", translate.x);
-            main.select('.' + CLASS.axisY).transition().duration(duration).attr("transform", translate.y);
-            main.select('.' + CLASS.axisY2).attr("transform", translate.y2);
+        function asHalfPixel(n) {
+            return Math.ceil(n) + 0.5;
+        }
+
+        function transformMain(withTransition, transitions) {
+            var xAxis, yAxis, y2Axis;
+            if (transitions && transitions.axisX) {
+                xAxis = transitions.axisX;
+            } else {
+                xAxis  = main.select('.' + CLASS.axisX);
+                if (withTransition) { xAxis = xAxis.transition(); }
+            }
+            if (transitions && transitions.axisY) {
+                yAxis = transitions.axisY;
+            } else {
+                yAxis = main.select('.' + CLASS.axisY);
+                if (withTransition) { yAxis = yAxis.transition(); }
+            }
+            if (transitions && transitions.axisY2) {
+                y2Axis = transitions.axisY2;
+            } else {
+                y2Axis = main.select('.' + CLASS.axisY2);
+                if (withTransition) { y2Axis = y2Axis.transition(); }
+            }
+            (withTransition ? main.transition() : main).attr("transform", translate.main);
+            xAxis.attr("transform", translate.x);
+            yAxis.attr("transform", translate.y);
+            y2Axis.attr("transform", translate.y2);
             main.select('.' + CLASS.chartArcs).attr("transform", translate.arc);
         }
-        function transformContext() {
-            if (__subchart_show) {
-                context.attr("transform", translate.context);
-                context.select('.' + CLASS.axisX).attr("transform", translate.subx);
+        function transformContext(withTransition, transitions) {
+            var subXAxis;
+            if (transitions && transitions.axisSubX) {
+                subXAxis = transitions.axisSubX;
+            } else {
+                subXAxis = context.select('.' + CLASS.axisX);
+                if (withTransition) { subXAxis = subXAxis.transition(); }
             }
+            context.attr("transform", translate.context);
+            subXAxis.attr("transform", translate.subx);
         }
         function transformLegend(withTransition) {
-            var duration = withTransition !== false ? 250 : 0;
-            legend.transition().duration(duration).attr("transform", translate.legend);
+            (withTransition ? legend.transition() : legend).attr("transform", translate.legend);
         }
-        function transformAll(withTransition) {
-            transformMain(withTransition);
-            transformContext(withTransition);
+        function transformAll(withTransition, transitions) {
+            transformMain(withTransition, transitions);
+            if (__subchart_show) { transformContext(withTransition, transitions); }
             transformLegend(withTransition);
         }
 
@@ -377,11 +456,13 @@
         // TODO: configurabale
         var rotated_padding_left = 30, rotated_padding_right = __axis_rotated && !__axis_x_show ? 0 : 30, rotated_padding_top = 5;
 
+        // MEMO: each value should be int to avoid disabling antialiasing
         function updateSizes() {
             var legendHeight = getLegendHeight(), legendWidth = getLegendWidth(),
-                legendHeightForBottom = isLegendRight ? 0 : legendHeight,
-                xAxisHeight = __axis_rotated ? 0 : getHorizontalAxisHeight('x'),
-                subchartHeight = __subchart_show ? (__subchart_size_height + xAxisHeight) : 0;
+                legendHeightForBottom = isLegendRight || isLegendInset ? 0 : legendHeight,
+                hasArc = hasArcType(c3.data.targets),
+                xAxisHeight = __axis_rotated || hasArc ? 0 : getHorizontalAxisHeight('x'),
+                subchartHeight = __subchart_show && !hasArc ? (__subchart_size_height + xAxisHeight) : 0;
 
             currentWidth = getCurrentWidth();
             currentHeight = getCurrentHeight();
@@ -389,10 +470,10 @@
             // for main, context
             if (__axis_rotated) {
                 margin = {
-                    top: getHorizontalAxisHeight('y2'),
-                    right: getCurrentPaddingRight(),
-                    bottom: getHorizontalAxisHeight('y') + legendHeightForBottom,
-                    left: subchartHeight + rotated_padding_right + getCurrentPaddingLeft()
+                    top: getHorizontalAxisHeight('y2') + getCurrentPaddingTop(),
+                    right: hasArc ? 0 : getCurrentPaddingRight(),
+                    bottom: getHorizontalAxisHeight('y') + legendHeightForBottom + getCurrentPaddingBottom(),
+                    left: subchartHeight + (hasArc ? 0 : getCurrentPaddingLeft())
                 };
                 margin2 = {
                     top: margin.top,
@@ -402,10 +483,10 @@
                 };
             } else {
                 margin = {
-                    top: 0,
-                    right: getCurrentPaddingRight(),
-                    bottom: xAxisHeight + subchartHeight + legendHeightForBottom,
-                    left: getCurrentPaddingLeft()
+                    top: 4 + getCurrentPaddingTop(), // for top tick text
+                    right: hasArc ? 0 : getCurrentPaddingRight(),
+                    bottom: xAxisHeight + subchartHeight + legendHeightForBottom + getCurrentPaddingBottom(),
+                    left: hasArc ? 0 : getCurrentPaddingLeft()
                 };
                 margin2 = {
                     top: currentHeight - subchartHeight - legendHeightForBottom,
@@ -415,11 +496,15 @@
                 };
             }
             // for legend
+            var insetLegendPosition = {
+                top: isLegendTop ? getCurrentPaddingTop() + __legend_inset_y + 5.5 : currentHeight - legendHeight - getCurrentPaddingBottom() - __legend_inset_y,
+                left: isLegendLeft ? getCurrentPaddingLeft() + __legend_inset_x + 0.5 : currentWidth - legendWidth - getCurrentPaddingRight() - __legend_inset_x + 0.5
+            };
             margin3 = {
-                top: isLegendRight ? 0 : currentHeight - legendHeight,
+                top: isLegendRight ? 0 : isLegendInset ? insetLegendPosition.top : currentHeight - legendHeight,
                 right: NaN,
                 bottom: 0,
-                left: isLegendRight ? currentWidth - legendWidth : 0
+                left: isLegendRight ? currentWidth - legendWidth : isLegendInset ? insetLegendPosition.left : 0
             };
 
             width = currentWidth - margin.left - margin.right;
@@ -433,30 +518,35 @@
             if (height2 < 0) { height2 = 0; }
 
             // for arc
+            arcWidth = width - (isLegendRight ? legendWidth + 10 : 0);
+            arcHeight = height - (isLegendRight ? 0 : 10);
             updateRadius();
 
-            if (isLegendRight && hasArcType(c3.data.targets)) {
-                margin3.left = width / 2 + radiusExpanded;
+            if (isLegendRight && hasArc) {
+                margin3.left = arcWidth / 2 + radiusExpanded * 1.1;
             }
         }
         function updateXgridFocus() {
             main.select('line.' + CLASS.xgridFocus)
                 .attr("x1", __axis_rotated ? 0 : -10)
                 .attr("x2", __axis_rotated ? width : -10)
-                .attr("y1", __axis_rotated ? -10 : margin.top)
+                .attr("y1", __axis_rotated ? -10 : 0)
                 .attr("y2", __axis_rotated ? -10 : height);
         }
         function updateRadius() {
-            radiusExpanded = height / 2;
+            var innerRadiusRatio, w = __gauge_width || __donut_width;
+            radiusExpanded = Math.min(arcWidth, arcHeight) / 2;
             radius = radiusExpanded * 0.95;
-            innerRadius = hasDonutType(c3.data.targets) ? radius * 0.6 : 0;
+            innerRadiusRatio = w ? (radius - w) / radius : 0.6;
+            innerRadius = hasDonutType(c3.data.targets) || hasGaugeType(c3.data.targets) ? radius * innerRadiusRatio : 0;
         }
         function getSvgLeft() {
             var leftAxisClass = __axis_rotated ? CLASS.axisX : CLASS.axisY,
-                leftAxis = d3.select('.' + leftAxisClass).node(),
+                leftAxis = main.select('.' + leftAxisClass).node(),
                 svgRect = leftAxis ? leftAxis.getBoundingClientRect() : {right: 0},
-                chartRect = d3.select(__bindto).node().getBoundingClientRect(),
-                svgLeft = svgRect.right - chartRect.left - getCurrentPaddingLeft();
+                chartRect = selectChart.node().getBoundingClientRect(),
+                hasArc = hasArcType(c3.data.targets),
+                svgLeft = svgRect.right - chartRect.left - (hasArc ? 0 : getCurrentPaddingLeft());
             return svgLeft > 0 ? svgLeft : 0;
         }
         function getCurrentWidth() {
@@ -466,27 +556,29 @@
             var h = __size_height ? __size_height : getParentHeight();
             return h > 0 ? h : 320;
         }
+        function getCurrentPaddingTop() {
+            return isValue(__padding_top) ? __padding_top : 0;
+        }
+        function getCurrentPaddingBottom() {
+            return isValue(__padding_bottom) ? __padding_bottom : 0;
+        }
         function getCurrentPaddingLeft() {
-            if (hasArcType(c3.data.targets)) {
-                return 0;
-            } else if (__padding_left) {
+            if (isValue(__padding_left)) {
                 return __padding_left;
+            } else if (__axis_rotated) {
+                return !__axis_x_show ? 1 : Math.max(ceil10(getAxisWidthByAxisId('x')), 40);
             } else {
-                return __axis_rotated || !__axis_y_show || __axis_y_inner ? 1 : getAxisWidthByAxisId('y');
+                return !__axis_y_show || __axis_y_inner ? 1 : ceil10(getAxisWidthByAxisId('y'));
             }
         }
         function getCurrentPaddingRight() {
-            var defaultPadding = 1;
-            if (hasArcType(c3.data.targets)) {
-                return 0;
-            } else if (__padding_right) {
-                return __padding_right;
-            } else if (isLegendRight) {
-                return getLegendWidth() + (__axis_y2_show && !__axis_rotated ? getAxisWidthByAxisId('y2') : defaultPadding);
-            } else if (__axis_y2_show) {
-                return __axis_y2_inner || __axis_rotated ? defaultPadding : getAxisWidthByAxisId('y2');
+            var defaultPadding = 10, legendWidthOnRight = isLegendRight ? getLegendWidth() + 20 : 0;
+            if (isValue(__padding_right)) {
+                return __padding_right + 1; // 1 is needed not to hide tick line
+            } else if (__axis_rotated) {
+                return defaultPadding + legendWidthOnRight;
             } else {
-                return defaultPadding;
+                return (!__axis_y2_show || __axis_y2_inner ? defaultPadding : ceil10(getAxisWidthByAxisId('y2'))) + legendWidthOnRight;
             }
         }
         function getAxisWidthByAxisId(id) {
@@ -496,21 +588,34 @@
         function getHorizontalAxisHeight(axisId) {
             if (axisId === 'x' && !__axis_x_show) { return 0; }
             if (axisId === 'x' && __axis_x_height) { return __axis_x_height; }
-            if (axisId === 'y' && !__axis_y_show) { return __legend_show && !isLegendRight ? 10 : 1; }
+            if (axisId === 'y' && !__axis_y_show) { return __legend_show && !isLegendRight && !isLegendInset ? 10 : 1; }
             if (axisId === 'y2' && !__axis_y2_show) { return rotated_padding_top; }
             return (getAxisLabelPositionById(axisId).isInner ? 30 : 40) + (axisId === 'y2' ? -10 : 0);
         }
+        function getParentRectValue(key) {
+            var parent = selectChart.node(), v;
+            while (parent && parent.tagName !== 'BODY') {
+                v = parent.getBoundingClientRect()[key];
+                if (v) {
+                    break;
+                }
+                parent = parent.parentNode;
+            }
+            return v;
+        }
         function getParentWidth() {
-            return +d3.select(__bindto).style("width").replace('px', ''); // TODO: if rotated, use height
+            return getParentRectValue('width');
         }
         function getParentHeight() {
-            return +d3.select(__bindto).style('height').replace('px', ''); // TODO: if rotated, use width
+            var h = selectChart.style('height');
+            return h.indexOf('px') > 0 ? +h.replace('px', '') : 0;
         }
         function getAxisClipX(forHorizontal) {
-            return forHorizontal ? -(1 + 4) : -(margin.left - 1);
+            // axis line width + padding for left
+            return forHorizontal ? -(1 + 30) : -(margin.left - 1);
         }
         function getAxisClipY(forHorizontal) {
-            return forHorizontal ? -20 : -1;
+            return forHorizontal ? -20 : -4;
         }
         function getXAxisClipX() {
             return getAxisClipX(!__axis_rotated);
@@ -525,10 +630,11 @@
             return getAxisClipY(__axis_rotated);
         }
         function getAxisClipWidth(forHorizontal) {
-            return forHorizontal ? width + 2 + 4 : margin.left + 20;
+            // width + axis line width + padding for left/right
+            return forHorizontal ? width + 2 + 30 + 30 : margin.left + 20;
         }
         function getAxisClipHeight(forHorizontal) {
-            return forHorizontal ? (__axis_x_height ? __axis_x_height : 0) + 40 : height + 2;
+            return forHorizontal ? (__axis_x_height ? __axis_x_height : 0) + 80 : height + 8;
         }
         function getXAxisClipWidth() {
             return getAxisClipWidth(!__axis_rotated);
@@ -543,10 +649,20 @@
             return getAxisClipHeight(__axis_rotated);
         }
         function getEventRectWidth() {
-            var base = __axis_rotated ? height : width,
-                maxDataCount = getMaxDataCount(),
-                ratio = getXDomainRatio() * (hasBarType(c3.data.targets) ? (maxDataCount - (isCategorized ? 0.25 : 1)) / maxDataCount : 0.98);
-            return maxDataCount > 1 ? (base * ratio) / (maxDataCount - 1) : base;
+            var target = getMaxDataCountTarget(c3.data.targets),
+                firstData, lastData, base, maxDataCount, ratio, w;
+            if (!target) {
+                return 0;
+            }
+            firstData = target.values[0], lastData = target.values[target.values.length - 1];
+            base = x(lastData.x) - x(firstData.x);
+            if (base === 0) {
+                return __axis_rotated ? height : width;
+            }
+            maxDataCount = getMaxDataCount();
+            ratio = (hasBarType(c3.data.targets) ? (maxDataCount - (isCategorized ? 0.25 : 1)) / maxDataCount : 1);
+            w = maxDataCount > 1 ? (base * ratio) / (maxDataCount - 1) : base;
+            return w < 1 ? 1 : w;
         }
         function updateLegendStep(step) {
             legendStep = step;
@@ -558,16 +674,26 @@
             legendItemHeight = h;
         }
         function getLegendWidth() {
-            return __legend_show ? isLegendRight ? legendItemWidth * (legendStep + 1) : currentWidth : 0;
+            return __legend_show ? isLegendRight || isLegendInset ? legendItemWidth * (legendStep + 1) : currentWidth : 0;
         }
         function getLegendHeight() {
-            return __legend_show ? isLegendRight ? currentHeight : legendItemHeight * (legendStep + 1) : 0;
+            var h = 0;
+            if (__legend_show) {
+                if (isLegendRight) {
+                    h = currentHeight;
+                } else if (isLegendInset) {
+                    h = __legend_inset_step ? Math.max(20, legendItemHeight) * (__legend_inset_step + 1) : height;
+                } else {
+                    h = Math.max(20, legendItemHeight) * (legendStep + 1);
+                }
+            }
+            return h;
         }
 
         //-- Scales --//
 
         function updateScales() {
-            var xAxisTickFormat, forInit = !x;
+            var xAxisTickFormat, xAxisTickValues, forInit = !x;
             // update edges
             xMin = __axis_rotated ? 1 : 0;
             xMax = __axis_rotated ? height : width;
@@ -578,18 +704,19 @@
             subYMin = __axis_rotated ? 0 : height2;
             subYMax = __axis_rotated ? width2 : 1;
             // update scales
-            x = getX(xMin, xMax, forInit ? undefined : x.domain(), function () { return xAxis.tickOffset(); });
-            y = getY(yMin, yMax);
-            y2 = getY(yMin, yMax);
+            x = getX(xMin, xMax, forInit ? undefined : x.orgDomain(), function () { return xAxis.tickOffset(); });
+            y = getY(yMin, yMax, forInit ? undefined : y.domain());
+            y2 = getY(yMin, yMax, forInit ? undefined : y2.domain());
             subX = getX(xMin, xMax, orgXDomain, function (d) { return d % 1 ? 0 : subXAxis.tickOffset(); });
-            subY = getY(subYMin, subYMax);
-            subY2 = getY(subYMin, subYMax);
+            subY = getY(subYMin, subYMax, forInit ? undefined : subY.domain());
+            subY2 = getY(subYMin, subYMax, forInit ? undefined : subY2.domain());
             // update axes
             xAxisTickFormat = getXAxisTickFormat();
-            xAxis = getXAxis(x, xOrient, xAxisTickFormat);
-            subXAxis = getXAxis(subX, subXOrient, xAxisTickFormat);
-            yAxis = getYAxis(y, yOrient, __axis_y_tick_format, __axis_y_ticks);
-            yAxis2 = getYAxis(y2, y2Orient, __axis_y2_tick_format, __axis_y2_ticks);
+            xAxisTickValues = __axis_x_tick_values ? __axis_x_tick_values : (forInit ? undefined : xAxis.tickValues());
+            xAxis = getXAxis(x, xOrient, xAxisTickFormat, xAxisTickValues);
+            subXAxis = getXAxis(subX, subXOrient, xAxisTickFormat, xAxisTickValues);
+            yAxis = getYAxis(y, yOrient, __axis_y_tick_format, __axis_y_ticks, __axis_y_tick_outer);
+            y2Axis = getYAxis(y2, y2Orient, __axis_y2_tick_format, __axis_y2_ticks, __axis_y2_tick_outer);
             // Set initialized scales to brush and zoom
             if (!forInit) {
                 brush.scale(subX);
@@ -603,25 +730,37 @@
             svgArcExpanded = getSvgArcExpanded();
             svgArcExpandedSub = getSvgArcExpanded(0.98);
         }
+        function getScale(min, max, forTimeseries) {
+            return (forTimeseries ? d3.time.scale() : d3.scale.linear()).range([min, max]);
+        }
         function getX(min, max, domain, offset) {
-            var scale = ((isTimeSeries) ? d3.time.scale() : d3.scale.linear()).range([min, max]);
-            // Set function and values for c3
-            scale.orgDomain = function () { return scale.domain(); };
-            if (isDefined(domain)) { scale.domain(domain); }
-            if (isUndefined(offset)) { offset = function () { return 0; }; }
+            var scale = getScale(min, max, isTimeSeries),
+                _scale = domain ? scale.domain(domain) : scale, key;
             // Define customized scale if categorized axis
             if (isCategorized) {
-                var _scale = scale, key;
-                scale = function (d) { return _scale(d) + offset(d); };
-                for (key in _scale) {
-                    scale[key] = _scale[key];
-                }
-                scale.orgDomain = function () {
-                    return _scale.domain();
+                offset = offset || function () { return 0; };
+                scale = function (d, raw) {
+                    var v = _scale(d) + offset(d);
+                    return raw ? v : Math.ceil(v);
                 };
+            } else {
+                scale = function (d, raw) {
+                    var v = _scale(d);
+                    return raw ? v : Math.ceil(v);
+                };
+            }
+            // define functions
+            for (key in _scale) {
+                scale[key] = _scale[key];
+            }
+            scale.orgDomain = function () {
+                return _scale.domain();
+            };
+            // define custom domain() for categorized axis
+            if (isCategorized) {
                 scale.domain = function (domain) {
                     if (!arguments.length) {
-                        domain = _scale.domain();
+                        domain = this.orgDomain();
                         return [domain[0], domain[1] + 1];
                     }
                     _scale.domain(domain);
@@ -630,8 +769,10 @@
             }
             return scale;
         }
-        function getY(min, max) {
-            return d3.scale.linear().range([min, max]);
+        function getY(min, max, domain) {
+            var scale = getScale(min, max);
+            if (domain) { scale.domain(domain); }
+            return scale;
         }
         function getYScale(id) {
             return getAxisId(id) === 'y2' ? y2 : y;
@@ -642,44 +783,43 @@
 
         //-- Axes --//
 
-        function getXAxis(scale, orient, tickFormat) {
-            var axis = (isCategorized ? categoryAxis() : d3.svg.axis()).scale(scale).orient(orient);
+        function getXAxis(scale, orient, tickFormat, tickValues) {
+            var axisParams = {isCategory: isCategorized, withOuterTick: __axis_x_tick_outer},
+                axis = c3_axis(d3, axisParams).scale(scale).orient(orient);
 
             // Set tick
-            axis.tickFormat(tickFormat);
+            axis.tickFormat(tickFormat).tickValues(tickValues);
             if (isCategorized) {
                 axis.tickCentered(__axis_x_tick_centered);
                 if (isEmpty(__axis_x_tick_culling)) {
                     __axis_x_tick_culling = false;
                 }
             } else {
+                // TODO: move this to c3_axis
                 axis.tickOffset = function () {
-                    var base = __axis_rotated ? height : width;
-                    return ((base * getXDomainRatio()) / getMaxDataCount()) / 2;
+                    var edgeX = getEdgeX(c3.data.targets), diff = x(edgeX[1]) - x(edgeX[0]),
+                        base = diff ? diff : (__axis_rotated ? height : width);
+                    return (base / getMaxDataCount()) / 2;
                 };
-            }
-
-            // Set categories
-            if (isCategorized) {
-                axis.categories(__axis_x_categories);
             }
 
             return axis;
         }
-        function getYAxis(scale, orient, tickFormat, ticks) {
-            return d3.svg.axis().scale(scale).orient(orient).tickFormat(tickFormat).ticks(ticks).outerTickSize(0);
+        function getYAxis(scale, orient, tickFormat, ticks, withOuterTick) {
+            var axisParams = {withOuterTick: withOuterTick};
+            return c3_axis(d3, axisParams).scale(scale).orient(orient).tickFormat(tickFormat).ticks(ticks);
         }
         function getAxisId(id) {
             return id in __data_axes ? __data_axes[id] : 'y';
         }
         function getXAxisTickFormat() {
-            var format = isTimeSeries ? defaultTimeFormat : isCategorized ? categoryName : function (v) { return v < 0 ? v.toFixed(0) : v; };
+            var format = isTimeSeries ? defaultAxisTimeFormat : isCategorized ? categoryName : function (v) { return v < 0 ? v.toFixed(0) : v; };
             if (__axis_x_tick_format) {
                 if (typeof __axis_x_tick_format === 'function') {
                     format = __axis_x_tick_format;
                 } else if (isTimeSeries) {
                     format = function (date) {
-                        return date ? xTimeFormat(__axis_x_tick_format)(date) : "";
+                        return date ? axisTimeFormat(__axis_x_tick_format)(date) : "";
                     };
                 }
             }
@@ -720,12 +860,13 @@
         function yForRotatedTickText(r) {
             return 11.5 - 2.5 * (r / 15);
         }
-        function rotateTickText(axis) {
+        function rotateTickText(axis, transition, rotate) {
             axis.selectAll('.tick text')
-                .attr("y", yForRotatedTickText(__axis_x_tick_rotate))
-                .attr("x", xForRotatedTickText(__axis_x_tick_rotate))
-                .attr("transform", "rotate(" + __axis_x_tick_rotate + ")")
                 .style("text-anchor", "start");
+            transition.selectAll('.tick text')
+                .attr("y", yForRotatedTickText(rotate))
+                .attr("x", xForRotatedTickText(rotate))
+                .attr("transform", "rotate(" + rotate + ")");
         }
         function getAxisLabelPosition(axisId, defaultPosition) {
             var option = getAxisLabelOptionByAxisId(axisId),
@@ -804,9 +945,9 @@
         function dyForXAxisLabel() {
             var position = getXAxisLabelPosition();
             if (__axis_rotated) {
-                return position.isInner ? "1.2em" : -30 - getMaxTickWidth('x');
+                return position.isInner ? "1.2em" : -25 - getMaxTickWidth('x');
             } else {
-                return position.isInner ? "-0.5em" : "3em";
+                return position.isInner ? "-0.5em" : __axis_x_height ? __axis_x_height - 10 : "3em";
             }
         }
         function dyForYAxisLabel() {
@@ -835,187 +976,49 @@
             return textAnchorForAxisLabel(__axis_rotated, getY2AxisLabelPosition());
         }
         function getMaxTickWidth(id) {
-            var maxWidth = 0, axisClass = id === 'x' ? CLASS.axisX : id === 'y' ? CLASS.axisY : CLASS.axisY2;
-            d3.selectAll('.' + axisClass + ' .tick text').each(function () {
-                var box = this.getBoundingClientRect();
-                if (maxWidth < box.width) { maxWidth = box.width; }
-            });
-            return maxWidth < 20 ? 20 : maxWidth;
-        }
-        function updateAxisLabels() {
-            main.select('.' + CLASS.axisX + ' .' + CLASS.axisXLabel).attr("x", xForXAxisLabel).text(textForXAxisLabel);
-            main.select('.' + CLASS.axisY + ' .' + CLASS.axisYLabel).attr("x", xForYAxisLabel).attr("dy", dyForYAxisLabel).text(textForYAxisLabel);
-            main.select('.' + CLASS.axisY2 + ' .' + CLASS.axisY2Label).attr("x", xForY2AxisLabel).attr("dy", dyForY2AxisLabel).text(textForY2AxisLabel);
-        }
-
-        function categoryAxis() {
-            var scale = d3.scale.linear(), orient = "bottom";
-            var tickMajorSize = 6, /*tickMinorSize = 6,*/ tickEndSize = 6, tickPadding = 3, tickCentered = false, tickTextNum = 10, tickOffset = 0, tickFormat = null, tickCulling = true;
-            var categories = [];
-            function axisX(selection, x) {
-                selection.attr("transform", function (d) {
-                    return "translate(" + (x(d) + tickOffset) + ", 0)";
-                });
-            }
-            function axisY(selection, y) {
-                selection.attr("transform", function (d) {
-                    return "translate(0," + y(d) + ")";
-                });
-            }
-            function scaleExtent(domain) {
-                var start = domain[0], stop = domain[domain.length - 1];
-                return start < stop ? [ start, stop ] : [ stop, start ];
-            }
-            function generateTicks(domain) {
-                var ticks = [];
-                for (var i = Math.ceil(domain[0]); i < domain[1]; i++) {
-                    ticks.push(i);
+            var maxWidth = 0, targetsToShow, scale, axis;
+            if (svg) {
+                targetsToShow = filterTargetsToShow(c3.data.targets);
+                if (id === 'y') {
+                    scale = y.copy().domain(getYDomain(targetsToShow, 'y'));
+                    axis = getYAxis(scale, yOrient, __axis_y_tick_format, __axis_y_ticks, __axis_y_tick_outer);
+                } else if (id === 'y2') {
+                    scale = y2.copy().domain(getYDomain(targetsToShow, 'y2'));
+                    axis = getYAxis(scale, y2Orient, __axis_y2_tick_format, __axis_y2_ticks, __axis_y2_tick_outer);
+                } else {
+                    scale = x.copy().domain(getXDomain(targetsToShow));
+                    axis = getXAxis(scale, xOrient, getXAxisTickFormat(), __axis_x_tick_values ? __axis_x_tick_values : xAxis.tickValues());
                 }
-                if (ticks.length > 0 && ticks[0] > 0) {
-                    ticks.unshift(ticks[0] - (ticks[1] - ticks[0]));
-                }
-                return ticks;
+                main.append("g").call(axis).each(function () {
+                    d3.select(this).selectAll('text').each(function () {
+                        var box = this.getBoundingClientRect();
+                        if (maxWidth < box.width) { maxWidth = box.width; }
+                    });
+                }).remove();
             }
-            function category(i) {
-                return i < categories.length ? categories[i] : i;
-            }
-            function formattedCategory(i) {
-                var c = category(i);
-                return tickFormat ? tickFormat(c) : c;
-            }
-            function axis(g) {
-                g.each(function () {
-                    var g = d3.select(this);
-                    var ticks = generateTicks(scale.domain());
-                    var tick = g.selectAll(".tick.major").data(ticks, String),
-                        tickEnter = tick.enter().insert("g", "path").attr("class", "tick major").style("opacity", 1e-6),
-                        tickExit = d3.transition(tick.exit()).style("opacity", 1e-6).remove(),
-                        tickUpdate = d3.transition(tick).style("opacity", 1),
-                        tickTransform,
-                        tickX;
-                    var range = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
-                        path = g.selectAll(".domain").data([ 0 ]);
-
-                    path.enter().append("path").attr("class", "domain");
-
-                    var pathUpdate = d3.transition(path);
-
-                    var scale1 = scale.copy(), scale0 = this.__chart__ || scale1;
-                    this.__chart__ = scale1;
-                    tickEnter.append("line");
-                    tickEnter.append("text");
-                    var lineEnter = tickEnter.select("line"), lineUpdate = tickUpdate.select("line"), text = tick.select("text"), textEnter = tickEnter.select("text"), textUpdate = tickUpdate.select("text");
-
-                    tickOffset = (scale1(1) - scale1(0)) / 2;
-                    tickX = tickCentered ? 0 : tickOffset;
-
-                    switch (orient) {
-                    case "bottom":
-                        {
-                            tickTransform = axisX;
-                            lineEnter.attr("y2", tickMajorSize);
-                            textEnter.attr("y", Math.max(tickMajorSize, 0) + tickPadding);
-                            lineUpdate.attr("x1", tickX).attr("x2", tickX).attr("y2", tickMajorSize);
-                            textUpdate.attr("x", 0).attr("y", Math.max(tickMajorSize, 0) + tickPadding);
-                            text.attr("dy", ".71em").style("text-anchor", "middle");
-                            text.text(formattedCategory);
-                            pathUpdate.attr("d", "M" + range[0] + "," + tickEndSize + "V0H" + range[1] + "V" + tickEndSize);
-                            break;
-                        }
-/* TODO: implement
-                    case "top":
-                        {
-                        tickTransform = axisX
-                        lineEnter.attr("y2", -tickMajorSize)
-                        textEnter.attr("y", -(Math.max(tickMajorSize, 0) + tickPadding))
-                        lineUpdate.attr("x2", 0).attr("y2", -tickMajorSize)
-                        textUpdate.attr("x", 0).attr("y", -(Math.max(tickMajorSize, 0) + tickPadding))
-                        text.attr("dy", "0em").style("text-anchor", "middle")
-                        pathUpdate.attr("d", "M" + range[0] + "," + -tickEndSize + "V0H" + range[1] + "V" + -tickEndSize)
-                        break
-                        }
-*/
-                    case "left":
-                        {
-                            tickTransform = axisY;
-                            lineEnter.attr("x2", -tickMajorSize);
-                            textEnter.attr("x", -(Math.max(tickMajorSize, 0) + tickPadding));
-                            lineUpdate.attr("x2", -tickMajorSize).attr("y2", 0);
-                            textUpdate.attr("x", -(Math.max(tickMajorSize, 0) + tickPadding)).attr("y", tickOffset);
-                            text.attr("dy", ".32em").style("text-anchor", "end");
-                            text.text(formattedCategory);
-                            pathUpdate.attr("d", "M" + -tickEndSize + "," + range[0] + "H0V" + range[1] + "H" + -tickEndSize);
-                            break;
-                        }
-/*
-                case "right":
-                    {
-                        tickTransform = axisY
-                        lineEnter.attr("x2", tickMajorSize)
-                        textEnter.attr("x", Math.max(tickMajorSize, 0) + tickPadding)
-                        lineUpdate.attr("x2", tickMajorSize).attr("y2", 0)
-                        textUpdate.attr("x", Math.max(tickMajorSize, 0) + tickPadding).attr("y", 0)
-                        text.attr("dy", ".32em").style("text-anchor", "start")
-                        pathUpdate.attr("d", "M" + tickEndSize + "," + range[0] + "H0V" + range[1] + "H" + tickEndSize)
-                        break
-                    }
-*/
-                    }
-                    if (scale.ticks) {
-                        tickEnter.call(tickTransform, scale0);
-                        tickUpdate.call(tickTransform, scale1);
-                        tickExit.call(tickTransform, scale1);
-                    } else {
-                        var dx = scale1.rangeBand() / 2, x = function (d) {
-                            return scale1(d) + dx;
-                        };
-                        tickEnter.call(tickTransform, x);
-                        tickUpdate.call(tickTransform, x);
-                    }
-                });
-            }
-            axis.scale = function (x) {
-                if (!arguments.length) { return scale; }
-                scale = x;
-                return axis;
-            };
-            axis.orient = function (x) {
-                if (!arguments.length) { return orient; }
-                orient = x in {top: 1, right: 1, bottom: 1, left: 1} ? x + "" : "bottom";
-                return axis;
-            };
-            axis.categories = function (x) {
-                if (!arguments.length) { return categories; }
-                categories = x;
-                return axis;
-            };
-            axis.tickCentered = function (x) {
-                if (!arguments.length) { return tickCentered; }
-                tickCentered = x;
-                return axis;
-            };
-            axis.tickFormat = function (format) {
-                if (!arguments.length) { return tickFormat; }
-                tickFormat = format;
-                return axis;
-            };
-            axis.tickOffset = function () {
-                return tickOffset;
-            };
-            axis.ticks = function (n) {
-                if (!arguments.length) { return tickTextNum; }
-                tickTextNum = n;
-                return axis;
-            };
-            axis.tickCulling = function (culling) {
-                if (!arguments.length) { return tickCulling; }
-                tickCulling = culling;
-                return axis;
-            };
-            axis.tickValues = function () {
-                // TODO: do something
-            };
-            return axis;
+            currentMaxTickWidth = maxWidth <= 0 ? currentMaxTickWidth : maxWidth;
+            return currentMaxTickWidth;
+        }
+        function updateAxisLabels(withTransition) {
+            var axisXLabel = main.select('.' + CLASS.axisX + ' .' + CLASS.axisXLabel),
+                axisYLabel = main.select('.' + CLASS.axisY + ' .' + CLASS.axisYLabel),
+                axisY2Label = main.select('.' + CLASS.axisY2 + ' .' + CLASS.axisY2Label);
+            (withTransition ? axisXLabel.transition() : axisXLabel)
+                .attr("x", xForXAxisLabel)
+                .attr("dx", dxForXAxisLabel)
+                .attr("dy", dyForXAxisLabel)
+                .text(textForXAxisLabel);
+            (withTransition ? axisYLabel.transition() : axisYLabel)
+                .attr("x", xForYAxisLabel)
+                .attr("dx", dxForYAxisLabel)
+                .attr("dy", dyForYAxisLabel)
+                .attr("dy", dyForYAxisLabel)
+                .text(textForYAxisLabel);
+            (withTransition ? axisY2Label.transition() : axisY2Label)
+                .attr("x", xForY2AxisLabel)
+                .attr("dx", dxForY2AxisLabel)
+                .attr("dy", dyForY2AxisLabel)
+                .text(textForY2AxisLabel);
         }
 
         //-- Arc --//
@@ -1023,16 +1026,34 @@
         pie = d3.layout.pie().value(function (d) {
             return d.values.reduce(function (a, b) { return a + b.value; }, 0);
         });
+        if (!__data_order || !__pie_sort || !__donut_sort) {
+            pie.sort(null);
+        }
+
+        function descByStartAngle(a, b) {
+            return a.startAngle - b.startAngle;
+        }
 
         function updateAngle(d) {
-            var found = false;
-            pie(filterTargetsToShow(c3.data.targets)).forEach(function (t) {
+            var found = false, index = 0;
+            pie(filterTargetsToShow(c3.data.targets)).sort(descByStartAngle).forEach(function (t) {
                 if (! found && t.data.id === d.data.id) {
                     found = true;
                     d = t;
-                    return;
+                    d.index = index;
                 }
+                index++;
             });
+            if (isNaN(d.endAngle)) {
+                d.endAngle = d.startAngle;
+            }
+            if (isGaugeType(d.data)) {
+                var gMin = __gauge_min, gMax = __gauge_max,
+                    gF = Math.abs(gMin) + gMax,
+                    aTic = (Math.PI) / gF;
+                d.startAngle = (-1 * (Math.PI / 2)) + (aTic * Math.abs(gMin));
+                d.endAngle = d.startAngle + (aTic * ((d.value > gMax) ? gMax : d.value));
+            }
             return found ? d : null;
         }
 
@@ -1055,34 +1076,41 @@
                 return updated ? arc(updated) : "M 0 0";
             };
         }
-        function getArc(d, withoutUpdate) {
-            return isArcType(d.data) ? svgArc(d, withoutUpdate) : "M 0 0";
+        function getArc(d, withoutUpdate, force) {
+            return force || isArcType(d.data) ? svgArc(d, withoutUpdate) : "M 0 0";
         }
         function transformForArcLabel(d) {
-            var updated = updateAngle(d), c, x, y, h, translate = "";
-            if (updated) {
+            var updated = updateAngle(d), c, x, y, h, ratio, translate = "";
+            if (updated && !hasGaugeType(c3.data.targets)) {
                 c = svgArc.centroid(updated);
-                x = c[0], y = c[1], h = Math.sqrt(x * x + y * y);
-                translate = "translate(" + ((x / h) * radius * 0.8) +  ',' + ((y / h) * radius * 0.8) +  ")";
+                x = isNaN(c[0]) ? 0 : c[0];
+                y = isNaN(c[1]) ? 0 : c[1];
+                h = Math.sqrt(x * x + y * y);
+                // TODO: ratio should be an option?
+                ratio = radius && h ? (36 / radius > 0.375 ? 1.175 - 36 / radius : 0.8) * radius / h : 0;
+                translate = "translate(" + (x * ratio) +  ',' + (y * ratio) +  ")";
             }
             return translate;
         }
         function getArcRatio(d) {
-            return d ? (d.endAngle - d.startAngle) / (Math.PI * 2) : null;
+            var whole = hasGaugeType(c3.data.targets) ? Math.PI : (Math.PI * 2);
+            return d ? (d.endAngle - d.startAngle) / whole : null;
         }
         function convertToArcData(d) {
             return addName({
                 id: d.data.id,
                 value: d.value,
-                ratio: getArcRatio(d)
+                ratio: getArcRatio(d),
+                index: d.index,
             });
         }
         function textForArcLabel(d) {
             var updated, value, ratio, format;
-            if (! shouldShowArcLable()) { return ""; }
+            if (! shouldShowArcLabel()) { return ""; }
             updated = updateAngle(d);
             value = updated ? updated.value : null;
             ratio = getArcRatio(updated);
+            if (! hasGaugeType(c3.data.targets) && ! meetsArcLabelThreshold(ratio)) { return ""; }
             format = getArcLabelFormat();
             return format ? format(value, ratio) : defaultArcValueFormat(value, ratio);
         }
@@ -1102,41 +1130,52 @@
                         }
                     });
             }
+
             if (!withoutFadeOut) {
                 noneTargets.style("opacity", 0.3);
             }
         }
         function unexpandArc(id) {
             var target = svg.selectAll('.' + CLASS.chartArc + selectorTarget(id));
-            target.selectAll('path')
+            target.selectAll('path.' + CLASS.arc)
               .transition().duration(50)
                 .attr("d", svgArc);
             svg.selectAll('.' + CLASS.arc)
                 .style("opacity", 1);
         }
-        function shouldShowArcLable() {
-            return hasDonutType(c3.data.targets) ? __donut_label_show : __pie_label_show;
+        function shouldShowArcLabel() {
+            var shouldShow = true;
+            if (hasDonutType(c3.data.targets)) {
+                shouldShow = __donut_label_show;
+            } else if (hasPieType(c3.data.targets)) {
+                shouldShow = __pie_label_show;
+            }
+            // when gauge, always true
+            return shouldShow;
+        }
+        function meetsArcLabelThreshold(ratio) {
+            var threshold = hasDonutType(c3.data.targets) ? __donut_label_threshold : __pie_label_threshold;
+            return ratio >= threshold;
         }
         function getArcLabelFormat() {
-            return hasDonutType(c3.data.targets) ? __donut_label_format : __pie_label_format;
+            var format = __pie_label_format;
+            if (hasGaugeType(c3.data.targets)) {
+                format = __gauge_label_format;
+            } else if (hasDonutType(c3.data.targets)) {
+                format = __donut_label_format;
+            }
+            return format;
         }
         function getArcTitle() {
             return hasDonutType(c3.data.targets) ? __donut_title : "";
         }
-        function getArcOnClick() {
-            var callback = hasDonutType(c3.data.targets) ? __donut_onclick : __pie_onclick;
-            return typeof callback === 'function' ? callback : function () {};
-        }
-        function getArcOnMouseOver() {
-            var callback = hasDonutType(c3.data.targets) ? __donut_onmouseover : __pie_onmouseover;
-            return typeof callback === 'function' ? callback : function () {};
-        }
-        function getArcOnMouseOut() {
-            var callback = hasDonutType(c3.data.targets) ? __donut_onmouseout : __pie_onmouseout;
-            return typeof callback === 'function' ? callback : function () {};
-        }
 
         //-- Domain --//
+
+        function getAxisPadding(padding, key, defaultValue, all) {
+            var ratio = padding.unit === 'ratio' ? all : 1;
+            return isValue(padding[key]) ? padding[key] * ratio : defaultValue;
+        }
 
         function getYDomainMin(targets) {
             var ids = mapToIds(targets), ys = getValuesAsIdKeyed(targets), j, k, baseId, idsInGroup, id, hasNegativeValue;
@@ -1204,16 +1243,28 @@
                 yDomainMax = isValue(yMax) ? yMax : getYDomainMax(yTargets),
                 domainLength, padding, padding_top, padding_bottom,
                 center = axisId === 'y2' ? __axis_y2_center : __axis_y_center,
-                yDomainAbs, widths, diff, ratio,
-                showHorizontalDataLabel = hasDataLabel() && __axis_rotated;
+                yDomainAbs, lengths, diff, ratio, isAllPositive, isAllNegative,
+                isZeroBased = (hasBarType(yTargets) && __bar_zerobased) || (hasAreaType(yTargets) && __area_zerobased),
+                showHorizontalDataLabel = hasDataLabel() && __axis_rotated,
+                showVerticalDataLabel = hasDataLabel() && !__axis_rotated;
             if (yTargets.length === 0) { // use current domain if target of axisId is none
                 return axisId === 'y2' ? y2.domain() : y.domain();
             }
             if (yDomainMin === yDomainMax) {
                 yDomainMin < 0 ? yDomainMax = 0 : yDomainMin = 0;
             }
+            isAllPositive = yDomainMin >= 0 && yDomainMax >= 0;
+            isAllNegative = yDomainMin <= 0 && yDomainMax <= 0;
+
+            // Bar/Area chart should be 0-based if all positive|negative
+            if (isZeroBased) {
+                if (isAllPositive) { yDomainMin = 0; }
+                if (isAllNegative) { yDomainMax = 0; }
+            }
+
             domainLength = Math.abs(yDomainMax - yDomainMin);
-            padding = padding_top = padding_bottom = showHorizontalDataLabel ? 0 : domainLength * 0.1;
+            padding = padding_top = padding_bottom = domainLength * 0.1;
+
             if (center) {
                 yDomainAbs = Math.max(Math.abs(yDomainMin), Math.abs(yDomainMax));
                 yDomainMax = yDomainAbs - center;
@@ -1221,38 +1272,40 @@
             }
             // add padding for data label
             if (showHorizontalDataLabel) {
-                widths = getDataLabelWidth(yDomainMin, yDomainMax);
+                lengths = getDataLabelLength(yDomainMin, yDomainMax, axisId, 'width');
                 diff = diffDomain(y.range());
-                ratio = [widths[0] / diff, widths[1] / diff];
+                ratio = [lengths[0] / diff, lengths[1] / diff];
                 padding_top += domainLength * (ratio[1] / (1 - ratio[0] - ratio[1]));
                 padding_bottom += domainLength * (ratio[0] / (1 - ratio[0] - ratio[1]));
+            } else if (showVerticalDataLabel) {
+                lengths = getDataLabelLength(yDomainMin, yDomainMax, axisId, 'height');
+                padding_top += lengths[1];
+                padding_bottom += lengths[0];
             }
             if (axisId === 'y' && __axis_y_padding) {
-                padding_top = isValue(__axis_y_padding.top) ? __axis_y_padding.top : padding;
-                padding_bottom = isValue(__axis_y_padding.bottom) ? __axis_y_padding.bottom : padding;
+                padding_top = getAxisPadding(__axis_y_padding, 'top', padding, domainLength);
+                padding_bottom = getAxisPadding(__axis_y_padding, 'bottom', padding, domainLength);
             }
             if (axisId === 'y2' && __axis_y2_padding) {
-                padding_top = isValue(__axis_y2_padding.top) ? __axis_y2_padding.top : padding;
-                padding_bottom = isValue(__axis_y2_padding.bottom) ? __axis_y2_padding.bottom : padding;
+                padding_top = getAxisPadding(__axis_y2_padding, 'top', padding, domainLength);
+                padding_bottom = getAxisPadding(__axis_y2_padding, 'bottom', padding, domainLength);
             }
-            // Bar chart with only positive values should be 0-based
-            if (hasBarType(yTargets) && !hasNegativeValueInTargets(yTargets)) {
-                padding_bottom = yDomainMin;
+            // Bar/Area chart should be 0-based if all positive|negative
+            if (isZeroBased) {
+                if (isAllPositive) { padding_bottom = yDomainMin; }
+                if (isAllNegative) { padding_top = -yDomainMax; }
             }
             return [yDomainMin - padding_bottom, yDomainMax + padding_top];
         }
-        function getXDomainRatio(isSub) {
-            var orgDiff = diffDomain(orgXDomain), currentDiff = diffDomain(x.domain());
-            return isSub || currentDiff === 0 ? 1 : orgDiff / currentDiff;
-        }
         function getXDomainMin(targets) {
-            return __axis_x_min ? __axis_x_min : d3.min(targets, function (t) { return d3.min(t.values, function (v) { return v.x; }); });
+            return __axis_x_min ? (isTimeSeries ? parseDate(__axis_x_min) : __axis_x_min) : d3.min(targets, function (t) { return d3.min(t.values, function (v) { return v.x; }); });
         }
         function getXDomainMax(targets) {
-            return __axis_x_max ? __axis_x_max : d3.max(targets, function (t) { return d3.max(t.values, function (v) { return v.x; }); });
+            return __axis_x_max ? (isTimeSeries ? parseDate(__axis_x_max) : __axis_x_max) : d3.max(targets, function (t) { return d3.max(t.values, function (v) { return v.x; }); });
         }
-        function getXDomainPadding(targets, domain) {
-            var firstX = domain[0], lastX = domain[1], diff = Math.abs(firstX - lastX), maxDataCount, padding, paddingLeft, paddingRight;
+        function getXDomainPadding(targets) {
+            var edgeX = getEdgeX(targets), diff = edgeX[1] - edgeX[0],
+                maxDataCount, padding, paddingLeft, paddingRight;
             if (isCategorized) {
                 padding = 0;
             } else if (hasBarType(targets)) {
@@ -1274,8 +1327,13 @@
         function getXDomain(targets) {
             var xDomain = [getXDomainMin(targets), getXDomainMax(targets)],
                 firstX = xDomain[0], lastX = xDomain[1],
-                padding = getXDomainPadding(targets, xDomain),
+                padding = getXDomainPadding(targets),
                 min = 0, max = 0;
+            // show center of x domain if min and max are the same
+            if ((firstX - lastX) === 0 && !isCategorized) {
+                firstX = isTimeSeries ? new Date(firstX.getTime() * 0.5) : -0.5;
+                lastX = isTimeSeries ? new Date(lastX.getTime() * 1.5) : 0.5;
+            }
             if (firstX || firstX === 0) {
                 min = isTimeSeries ? new Date(firstX.getTime() - padding.left) : firstX - padding.left;
             }
@@ -1283,6 +1341,20 @@
                 max = isTimeSeries ? new Date(lastX.getTime() + padding.right) : lastX + padding.right;
             }
             return [min, max];
+        }
+        function updateXDomain(targets, withUpdateXDomain, withUpdateOrgXDomain, domain) {
+            if (withUpdateOrgXDomain) {
+                x.domain(domain ? domain : d3.extent(getXDomain(targets)));
+                orgXDomain = x.domain();
+                if (__zoom_enabled) { zoom.scale(x).updateScaleExtent(); }
+                subX.domain(x.domain());
+                brush.scale(subX);
+            }
+            if (withUpdateXDomain) {
+                x.domain(domain ? domain : brush.empty() ? orgXDomain : brush.extent());
+                if (__zoom_enabled) { zoom.scale(x).updateScaleExtent(); }
+            }
+            return x.domain();
         }
         function diffDomain(d) {
             return d[1] - d[0];
@@ -1345,6 +1417,9 @@
             }
             return end < start ? 0 : end - start;
         }
+        function isRegionOnX(d) {
+            return !d.axis || d.axis === 'x';
+        }
 
         //-- Data --//
 
@@ -1367,7 +1442,15 @@
             return xValues;
         }
         function getXValue(id, i) {
-            return id in c3.data.xs && c3.data.xs[id] && c3.data.xs[id][i] ? c3.data.xs[id][i] : i;
+            return id in c3.data.xs && c3.data.xs[id] && isValue(c3.data.xs[id][i]) ? c3.data.xs[id][i] : i;
+        }
+        function getOtherTargetXs() {
+            var idsForX = Object.keys(c3.data.xs);
+            return idsForX.length ? c3.data.xs[idsForX[0]] : null;
+        }
+        function getOtherTargetX(index) {
+            var xs = getOtherTargetXs();
+            return xs && index < xs.length ? xs[index] : null;
         }
         function addXs(xs) {
             Object.keys(xs).forEach(function (id) {
@@ -1385,6 +1468,11 @@
                 data.name = name ? name : data.id;
             }
             return data;
+        }
+
+        function getValueOnIndex(values, index) {
+            var valueOnIndex = values.filter(function (v) { return v.index === index; });
+            return valueOnIndex.length ? valueOnIndex[0] : null;
         }
 
         function updateTargetX(targets, x) {
@@ -1405,21 +1493,75 @@
         function generateTargetX(rawX, id, index) {
             var x;
             if (isTimeSeries) {
-                x = rawX ? rawX instanceof Date ? rawX : parseDate(rawX) : parseDate(getXValue(id, index));
+                x = rawX ? parseDate(rawX) : parseDate(getXValue(id, index));
             }
-            else if (isCustomX && !isCategorized) {
-                x = rawX ? +rawX : getXValue(id, index);
+            else if (isCustomX() && !isCategorized) {
+                x = isValue(rawX) ? +rawX : getXValue(id, index);
             }
             else {
                 x = index;
             }
             return x;
         }
+        function convertUrlToData(url, mimeType, keys, done) {
+            var type = mimeType ? mimeType : 'csv';
+            d3.xhr(url, function (error, data) {
+                var d;
+                if (type === 'json') {
+                    d = convertJsonToData(JSON.parse(data.response), keys);
+                } else {
+                    d = convertCsvToData(data.response);
+                }
+                done(d);
+            });
+        }
+        function convertCsvToData(csv) {
+            var rows = d3.csv.parseRows(csv), d;
+            if (rows.length === 1) {
+                d = [{}];
+                rows[0].forEach(function (id) {
+                    d[0][id] = null;
+                });
+            } else {
+                d = d3.csv.parse(csv);
+            }
+            return d;
+        }
+        function convertJsonToData(json, keys) {
+            var new_rows = [], targetKeys, data;
+            if (keys) { // when keys specified, json would be an array that includes objects
+                targetKeys = keys.value;
+                if (keys.x) {
+                    targetKeys.push(keys.x);
+                    __data_x = keys.x;
+                }
+                new_rows.push(targetKeys);
+                json.forEach(function (o) {
+                    var new_row = [];
+                    targetKeys.forEach(function (key) {
+                        // convert undefined to null because undefined data will be removed in convertDataToTargets()
+                        var v = typeof o[key] === 'undefined' ? null : o[key];
+                        new_row.push(v);
+                    });
+                    new_rows.push(new_row);
+                });
+                data = convertRowsToData(new_rows);
+            } else {
+                Object.keys(json).forEach(function (key) {
+                    new_rows.push([key].concat(json[key]));
+                });
+                data = convertColumnsToData(new_rows);
+            }
+            return data;
+        }
         function convertRowsToData(rows) {
             var keys = rows[0], new_row = {}, new_rows = [], i, j;
             for (i = 1; i < rows.length; i++) {
                 new_row = {};
                 for (j = 0; j < rows[i].length; j++) {
+                    if (isUndefined(rows[i][j])) {
+                        throw new Error("Source data is missing a component at (" + i + "," + j + ")!");
+                    }
                     new_row[keys[j]] = rows[i][j];
                 }
                 new_rows.push(new_row);
@@ -1434,27 +1576,33 @@
                     if (isUndefined(new_rows[j - 1])) {
                         new_rows[j - 1] = {};
                     }
+                    if (isUndefined(columns[i][j])) {
+                        throw new Error("Source data is missing a component at (" + i + "," + j + ")!");
+                    }
                     new_rows[j - 1][key] = columns[i][j];
                 }
             }
             return new_rows;
         }
-        function convertDataToTargets(data) {
+        function convertDataToTargets(data, appendXs) {
             var ids = d3.keys(data[0]).filter(isNotX), xs = d3.keys(data[0]).filter(isX), targets;
 
             // save x for update data by load when custom x and c3.x API
             ids.forEach(function (id) {
-                var xKey = getXKey(id), idsForX;
+                var xKey = getXKey(id);
 
-                if (isCustomX || isTimeSeries) {
+                if (isCustomX() || isTimeSeries) {
                     // if included in input data
                     if (xs.indexOf(xKey) >= 0) {
-                        c3.data.xs[id] = data.map(function (d) { return d[xKey]; }).filter(isValue);
+                        c3.data.xs[id] = (appendXs && c3.data.xs[id] ? c3.data.xs[id] : []).concat(
+                            data.map(function (d) { return d[xKey]; })
+                                .filter(isValue)
+                                .map(function (rawX, i) { return generateTargetX(rawX, id, i); })
+                        );
                     }
                     // if not included in input data, find from preloaded data of other id's x
                     else if (__data_x) {
-                        idsForX = Object.keys(c3.data.xs);
-                        c3.data.xs[id] = idsForX.length > 0 ? c3.data.xs[idsForX[0]] : undefined;
+                        c3.data.xs[id] = getOtherTargetXs();
                     }
                     // if not included in input data, find from preloaded data
                     else if (notEmpty(__data_xs)) {
@@ -1482,7 +1630,7 @@
                     values: data.map(function (d, i) {
                         var xKey = getXKey(id), rawX = d[xKey], x = generateTargetX(rawX, id, i);
                         // use x as categories if custom x and categorized
-                        if (isCustomX && isCategorized && index === 0 && rawX) {
+                        if (isCustomX() && isCategorized && index === 0 && rawX) {
                             if (i === 0) { __axis_x_categories = []; }
                             __axis_x_categories.push(rawX);
                         }
@@ -1509,6 +1657,10 @@
                 t.values.forEach(function (v) {
                     v.index = i++;
                 });
+                // this needs to be sorted because its index and value.index is identical
+                c3.data.xs[t.id].sort(function (v1, v2) {
+                    return v1 - v2;
+                });
             });
 
             // set target types
@@ -1533,27 +1685,37 @@
             };
         }
         function getPrevX(i) {
-            return i > 0 && c3.data.targets[0].values[i - 1] ? c3.data.targets[0].values[i - 1].x : undefined;
+            var value = getValueOnIndex(c3.data.targets[0].values, i - 1);
+            return value ? value.x : null;
         }
         function getNextX(i) {
-            return i < getMaxDataCount() - 1 ? c3.data.targets[0].values[i + 1].x : undefined;
+            var value = getValueOnIndex(c3.data.targets[0].values, i + 1);
+            return value ? value.x : null;
         }
         function getMaxDataCount() {
             return d3.max(c3.data.targets, function (t) { return t.values.length; });
         }
-        function getMaxDataCountTarget() {
-            var length = c3.data.targets.length, max = 0, maxTarget;
+        function getMaxDataCountTarget(targets) {
+            var length = targets.length, max = 0, maxTarget;
             if (length > 1) {
-                c3.data.targets.forEach(function (t) {
+                targets.forEach(function (t) {
                     if (t.values.length > max) {
                         maxTarget = t;
                         max = t.values.length;
                     }
                 });
             } else {
-                maxTarget = length ? c3.data.targets[0] : null;
+                maxTarget = length ? targets[0] : null;
             }
             return maxTarget;
+        }
+        function getEdgeX(targets) {
+            var target = getMaxDataCountTarget(targets), firstData, lastData;
+            if (!target) {
+                return [0, 0];
+            }
+            firstData = target.values[0], lastData = target.values[target.values.length - 1];
+            return [firstData.x, lastData.x];
         }
         function mapToIds(targets) {
             return targets.map(function (d) { return d.id; });
@@ -1570,9 +1732,6 @@
             }
             return false;
         }
-        function getTargets(filter) {
-            return isDefined(filter) ? c3.data.targets.filter(filter) : c3.data.targets;
-        }
         function isTargetToShow(targetId) {
             return hiddenTargetIds.indexOf(targetId) < 0;
         }
@@ -1586,11 +1745,10 @@
             var xs = d3.set(d3.merge(targets.map(function (t) { return t.values.map(function (v) { return v.x; }); }))).values();
             return isTimeSeries ? xs.map(function (x) { return new Date(x); }) : xs.map(function (x) { return +x; });
         }
-        function generateTickValues(xs) {
+        function generateTickValues(xs, tickCount) {
             var tickValues = xs, targetCount, start, end, count, interval, i, tickValue;
-            if (__axis_x_tick_count) {
-                // TODO: need some arguments for __axis_x_tick_count()?
-                targetCount = typeof __axis_x_tick_count === 'function' ? __axis_x_tick_count() : __axis_x_tick_count;
+            if (tickCount) {
+                targetCount = typeof tickCount === 'function' ? tickCount() : tickCount;
                 // compute ticks according to __axis_x_tick_count
                 if (targetCount === 1) {
                     tickValues = [xs[0]];
@@ -1659,19 +1817,22 @@
         function generateClass(prefix, targetId) {
             return " " + prefix + " " + prefix + getTargetSelectorSuffix(targetId);
         }
-        function classText(d) { return generateClass(CLASS.text, d.id); }
+        function classText(d) { return generateClass(CLASS.text, d.index); }
         function classTexts(d) { return generateClass(CLASS.texts, d.id); }
-        function classShape(d, i) { return generateClass(CLASS.shape, i); }
+        function classShape(d) { return generateClass(CLASS.shape, d.index); }
         function classShapes(d) { return generateClass(CLASS.shapes, d.id); }
-        function classLine(d) { return classShapes(d) + generateClass(CLASS.line, d.id); }
-        function classCircle(d, i) { return classShape(d, i) + generateClass(CLASS.circle, i); }
+        function classLine(d) { return classShape(d) + generateClass(CLASS.line, d.id); }
+        function classLines(d) { return classShapes(d) + generateClass(CLASS.lines, d.id); }
+        function classCircle(d) { return classShape(d) + generateClass(CLASS.circle, d.index); }
         function classCircles(d) { return classShapes(d) + generateClass(CLASS.circles, d.id); }
-        function classBar(d, i) { return classShape(d, i) + generateClass(CLASS.bar, i); }
+        function classBar(d) { return classShape(d) + generateClass(CLASS.bar, d.index); }
         function classBars(d) { return classShapes(d) + generateClass(CLASS.bars, d.id); }
-        function classArc(d) { return classShapes(d.data) + generateClass(CLASS.arc, d.data.id); }
-        function classArea(d) { return classShapes(d) + generateClass(CLASS.area, d.id); }
+        function classArc(d) { return classShape(d.data) + generateClass(CLASS.arc, d.data.id); }
+        function classArcs(d) { return classShapes(d.data) + generateClass(CLASS.arcs, d.data.id); }
+        function classArea(d) { return classShape(d) + generateClass(CLASS.area, d.id); }
+        function classAreas(d) { return classShapes(d) + generateClass(CLASS.areas, d.id); }
         function classRegion(d, i) { return generateClass(CLASS.region, i) + ' ' + ('class' in d ? d.class : ''); }
-        function classEvent(d, i) { return generateClass(CLASS.eventRect, i); }
+        function classEvent(d) { return generateClass(CLASS.eventRect, d.index); }
         function classTarget(id) {
             var additionalClassSuffix = __data_classes[id], additionalClass = '';
             if (additionalClassSuffix) {
@@ -1688,16 +1849,12 @@
             return targetId || targetId === 0 ? '-' + (targetId.replace ? targetId.replace(/([^a-zA-Z0-9-_])/g, '-') : targetId) : '';
         }
         function selectorTarget(id) { return '.' + CLASS.target + getTargetSelectorSuffix(id); }
-        function selectorTargets(ids) { return ids.map(function (id) { return selectorTarget(id); }); }
+        function selectorTargets(ids) { return ids.length ? ids.map(function (id) { return selectorTarget(id); }) : null; }
         function selectorLegend(id) { return '.' + CLASS.legendItem + getTargetSelectorSuffix(id); }
-        function selectorLegends(ids) { return ids.map(function (id) { return selectorLegend(id); }); }
+        function selectorLegends(ids) { return ids.length ? ids.map(function (id) { return selectorLegend(id); }) : null; }
 
         function initialOpacity(d) {
             return d.value !== null && withoutFadeIn[d.id] ? 1 : 0;
-        }
-        function initialOpacityForText(d) {
-            var targetOpacity = opacityForText(d);
-            return initialOpacity(d) * targetOpacity;
         }
         function opacityForCircle(d) {
             return isValue(d.value) ? isScatterType(d) ? 0.5 : 1 : 0;
@@ -1713,26 +1870,42 @@
             }
             return false;
         }
-        function getDataLabelWidth(min, max) {
-            var widths = [], paddingCoef = 1.3;
-            d3.select('svg').selectAll('.dummy')
+        function getDataLabelLength(min, max, axisId, key) {
+            var lengths = [0, 0], paddingCoef = 1.3;
+            selectChart.select('svg').selectAll('.dummy')
                 .data([min, max])
               .enter().append('text')
-                .text(function (d) { return d; })
-                .each(function (d, i) { widths[i] = this.getBoundingClientRect().width * paddingCoef; })
+                .text(function (d) { return formatByAxisId(axisId)(d); })
+                .each(function (d, i) {
+                    lengths[i] = this.getBoundingClientRect()[key] * paddingCoef;
+                })
               .remove();
-            return widths;
+            return lengths;
         }
-
+        function getYFormat(forArc) {
+            var formatForY = forArc && !hasGaugeType(c3.data.targets) ? defaultArcValueFormat : yFormat,
+                formatForY2 = forArc && !hasGaugeType(c3.data.targets) ? defaultArcValueFormat : y2Format;
+            return function (v, ratio, id) {
+                var format = getAxisId(id) === 'y2' ? formatForY2 : formatForY;
+                return format(v, ratio);
+            };
+        }
+        function yFormat(v) {
+            var format = __axis_y_tick_format ? __axis_y_tick_format : defaultValueFormat;
+            return format(v);
+        }
+        function y2Format(v) {
+            var format = __axis_y2_tick_format ? __axis_y2_tick_format : defaultValueFormat;
+            return format(v);
+        }
         function defaultValueFormat(v) {
-            var yFormat = __axis_y_tick_format ? __axis_y_tick_format : function (v) { return isValue(v) ? +v : ""; };
-            return yFormat(v);
+            return isValue(v) ? +v : "";
         }
         function defaultArcValueFormat(v, ratio) {
             return (ratio * 100).toFixed(1) + '%';
         }
-        function formatByAxisId(id) {
-            var defaultFormat = function (v) { return isValue(v) ? +v : ""; }, axisId = getAxisId(id), format = defaultFormat;
+        function formatByAxisId(axisId) {
+            var format = function (v) { return isValue(v) ? +v : ""; };
             // find format according to axis id
             if (typeof __data_labels.format === 'function') {
                 format = __data_labels.format;
@@ -1748,14 +1921,14 @@
             return d ? x(d.x) : null;
         }
         function xv(d) {
-            return x(isTimeSeries ? parseDate(d.value) : d.value);
+            return Math.ceil(x(isTimeSeries ? parseDate(d.value) : d.value));
         }
         function yv(d) {
             var yScale = d.axis && d.axis === 'y2' ? y2 : y;
-            return yScale(d.value);
+            return Math.ceil(yScale(d.value));
         }
         function subxx(d) {
-            return subX(d.x);
+            return d ? subX(d.x) : null;
         }
 
         function findSameXOfValues(values, index) {
@@ -1823,7 +1996,7 @@
             return closest;
         }
         function filterSameX(targets, x) {
-            return d3.merge(targets.map(function (t) { return t.values; })).filter(function (v) { return v.x === x; });
+            return d3.merge(targets.map(function (t) { return t.values; })).filter(function (v) { return v.x - x === 0; });
         }
 
         function getPathBox(path) {
@@ -1857,16 +2030,14 @@
         //-- Tooltip --//
 
         function showTooltip(selectedData, mouse) {
-            var tWidth, tHeight;
-            var svgLeft, tooltipLeft, tooltipRight, tooltipTop, chartRight;
-            var forArc = hasArcType(c3.data.targets);
-            var valueFormat = forArc ? defaultArcValueFormat : defaultValueFormat;
-            var dataToShow = selectedData.filter(function (d) { return d && isValue(d.value); });
-            if (! __tooltip_show) { return; }
-            // don't show tooltip when no data
-            if (dataToShow.length === 0) { return; }
-            // Construct tooltip
-            tooltip.html(__tooltip_contents(selectedData, getXAxisTickFormat(), valueFormat, color)).style("display", "block");
+            var tWidth, tHeight, svgLeft, tooltipLeft, tooltipRight, tooltipTop, chartRight;
+            var forArc = hasArcType(c3.data.targets),
+                dataToShow = selectedData.filter(function (d) { return d && isValue(d.value); });
+            if (dataToShow.length === 0 || !__tooltip_show) {
+                return;
+            }
+            tooltip.html(__tooltip_contents(selectedData, getXAxisTickFormat(), getYFormat(forArc), color)).style("display", "block");
+
             // Get tooltip dimensions
             tWidth = tooltip.property('offsetWidth');
             tHeight = tooltip.property('offsetHeight');
@@ -1890,9 +2061,9 @@
                 }
 
                 if (tooltipRight > chartRight) {
-                    tooltipLeft -= tWidth + 60;
+                    tooltipLeft -= tooltipRight - chartRight;
                 }
-                if (tooltipTop + tHeight > getCurrentHeight()) {
+                if (tooltipTop + tHeight > getCurrentHeight() && tooltipTop > tHeight + 30) {
                     tooltipTop -= tHeight + 30;
                 }
             }
@@ -1910,30 +2081,41 @@
             if (! __tooltip_show) { return; }
             // Hide when scatter plot exists
             if (hasScatterType(c3.data.targets) || hasArcType(c3.data.targets)) { return; }
-            main.selectAll('line.' + CLASS.xgridFocus)
+            var focusEl = main.selectAll('line.' + CLASS.xgridFocus);
+            focusEl
                 .style("visibility", "visible")
                 .data([dataToShow[0]])
                 .attr(__axis_rotated ? 'y1' : 'x1', xx)
                 .attr(__axis_rotated ? 'y2' : 'x2', xx);
+            smoothLines(focusEl, 'grid');
         }
         function hideXGridFocus() {
             main.select('line.' + CLASS.xgridFocus).style("visibility", "hidden");
         }
-
-        //-- Circle --//
-
-        function circleX(d) {
-            return d.x || d.x === 0 ? x(d.x) : null;
+        function generateGridData(type, scale) {
+            var gridData = [], xDomain, firstYear, lastYear, i,
+                tickNum = main.select("." + CLASS.axisX).selectAll('.tick').size();
+            if (type === 'year') {
+                xDomain = getXDomain();
+                firstYear = xDomain[0].getFullYear();
+                lastYear = xDomain[1].getFullYear();
+                for (i = firstYear; i <= lastYear; i++) {
+                    gridData.push(new Date(i + '-01-01 00:00:00'));
+                }
+            } else {
+                gridData = scale.ticks(10);
+                if (gridData.length > tickNum) { // use only int
+                    gridData = gridData.filter(function (d) { return ("" + d).indexOf('.') < 0; });
+                }
+            }
+            return gridData;
         }
-        function circleY(d) {
-            return getYScale(d.id)(d.value);
-        }
 
-        //-- Bar --//
+        //-- Shape --//
 
-        function getBarIndices() {
+        function getShapeIndices(typeFilter) {
             var indices = {}, i = 0, j, k;
-            filterTargetsToShow(getTargets(isBarType)).forEach(function (d) {
+            filterTargetsToShow(c3.data.targets.filter(typeFilter)).forEach(function (d) {
                 for (j = 0; j < __data_groups.length; j++) {
                     if (__data_groups[j].indexOf(d.id) < 0) { continue; }
                     for (k = 0; k < __data_groups[j].length; k++) {
@@ -1948,36 +2130,50 @@
             indices.__max__ = i - 1;
             return indices;
         }
-        function getBarX(barW, barTargetsNum, barIndices, isSub) {
+        function getShapeX(offset, targetsNum, indices, isSub) {
             var scale = isSub ? subX : x;
             return function (d) {
-                var barIndex = d.id in barIndices ? barIndices[d.id] : 0;
-                return d.x || d.x === 0 ? scale(d.x) - barW * (barTargetsNum / 2 - barIndex) : 0;
+                var index = d.id in indices ? indices[d.id] : 0;
+                return d.x || d.x === 0 ? scale(d.x) - offset * (targetsNum / 2 - index) : 0;
             };
         }
-        function getBarY(isSub) {
+        function getShapeY(isSub) {
             return function (d) {
                 var scale = isSub ? getSubYScale(d.id) : getYScale(d.id);
                 return scale(d.value);
             };
         }
-        function getBarOffset(barIndices, isSub) {
-            var targets = orderTargets(filterTargetsToShow(getTargets(isBarType))),
+        function getShapeOffset(typeFilter, indices, isSub) {
+            var targets = orderTargets(filterTargetsToShow(c3.data.targets.filter(typeFilter))),
                 targetIds = targets.map(function (t) { return t.id; });
             return function (d, i) {
                 var scale = isSub ? getSubYScale(d.id) : getYScale(d.id),
                     y0 = scale(0), offset = y0;
                 targets.forEach(function (t) {
-                    if (t.id === d.id || barIndices[t.id] !== barIndices[d.id]) { return; }
-                    if (targetIds.indexOf(t.id) < targetIds.indexOf(d.id) && t.values[i].value * d.value > 0) {
+                    if (t.id === d.id || indices[t.id] !== indices[d.id]) { return; }
+                    if (targetIds.indexOf(t.id) < targetIds.indexOf(d.id) && t.values[i].value * d.value >= 0) {
                         offset += scale(t.values[i].value) - y0;
                     }
                 });
                 return offset;
             };
         }
+
+        //-- Circle --//
+
+        function circleX(d) {
+            return d.x || d.x === 0 ? x(d.x) : null;
+        }
+        function circleY(d, i) {
+            var lineIndices = getShapeIndices(isLineType), getPoint = generateGetLinePoint(lineIndices);
+            return __data_groups.length > 0 ? getPoint(d, i)[0][1] : getYScale(d.id)(d.value);
+        }
+
+        //-- Bar --//
+
         function getBarW(axis, barTargetsNum) {
-            return __bar_width ? __bar_width : barTargetsNum ? (axis.tickOffset() * 2 * __bar_width_ratio) / barTargetsNum : 0;
+            var w = typeof __bar_width === 'number' ? __bar_width : barTargetsNum ? (axis.tickOffset() * 2 * __bar_width_ratio) / barTargetsNum : 0;
+            return __bar_width_ratio && w > __bar_width_max ? __bar_width_max : w;
         }
 
         //-- Type --//
@@ -1987,6 +2183,9 @@
                 withoutFadeIn[id] = (type === __data_types[id]);
                 __data_types[id] = type;
             });
+            if (!targetIds) {
+                __data_type = type;
+            }
         }
         function hasType(targets, type) {
             var has = false;
@@ -2002,6 +2201,9 @@
             return hasType(targets, 'line');
         }
         */
+        function hasAreaType(targets) {
+            return hasType(targets, 'area') || hasType(targets, 'area-spline') || hasType(targets, 'area-step');
+        }
         function hasBarType(targets) {
             return hasType(targets, 'bar');
         }
@@ -2009,21 +2211,32 @@
             return hasType(targets, 'scatter');
         }
         function hasPieType(targets) {
-            return hasType(targets, 'pie');
+            return __data_type === 'pie' || hasType(targets, 'pie');
+        }
+        function hasGaugeType(targets) {
+            return hasType(targets, 'gauge');
         }
         function hasDonutType(targets) {
-            return hasType(targets, 'donut');
+            return __data_type === 'donut' || hasType(targets, 'donut');
         }
         function hasArcType(targets) {
-            return hasPieType(targets) || hasDonutType(targets);
+            return hasPieType(targets) || hasDonutType(targets) || hasGaugeType(targets);
         }
         function isLineType(d) {
             var id = (typeof d === 'string') ? d : d.id;
-            return !(id in __data_types) || __data_types[id] === 'line' || __data_types[id] === 'spline' || __data_types[id] === 'area' || __data_types[id] === 'area-spline';
+            return !__data_types[id] || ['line', 'spline', 'area', 'area-spline', 'step', 'area-step'].indexOf(__data_types[id]) >= 0;
+        }
+        function isStepType(d) {
+            var id = (typeof d === 'string') ? d : d.id;
+            return ['step', 'area-step'].indexOf(__data_types[id]) >= 0;
         }
         function isSplineType(d) {
             var id = (typeof d === 'string') ? d : d.id;
-            return __data_types[id] === 'spline' || __data_types[id] === 'area-spline';
+            return ['spline', 'area-spline'].indexOf(__data_types[id]) >= 0;
+        }
+        function isAreaType(d) {
+            var id = (typeof d === 'string') ? d : d.id;
+            return ['area', 'area-spline', 'area-step'].indexOf(__data_types[id]) >= 0;
         }
         function isBarType(d) {
             var id = (typeof d === 'string') ? d : d.id;
@@ -2037,17 +2250,24 @@
             var id = (typeof d === 'string') ? d : d.id;
             return __data_types[id] === 'pie';
         }
+        function isGaugeType(d) {
+            var id = (typeof d === 'string') ? d : d.id;
+            return __data_types[id] === 'gauge';
+        }
         function isDonutType(d) {
             var id = (typeof d === 'string') ? d : d.id;
             return __data_types[id] === 'donut';
         }
         function isArcType(d) {
-            return isPieType(d) || isDonutType(d);
+            return isPieType(d) || isDonutType(d) || isGaugeType(d);
+        }
+        function lineData(d) {
+            return isLineType(d) ? [d] : [];
+        }
+        function arcData(d) {
+            return isArcType(d.data) ? [d] : [];
         }
         /* not used
-        function lineData(d) {
-            return isLineType(d) ? d.values : [];
-        }
         function scatterData(d) {
             return isScatterType(d) ? d.values : [];
         }
@@ -2063,7 +2283,7 @@
         }
 
         function shouldExpand(id) {
-            return (isDonutType(id) && __donut_expand) || (isPieType(id) && __pie_expand);
+            return (isDonutType(id) && __donut_expand) || (isGaugeType(id) && __gauge_expand) || (isPieType(id) && __pie_expand);
         }
 
         //-- Color --//
@@ -2079,15 +2299,33 @@
                     color = colors[id](d);
                 }
                 // if specified, choose that color
-                else if (id in colors) {
+                else if (colors[id]) {
                     color = colors[id];
                 }
                 // if not specified, choose from pattern
                 else {
                     if (ids.indexOf(id) < 0) { ids.push(id); }
                     color = pattern[ids.indexOf(id) % pattern.length];
+                    colors[id] = color;
                 }
                 return callback instanceof Function ? callback(color, d) : color;
+            };
+        }
+
+        function generateLevelColor(colors, threshold) {
+            var asValue = threshold.unit === 'value',
+                values = threshold.values && threshold.values.length ? threshold.values : [],
+                max = threshold.max || 100;
+            return function (value) {
+                var i, v, color = colors[colors.length - 1];
+                for (i = 0; i < values.length; i++) {
+                    v = asValue ? value : (value * 100 / max);
+                    if (v < values[i]) {
+                        color = colors[i];
+                        break;
+                    }
+                }
+                return color;
             };
         }
 
@@ -2095,10 +2333,15 @@
 
         function parseDate(date) {
             var parsedDate;
-            try {
-                parsedDate = __data_x_format ? d3.time.format(__data_x_format).parse(date) : new Date(date);
-            } catch (e) {
-                window.console.error("Failed to parse x '" + date + "' to Date with format " + __data_x_format);
+            if (date instanceof Date) {
+                parsedDate = date;
+            } else if (typeof date === 'number') {
+                parsedDate = new Date(date);
+            } else {
+                parsedDate = dataTimeFormat(__data_x_format).parse(date);
+            }
+            if (!parsedDate || isNaN(+parsedDate)) {
+                window.console.error("Failed to parse x '" + date + "' to Date object");
             }
             return parsedDate;
         }
@@ -2155,10 +2398,66 @@
                 });
         }
 
+        function generateWait() {
+            var transitionsToWait = [],
+                f = function (transition, callback) {
+                    var timer = setInterval(function () {
+                        var done = 0;
+                        transitionsToWait.forEach(function (t) {
+                            if (t.empty()) {
+                                done += 1;
+                                return;
+                            }
+                            try {
+                                t.transition();
+                            } catch (e) {
+                                done += 1;
+                            }
+                        });
+                        if (done === transitionsToWait.length) {
+                            clearInterval(timer);
+                            if (callback) { callback(); }
+                        }
+                    }, 10);
+                };
+            f.add = function (transition) {
+                transitionsToWait.push(transition);
+            };
+            return f;
+        }
+
+        function getOption(options, key, defaultValue) {
+            return isDefined(options[key]) ? options[key] : defaultValue;
+        }
+
+        function ceil10(v) {
+            return Math.ceil(v / 10) * 10;
+        }
+
+        function getTextRect(text, cls) {
+            var rect;
+            d3.select('body').selectAll('.dummy')
+                .data([text])
+              .enter().append('text')
+                .classed(cls ? cls : "", true)
+                .text(text)
+                .each(function () { rect = this.getBoundingClientRect(); })
+              .remove();
+            return rect;
+        }
+
+        function getInterpolate(d) {
+            return isSplineType(d) ? "cardinal" : isStepType(d) ? "step-after" : "linear";
+        }
+
+        function getEmptySelection() {
+            return d3.selectAll([]);
+        }
+
         //-- Selection --//
 
         function selectPoint(target, d, i) {
-            __data_onselected(d, target.node());
+            __data_onselected.call(c3, d, target.node());
             // add selected-circle on low layer g
             main.select('.' + CLASS.selectedCircles + getTargetSelectorSuffix(d.id)).selectAll('.' + CLASS.selectedCircle + '-' + i)
                 .data([d])
@@ -2167,12 +2466,12 @@
                 .attr("cx", __axis_rotated ? circleY : circleX)
                 .attr("cy", __axis_rotated ? circleX : circleY)
                 .attr("stroke", function () { return color(d); })
-                .attr("r", __point_select_r * 1.4)
+                .attr("r", pointSelectR(d) * 1.4)
               .transition().duration(100)
-                .attr("r", __point_select_r);
+                .attr("r", pointSelectR);
         }
         function unselectPoint(target, d, i) {
-            __data_onunselected(d, target.node());
+            __data_onunselected.call(c3, d, target.node());
             // remove selected-circle from low layer g
             main.select('.' + CLASS.selectedCircles + getTargetSelectorSuffix(d.id)).selectAll('.' + CLASS.selectedCircle + '-' + i)
               .transition().duration(100).attr('r', 0)
@@ -2183,19 +2482,38 @@
         }
 
         function selectBar(target, d) {
-            __data_onselected(d, target.node());
-            target.transition().duration(100).style("fill", function () { return d3.rgb(color(d)).darker(1); });
+            __data_onselected.call(c3, d, target.node());
+            target.transition().duration(100).style("fill", function () { return d3.rgb(color(d)).brighter(0.75); });
         }
         function unselectBar(target, d) {
-            __data_onunselected(d, target.node());
+            __data_onunselected.call(c3, d, target.node());
             target.transition().duration(100).style("fill", function () { return color(d); });
         }
         function toggleBar(selected, target, d, i) {
             selected ? selectBar(target, d, i) : unselectBar(target, d, i);
         }
+        function toggleArc(selected, target, d, i) {
+            toggleBar(selected, target, d.data, i);
+        }
+        function getToggle(that) {
+            // path selection not supported yet
+            return that.nodeName === 'circle' ? togglePoint : (d3.select(that).classed(CLASS.bar) ? toggleBar : toggleArc);
+        }
 
         function filterRemoveNull(data) {
             return data.filter(function (d) { return isValue(d.value); });
+        }
+
+        //-- Point --//
+
+        function pointR(d) {
+            return __point_show && !isStepType(d) ? (typeof __point_r === 'function' ? __point_r(d) : __point_r) : 0;
+        }
+        function pointExpandedR(d) {
+            return __point_focus_expand_enabled ? (__point_focus_expand_r ? __point_focus_expand_r : pointR(d) * 1.75) : pointR(d);
+        }
+        function pointSelectR(d) {
+            return __point_select_r ? __point_select_r : pointR(d) * 4;
         }
 
         //-- Shape --//
@@ -2206,13 +2524,13 @@
         function expandCircles(i, id) {
             getCircles(i, id)
                 .classed(CLASS.EXPANDED, true)
-                .attr('r', __point_focus_expand_r);
+                .attr('r', pointExpandedR);
         }
         function unexpandCircles(i) {
             getCircles(i)
                 .filter(function () { return d3.select(this).classed(CLASS.EXPANDED); })
                 .classed(CLASS.EXPANDED, false)
-                .attr('r', __point_r);
+                .attr('r', pointR);
         }
         function getBars(i) {
             return main.selectAll('.' + CLASS.bar + (isValue(i) ? '-' + i : ''));
@@ -2224,53 +2542,66 @@
             getBars(i).classed(CLASS.EXPANDED, false);
         }
 
-        // For main region
-        var lineOnMain = (function () {
-            var line = d3.svg.line()
-                .x(__axis_rotated ? function (d) { return getYScale(d.id)(d.value); } : xx)
-                .y(__axis_rotated ? xx : function (d) { return getYScale(d.id)(d.value); });
+        function generateDrawArea(areaIndices, isSub) {
+            var area = d3.svg.area(),
+                getPoint = generateGetAreaPoint(areaIndices, isSub),
+                yScaleGetter = isSub ? getSubYScale : getYScale,
+                value0 = function (d, i) {
+                    return __data_groups.length > 0 ? getPoint(d, i)[0][1] : yScaleGetter(d.id)(0);
+                },
+                value1 = function (d, i) {
+                    return __data_groups.length > 0 ? getPoint(d, i)[1][1] : yScaleGetter(d.id)(d.value);
+                };
+
+            area = __axis_rotated ? area.x0(value0).x1(value1).y(xx) : area.x(xx).y0(value0).y1(value1);
+            if (!__line_connect_null) { area = area.defined(function (d) { return d.value !== null; }); }
+            
+            return function (d) {
+                var data = __line_connect_null ? filterRemoveNull(d.values):d.values, x0 = 0, y0 = 0, path;
+
+                if (isAreaType(d)) {
+                    path = area.interpolate(getInterpolate(d))(data);
+                } else {
+                    if (data[0]) {
+                        x0 = x(data[0].x);
+                        y0 = getYScale(d.id)(data[0].value);
+                    }
+                    path = __axis_rotated ? "M " + y0 + " " + x0 : "M " + x0 + " " + y0;
+                }
+                return path ? path : "M 0 0";
+            };
+        }
+
+        function generateDrawLine(lineIndices, isSub) {
+            var line = d3.svg.line(),
+                getPoint = generateGetLinePoint(lineIndices, isSub),
+                yScaleGetter = isSub ? getSubYScale : getYScale,
+                xValue = isSub ? subxx : xx,
+                yValue = function (d, i) {
+                    return __data_groups.length > 0 ? getPoint(d, i)[0][1] : yScaleGetter(d.id)(d.value);
+                };
+
+            line = __axis_rotated ? line.x(yValue).y(xValue) : line.x(xValue).y(yValue);
             if (!__line_connect_null) { line = line.defined(function (d) { return d.value != null; }); }
             return function (d) {
-                var data = __line_connect_null ? filterRemoveNull(d.values) : d.values, x0, y0;
+                var data = __line_connect_null ? filterRemoveNull(d.values) : d.values,
+                    x = isSub ? x : subX, y = yScaleGetter(d.id), x0 = 0, y0 = 0, path;
                 if (isLineType(d)) {
-                    isSplineType(d) ? line.interpolate("cardinal") : line.interpolate("linear");
-                    return __data_regions[d.id] ? lineWithRegions(data, x, getYScale(d.id), __data_regions[d.id]) : line(data);
+                    if (__data_regions[d.id]) {
+                        path = lineWithRegions(data, x, y, __data_regions[d.id]);
+                    } else {
+                        path = line.interpolate(getInterpolate(d))(data);
+                    }
                 } else {
-                    x0 = data[0] ? x(data[0].x) : 0;
-                    y0 = data[0] ? getYScale(d.id)(data[0].value) : 0;
-                    return __axis_rotated ? "M " + y0 + " " + x0 : "M " + x0 + " " + y0;
+                    if (data[0]) {
+                        x0 = x(data[0].x);
+                        y0 = y(data[0].value);
+                    }
+                    path = __axis_rotated ? "M " + y0 + " " + x0 : "M " + x0 + " " + y0;
                 }
+                return path ? path : "M 0 0";
             };
-        })();
-
-        var areaOnMain = (function () {
-            var area;
-
-            if (__axis_rotated) {
-                area = d3.svg.area()
-                    .x0(function (d) { return getYScale(d.id)(0); })
-                    .x1(function (d) { return getYScale(d.id)(d.value); })
-                    .y(xx);
-            } else {
-                area = d3.svg.area()
-                    .x(xx)
-                    .y0(function (d) { return getYScale(d.id)(0); })
-                    .y1(function (d) { return getYScale(d.id)(d.value); });
-            }
-
-            return function (d) {
-                var data = filterRemoveNull(d.values), x0, y0;
-
-                if (hasType([d], 'area') || hasType([d], 'area-spline')) {
-                    isSplineType(d) ? area.interpolate("cardinal") : area.interpolate("linear");
-                    return area(data);
-                } else {
-                    x0 = data[0] ? x(data[0].x) : 0;
-                    y0 = data[0] ? getYScale(d.id)(data[0].value) : 0;
-                    return __axis_rotated ? "M " + y0 + " " + x0 : "M " + x0 + " " + y0;
-                }
-            };
-        })();
+        }
 
         function generateDrawBar(barIndices, isSub) {
             var getPoints = generateGetBarPoints(barIndices, isSub);
@@ -2298,38 +2629,62 @@
                 return getter(getPoints(d, i), d, this);
             };
         }
-        function getXForText(points, d) {
-            var padding;
+        function getXForText(points, d, textElement) {
+            var box = textElement.getBoundingClientRect(), xPos, padding;
             if (__axis_rotated) {
                 padding = isBarType(d) ? 4 : 6;
-                return points[2][1] + padding * (d.value < 0 ? -1 : 1);
+                xPos = points[2][1] + padding * (d.value < 0 ? -1 : 1);
             } else {
-                return points[0][0] + (points[2][0] - points[0][0]) / 2;
+                xPos = points[0][0] + (points[2][0] - points[0][0]) / 2;
             }
+            return xPos > width ? width - box.width : xPos;
         }
         function getYForText(points, d, textElement) {
-            var box = textElement.getBoundingClientRect();
+            var box = textElement.getBoundingClientRect(), yPos;
             if (__axis_rotated) {
-                return (points[0][0] + points[2][0] + box.height * 0.6) / 2;
+                yPos = (points[0][0] + points[2][0] + box.height * 0.6) / 2;
             } else {
-                return points[2][1] + (d.value < 0 ? box.height : isBarType(d) ? -3 : -6);
+                yPos = points[2][1] + (d.value < 0 ? box.height : isBarType(d) ? -3 : -6);
             }
+            return yPos < box.height ? box.height : yPos;
+        }
+
+        function generateGetAreaPoint(areaIndices, isSub) { // partial duplication of generateGetBarPoints
+            var areaTargetsNum = areaIndices.__max__ + 1,
+                x = getShapeX(0, areaTargetsNum, areaIndices, !!isSub),
+                y = getShapeY(!!isSub),
+                areaOffset = getShapeOffset(isAreaType, areaIndices, !!isSub),
+                yScale = isSub ? getSubYScale : getYScale;
+            return function (d, i) {
+                var y0 = yScale(d.id)(0),
+                    offset = areaOffset(d, i) || y0, // offset is for stacked area chart
+                    posX = x(d), posY = y(d);
+                    // fix posY not to overflow opposite quadrant
+                if (__axis_rotated) {
+                    if ((0 < d.value && posY < y0) || (d.value < 0 && y0 < posY)) { posY = y0; }
+                }
+                // 1 point that marks the area position
+                return [
+                    [posX, offset],
+                    [posX, posY - (y0 - offset)]
+                ];
+            };
         }
 
         function generateGetBarPoints(barIndices, isSub) {
             var barTargetsNum = barIndices.__max__ + 1,
                 barW = getBarW(xAxis, barTargetsNum),
-                x = getBarX(barW, barTargetsNum, barIndices, !!isSub),
-                y = getBarY(!!isSub),
-                barOffset = getBarOffset(barIndices, !!isSub),
+                barX = getShapeX(barW, barTargetsNum, barIndices, !!isSub),
+                barY = getShapeY(!!isSub),
+                barOffset = getShapeOffset(isBarType, barIndices, !!isSub),
                 yScale = isSub ? getSubYScale : getYScale;
             return function (d, i) {
                 var y0 = yScale(d.id)(0),
                     offset = barOffset(d, i) || y0, // offset is for stacked bar chart
-                    posX = x(d), posY = y(d);
+                    posX = barX(d), posY = barY(d);
                 // fix posY not to overflow opposite quadrant
                 if (__axis_rotated) {
-                    if ((d.value > 0 && posY < offset) || (d.value < 0 && posY > offset)) { posY = offset; }
+                    if ((0 < d.value && posY < y0) || (d.value < 0 && y0 < posY)) { posY = y0; }
                 }
                 // 4 points that make a bar
                 return [
@@ -2341,21 +2696,31 @@
             };
         }
 
-        // For brush region
-        var lineOnSub = (function () {
-            var line = d3.svg.line()
-                .x(__axis_rotated ? function (d) { return getSubYScale(d.id)(d.value); } : subxx)
-                .y(__axis_rotated ? subxx : function (d) { return getSubYScale(d.id)(d.value); });
-            return function (d) {
-                var data = filterRemoveNull(d.values);
-                return isLineType(d) ? line(data) : "M " + subX(data[0].x) + " " + getSubYScale(d.id)(data[0].value);
+        function generateGetLinePoint(lineIndices, isSub) { // partial duplication of generateGetBarPoints
+            var lineTargetsNum = lineIndices.__max__ + 1,
+                x = getShapeX(0, lineTargetsNum, lineIndices, !!isSub),
+                y = getShapeY(!!isSub),
+                lineOffset = getShapeOffset(isLineType, lineIndices, !!isSub),
+                yScale = isSub ? getSubYScale : getYScale;
+            return function (d, i) {
+                var y0 = yScale(d.id)(0),
+                    offset = lineOffset(d, i) || y0, // offset is for stacked area chart
+                    posX = x(d), posY = y(d);
+                // fix posY not to overflow opposite quadrant
+                if (__axis_rotated) {
+                    if ((0 < d.value && posY < y0) || (d.value < 0 && y0 < posY)) { posY = y0; }
+                }
+                // 1 point that marks the line position
+                return [
+                    [posX, posY - (y0 - offset)]
+                ];
             };
-        })();
+        }
 
         function lineWithRegions(d, x, y, _regions) {
             var prev = -1, i, j;
             var s = "M", sWithRegion;
-            var xp, yp, dx, dy, dd, diff;
+            var xp, yp, dx, dy, dd, diff, diffx2;
             var xValue, yValue;
             var regions = [];
 
@@ -2390,26 +2755,27 @@
                 };
             } else {
                 sWithRegion = function (d0, d1, j, diff) {
-                    return "M" + x(xp(j)) + " " + y(yp(j)) + " " + x(xp(j + diff)) + " " + y(yp(j + diff));
+                    return "M" + x(xp(j), true) + " " + y(yp(j)) + " " + x(xp(j + diff), true) + " " + y(yp(j + diff));
                 };
             }
 
             // Generate
             for (i = 0; i < d.length; i++) {
+
                 // Draw as normal
                 if (isUndefined(regions) || ! isWithinRegions(d[i].x, regions)) {
                     s += " " + xValue(d[i]) + " " + yValue(d[i]);
                 }
                 // Draw with region // TODO: Fix for horizotal charts
                 else {
-                    xp = getX(d[i - 1].x, d[i].x);
-                    yp = getY(d[i - 1].value, d[i].value);
+                    xp = getScale(d[i - 1].x, d[i].x, isTimeSeries);
+                    yp = getScale(d[i - 1].value, d[i].value);
 
                     dx = x(d[i].x) - x(d[i - 1].x);
                     dy = y(d[i].value) - y(d[i - 1].value);
                     dd = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
                     diff = 2 / dd;
-                    var diffx2 = diff * 2;
+                    diffx2 = diff * 2;
 
                     for (j = diff; j <= 1; j += diffx2) {
                         s += sWithRegion(d[i - 1], d[i], j, diff);
@@ -2434,22 +2800,26 @@
             return __axis_rotated ? this.y(scale) : this.x(scale);
         };
 
-        if (__zoom_enabled) {
-            zoom = d3.behavior.zoom()
-                .on("zoomstart", function () { zoom.altDomain = d3.event.sourceEvent.altKey ? x.orgDomain() : null; })
-                .on("zoom", __zoom_enabled ? redrawForZoom : null);
-            zoom.scale = function (scale) {
-                return __axis_rotated ? this.y(scale) : this.x(scale);
-            };
-            zoom.orgScaleExtent = function () {
-                var extent = __zoom_extent ? __zoom_extent : [1, 10];
-                return [extent[0], Math.max(getMaxDataCount() / extent[1], extent[1])];
-            };
-            zoom.updateScaleExtent = function () {
-                var ratio = diffDomain(x.orgDomain()) / diffDomain(orgXDomain), extent = this.orgScaleExtent();
-                this.scaleExtent([extent[0] * ratio, extent[1] * ratio]);
-                return this;
-            };
+        zoom = d3.behavior.zoom()
+            .on("zoomstart", function () { zoom.altDomain = d3.event.sourceEvent.altKey ? x.orgDomain() : null; })
+            .on("zoom", redrawForZoom);
+        zoom.scale = function (scale) {
+            return __axis_rotated ? this.y(scale) : this.x(scale);
+        };
+        zoom.orgScaleExtent = function () {
+            var extent = __zoom_extent ? __zoom_extent : [1, 10];
+            return [extent[0], Math.max(getMaxDataCount() / extent[1], extent[1])];
+        };
+        zoom.updateScaleExtent = function () {
+            var ratio = diffDomain(x.orgDomain()) / diffDomain(orgXDomain), extent = this.orgScaleExtent();
+            this.scaleExtent([extent[0] * ratio, extent[1] * ratio]);
+            return this;
+        };
+
+        function updateZoom() {
+            var z = __zoom_enabled ? zoom : function () {};
+            main.select('.' + CLASS.zoomRect).call(z);
+            main.selectAll('.' + CLASS.eventRect).call(z);
         }
 
         /*-- Draw Chart --*/
@@ -2463,25 +2833,76 @@
         // for save value
         var orgAreaOpacity, withoutFadeIn = {};
 
+        function updateDimension() {
+            if (__axis_rotated) {
+                axes.x.call(xAxis);
+                axes.subx.call(subXAxis);
+            } else {
+                axes.y.call(yAxis);
+                axes.y2.call(y2Axis);
+            }
+            updateSizes();
+            updateScales();
+            updateSvgSize();
+            transformAll(false);
+        }
+
+        function observeInserted(selection) {
+            var observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    if (mutation.type === 'childList' && mutation.previousSibling) {
+                        observer.disconnect();
+                        // need to wait for completion of load because size calculation requires the actual sizes determined after that completion
+                        var interval = window.setInterval(function () {
+                            // parentNode will NOT be null when completed
+                            if (selection.node().parentNode) {
+                                window.clearInterval(interval);
+                                updateDimension();
+                                redraw({
+                                    withTransform: true,
+                                    withUpdateXDomain: true,
+                                    withUpdateOrgXDomain: true,
+                                    withTransition: false,
+                                    withTransitionForTransform: false,
+                                    withLegend: true
+                                });
+                                selection.transition().style('opacity', 1);
+                            }
+                        }, 10);
+                    }
+                });
+            });
+            observer.observe(selection.node(), {attributes: true, childList: true, characterData: true});
+        }
+
         function init(data) {
-            var eventRect, grid;
-            var i;
+            var arcs, eventRect, grid, i, binding = true;
 
             selectChart = d3.select(__bindto);
             if (selectChart.empty()) {
-                throw new Error('No bind element found. Check the selector specified by "bindto" and existance of that element. Default "bindto" is "#chart".');
-            } else {
-                selectChart.html("");
+                selectChart = d3.select(document.createElement('div')).style('opacity', 0);
+                observeInserted(selectChart);
+                binding = false;
             }
-
-            // Set class
-            selectChart.classed("c3", true);
+            selectChart.html("").classed("c3", true);
 
             // Init data as targets
             c3.data.xs = {};
             c3.data.targets = convertDataToTargets(data);
 
-            // TODO: set names if names not specified
+            if (__data_filter) {
+                c3.data.targets = c3.data.targets.filter(__data_filter);
+            }
+
+            // Set targets to hide if needed
+            if (__data_hide) {
+                addHiddenTargetIds(__data_hide === true ? mapToIds(c3.data.targets) : __data_hide);
+            }
+
+            // when gauge, hide legend // TODO: fix
+            if (hasGaugeType(c3.data.targets)) {
+                __legend_show = false;
+            }
 
             // Init sizes and scales
             updateSizes();
@@ -2506,37 +2927,25 @@
 
             // Define svgs
             svg = selectChart.append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .on('mouseenter', __onenter)
-                .on('mouseleave', __onleave);
+                .style("overflow", "hidden")
+                .on('mouseenter', function () { return __onmouseover.call(c3); })
+                .on('mouseleave', function () { return __onmouseout.call(c3); });
 
             // Define defs
             defs = svg.append("defs");
-            defs.append("clipPath")
-                .attr("id", clipId)
-              .append("rect")
-                .attr("width", width)
-                .attr("height", height);
-            defs.append("clipPath")
-                .attr("id", clipIdForXAxis)
-              .append("rect")
-                .attr("x", getXAxisClipX)
-                .attr("y", getXAxisClipY)
-                .attr("width", getXAxisClipWidth)
-                .attr("height", getXAxisClipHeight);
-            defs.append("clipPath")
-                .attr("id", clipIdForYAxis)
-              .append("rect")
-                .attr("x", getYAxisClipX)
-                .attr("y", getYAxisClipY)
-                .attr("width", getYAxisClipWidth)
-                .attr("height", getYAxisClipHeight);
+            defs.append("clipPath").attr("id", clipId).append("rect");
+            defs.append("clipPath").attr("id", clipIdForXAxis).append("rect");
+            defs.append("clipPath").attr("id", clipIdForYAxis).append("rect");
+            updateSvgSize();
 
             // Define regions
             main = svg.append("g").attr("transform", translate.main);
-            context = __subchart_show ? svg.append("g").attr("transform", translate.context) : null;
+            context = svg.append("g").attr("transform", translate.context);
             legend = svg.append("g").attr("transform", translate.legend);
+
+            if (!__subchart_show) {
+                context.style('visibility', 'hidden');
+            }
 
             if (!__legend_show) {
                 legend.style('visibility', 'hidden');
@@ -2544,7 +2953,7 @@
             }
 
             // Define tooltip
-            tooltip = d3.select(__bindto)
+            tooltip = selectChart
                 .style("position", "relative")
               .append("div")
                 .style("position", "absolute")
@@ -2554,80 +2963,39 @@
 
             // MEMO: call here to update legend box and tranlate for all
             // MEMO: translate will be upated by this, so transform not needed in updateLegend()
-            updateLegend(mapToIds(c3.data.targets), {withTransform: false, withTransitionForTransform: false});
+            updateLegend(mapToIds(c3.data.targets), {withTransform: false, withTransitionForTransform: false, withTransition: false});
 
             /*-- Main Region --*/
 
-            // Add Axis
-            if (__axis_x_show) {
-                main.append("g")
-                    .attr("class", CLASS.axisX)
-                    .attr("clip-path", clipPathForXAxis)
-                    .attr("transform", translate.x)
-                  .append("text")
-                    .attr("class", CLASS.axisXLabel)
-                    .attr("transform", __axis_rotated ? "rotate(-90)" : "")
-                    .attr("dx", dxForXAxisLabel)
-                    .attr("dy", dyForXAxisLabel)
-                    .style("text-anchor", textAnchorForXAxisLabel);
-            }
-
-            if (__axis_y_show) {
-                main.append("g")
-                    .attr("class", CLASS.axisY)
-                    .attr("clip-path", clipPathForYAxis)
-                    .attr("transform", translate.y)
-                  .append("text")
-                    .attr("class", CLASS.axisYLabel)
-                    .attr("transform", __axis_rotated ? "" : "rotate(-90)")
-                    .attr("dx", dxForYAxisLabel)
-                    .attr("dy", dyForYAxisLabel)
-                    .style("text-anchor", textAnchorForYAxisLabel);
-            }
-
-            if (__axis_y2_show) {
-                main.append("g")
-                    .attr("class", CLASS.axisY2)
-                    // clip-path?
-                    .attr("transform", translate.y2)
-                  .append("text")
-                    .attr("class", CLASS.axisY2Label)
-                    .attr("transform", __axis_rotated ? "" : "rotate(-90)")
-                    .attr("dx", dxForY2AxisLabel)
-                    .style("text-anchor", textAnchorForY2AxisLabel);
-            }
-
-            // Grids
-            grid = main.append('g')
-                .attr("clip-path", clipPath)
-                .attr('class', CLASS.grid);
-
-            // X-Grid
-            if (__grid_x_show) {
-                grid.append("g").attr("class", CLASS.xgrids);
-            }
-            if (notEmpty(__grid_x_lines)) {
-                grid.append('g').attr("class", CLASS.xgridLines);
-            }
-            if (__point_focus_line_enabled) {
-                grid.append('g')
-                    .attr("class", CLASS.xgridFocus)
-                  .append('line')
-                    .attr('class', CLASS.xgridFocus);
-            }
-
-            // Y-Grid
-            if (__grid_y_show) {
-                grid.append('g').attr('class', CLASS.ygrids);
-            }
-            if (notEmpty(__grid_y_lines)) {
-                grid.append('g').attr('class', CLASS.ygridLines);
-            }
+            // text when empty
+            main.append("text")
+                .attr("class", CLASS.text + ' ' + CLASS.empty)
+                .attr("text-anchor", "middle") // horizontal centering of text at x position in all browsers.
+                .attr("dominant-baseline", "middle"); // vertical centering of text at y position in all browsers, except IE.
 
             // Regions
             main.append('g')
                 .attr("clip-path", clipPath)
                 .attr("class", CLASS.regions);
+
+            // Grids
+            grid = main.append('g')
+                .attr("clip-path", clipPath)
+                .attr('class', CLASS.grid);
+            if (__grid_x_show) {
+                grid.append("g").attr("class", CLASS.xgrids);
+            }
+            if (__grid_y_show) {
+                grid.append('g').attr('class', CLASS.ygrids);
+            }
+            grid.append('g').attr("class", CLASS.xgridLines);
+            grid.append('g').attr('class', CLASS.ygridLines);
+            if (__grid_focus_show) {
+                grid.append('g')
+                    .attr("class", CLASS.xgridFocus)
+                  .append('line')
+                    .attr('class', CLASS.xgridFocus);
+            }
 
             // Define g for chart area
             main.append('g')
@@ -2637,8 +3005,7 @@
             // Cover whole with rects for events
             eventRect = main.select('.' + CLASS.chart).append("g")
                 .attr("class", CLASS.eventRects)
-                .style('fill-opacity', 0)
-                .style('cursor', __zoom_enabled ? __axis_rotated ? 'ns-resize' : 'ew-resize' : null);
+                .style('fill-opacity', 0);
 
             // Define g for bar chart area
             main.select('.' + CLASS.chart).append("g")
@@ -2649,78 +3016,136 @@
                 .attr("class", CLASS.chartLines);
 
             // Define g for arc chart area
-            main.select('.' + CLASS.chart).append("g")
+            arcs = main.select('.' + CLASS.chart).append("g")
                 .attr("class", CLASS.chartArcs)
-                .attr("transform", translate.arc)
-              .append('text')
+                .attr("transform", translate.arc);
+            arcs.append('text')
                 .attr('class', CLASS.chartArcsTitle)
                 .style("text-anchor", "middle")
                 .text(getArcTitle());
+            if (hasGaugeType(c3.data.targets)) {
+                arcs.append('path')
+                    .attr("class", CLASS.chartArcsBackground)
+                    .attr("d", function () {
+                        var d = {
+                            data: [{value: __gauge_max}],
+                            startAngle: -1 * (Math.PI / 2),
+                            endAngle: Math.PI / 2
+                        };
+                        return getArc(d, true, true);
+                    });
+                arcs.append("text")
+                    .attr("dy", ".75em")
+                    .attr("class", CLASS.chartArcsGaugeUnit)
+                    .style("text-anchor", "middle")
+                    .style("pointer-events", "none")
+                    .text(__gauge_label_show ? __gauge_units : '');
+                arcs.append("text")
+                    .attr("dx", -1 * (innerRadius + ((radius - innerRadius) / 2)) + "px")
+                    .attr("dy", "1.2em")
+                    .attr("class", CLASS.chartArcsGaugeMin)
+                    .style("text-anchor", "middle")
+                    .style("pointer-events", "none")
+                    .text(__gauge_label_show ? __gauge_min : '');
+                arcs.append("text")
+                    .attr("dx", innerRadius + ((radius - innerRadius) / 2) + "px")
+                    .attr("dy", "1.2em")
+                    .attr("class", CLASS.chartArcsGaugeMax)
+                    .style("text-anchor", "middle")
+                    .style("pointer-events", "none")
+                    .text(__gauge_label_show ? __gauge_max : '');
+            }
 
             main.select('.' + CLASS.chart).append("g")
                 .attr("class", CLASS.chartTexts);
 
-            if (__zoom_enabled) { // TODO: __zoom_privileged here?
-                // if zoom privileged, insert rect to forefront
-                main.insert('rect', __zoom_privileged ? null : 'g.' + CLASS.grid)
-                    .attr('class', CLASS.zoomRect)
-                    .attr('width', width)
-                    .attr('height', height)
-                    .style('opacity', 0)
-                    .style('cursor', __axis_rotated ? 'ns-resize' : 'ew-resize')
-                    .call(zoom).on("dblclick.zoom", null);
-            }
+            // if zoom privileged, insert rect to forefront
+            main.insert('rect', __zoom_privileged ? null : 'g.' + CLASS.regions)
+                .attr('class', CLASS.zoomRect)
+                .attr('width', width)
+                .attr('height', height)
+                .style('opacity', 0)
+                .on("dblclick.zoom", null);
 
             // Set default extent if defined
             if (__axis_x_default) {
                 brush.extent(typeof __axis_x_default !== 'function' ? __axis_x_default : __axis_x_default(getXDomain()));
             }
 
+            // Add Axis
+            axes.x = main.append("g")
+                .attr("class", CLASS.axis + ' ' + CLASS.axisX)
+                .attr("clip-path", clipPathForXAxis)
+                .attr("transform", translate.x)
+                .style("visibility", __axis_x_show ? 'visible' : 'hidden');
+            axes.x.append("text")
+                .attr("class", CLASS.axisXLabel)
+                .attr("transform", __axis_rotated ? "rotate(-90)" : "")
+                .style("text-anchor", textAnchorForXAxisLabel);
+
+            axes.y = main.append("g")
+                .attr("class", CLASS.axis + ' ' + CLASS.axisY)
+                .attr("clip-path", clipPathForYAxis)
+                .attr("transform", translate.y)
+                .style("visibility", __axis_y_show ? 'visible' : 'hidden');
+            axes.y.append("text")
+                .attr("class", CLASS.axisYLabel)
+                .attr("transform", __axis_rotated ? "" : "rotate(-90)")
+                .style("text-anchor", textAnchorForYAxisLabel);
+
+            axes.y2 = main.append("g")
+                .attr("class", CLASS.axis + ' ' + CLASS.axisY2)
+                // clip-path?
+                .attr("transform", translate.y2)
+                .style("visibility", __axis_y2_show ? 'visible' : 'hidden');
+            axes.y2.append("text")
+                .attr("class", CLASS.axisY2Label)
+                .attr("transform", __axis_rotated ? "" : "rotate(-90)")
+                .style("text-anchor", textAnchorForY2AxisLabel);
+
             /*-- Context Region --*/
 
-            if (__subchart_show) {
-                // Define g for chart area
-                context.append('g')
-                    .attr("clip-path", clipPath)
-                    .attr('class', CLASS.chart);
+            // Define g for chart area
+            context.append('g')
+                .attr("clip-path", clipPath)
+                .attr('class', CLASS.chart);
 
-                // Define g for bar chart area
-                context.select('.' + CLASS.chart).append("g")
-                    .attr("class", CLASS.chartBars);
+            // Define g for bar chart area
+            context.select('.' + CLASS.chart).append("g")
+                .attr("class", CLASS.chartBars);
 
-                // Define g for line chart area
-                context.select('.' + CLASS.chart).append("g")
-                    .attr("class", CLASS.chartLines);
+            // Define g for line chart area
+            context.select('.' + CLASS.chart).append("g")
+                .attr("class", CLASS.chartLines);
 
-                // Add extent rect for Brush
-                context.append("g")
-                    .attr("clip-path", clipPath)
-                    .attr("class", CLASS.brush)
-                    .call(brush)
-                  .selectAll("rect")
-                    .attr(__axis_rotated ? "width" : "height", __axis_rotated ? width2 : height2);
+            // Add extent rect for Brush
+            context.append("g")
+                .attr("clip-path", clipPath)
+                .attr("class", CLASS.brush)
+                .call(brush)
+              .selectAll("rect")
+                .attr(__axis_rotated ? "width" : "height", __axis_rotated ? width2 : height2);
 
-                // ATTENTION: This must be called AFTER chart added
-                // Add Axis
-                context.append("g")
-                    .attr("class", CLASS.axisX)
-                    .attr("transform", translate.subx)
-                    .attr("clip-path", __axis_rotated ? "" : clipPathForXAxis);
-            }
+            // ATTENTION: This must be called AFTER chart added
+            // Add Axis
+            axes.subx = context.append("g")
+                .attr("class", CLASS.axisX)
+                .attr("transform", translate.subx)
+                .attr("clip-path", __axis_rotated ? "" : clipPathForXAxis);
 
             // Set targets
             updateTargets(c3.data.targets);
 
-            // Update ticks for width calculation
-            if (__axis_rotated) {
-                main.select('.' + CLASS.axisX).style("opacity", 0).call(xAxis);
-            } else {
-                main.select('.' + CLASS.axisY).style("opacity", 0).call(yAxis);
-                main.select('.' + CLASS.axisY2).style("opacity", 0).call(yAxis2);
-            }
-
             // Draw with targets
-            redraw({withTransform: true, withUpdateXDomain: true, withUpdateOrgXDomain: true, withTransitionForAxis: false});
+            if (binding) {
+                updateDimension();
+                redraw({
+                    withTransform: true,
+                    withUpdateXDomain: true,
+                    withUpdateOrgXDomain: true,
+                    withTransitionForAxis: false,
+                });
+            }
 
             // Show tooltip if needed
             if (__tooltip_init_show) {
@@ -2733,7 +3158,7 @@
                 }
                 tooltip.html(__tooltip_contents(c3.data.targets.map(function (d) {
                     return addName(d.values[__tooltip_init_x]);
-                }), getXAxisTickFormat(), defaultValueFormat, color));
+                }), getXAxisTickFormat(), getYFormat(hasArcType(c3.data.targets)), color));
                 tooltip.style("top", __tooltip_init_position.top)
                        .style("left", __tooltip_init_position.left)
                        .style("display", "block");
@@ -2744,110 +3169,133 @@
                 window.onresize = generateResize();
             }
             if (window.onresize.add) {
-                window.onresize.add(__onresize);
                 window.onresize.add(function () {
-                    updateAndRedraw({withLegend: true, withTransition: false, withTransitionForTransform: false});
+                    __onresize.call(c3);
                 });
-                window.onresize.add(__onresized);
+                window.onresize.add(function () {
+                    c3.flush();
+                });
+                window.onresize.add(function () {
+                    __onresized.call(c3);
+                });
             }
+
+            // export element of the chart
+            c3.element = selectChart.node();
         }
 
         function generateEventRectsForSingleX(eventRectEnter) {
             eventRectEnter.append("rect")
                 .attr("class", classEvent)
                 .style("cursor", __data_selection_enabled && __data_selection_grouped ? "pointer" : null)
-                .on('mouseover', function (_, i) {
+                .on('mouseover', function (d) {
+                    var index = d.index, selectedData, newData;
+
                     if (dragging) { return; } // do nothing if dragging
                     if (hasArcType(c3.data.targets)) { return; }
 
-                    var selectedData = c3.data.targets.map(function (d) { return addName(d.values[i]); });
-                    var j, newData;
+                    selectedData = c3.data.targets.map(function (t) {
+                        return addName(getValueOnIndex(t.values, index));
+                    });
 
                     // Sort selectedData as names order
-                    if (Object.keys(__data_names).length > 0) {
-                        newData = [];
-                        for (var id in __data_names) {
-                            for (j = 0; j < selectedData.length; j++) {
-                                if (selectedData[j].id === id) {
-                                    newData.push(selectedData[j]);
-                                    selectedData.shift(j);
-                                    break;
-                                }
+                    newData = [];
+                    Object.keys(__data_names).forEach(function (id) {
+                        for (var j = 0; j < selectedData.length; j++) {
+                            if (selectedData[j] && selectedData[j].id === id) {
+                                newData.push(selectedData[j]);
+                                selectedData.shift(j);
+                                break;
                             }
                         }
-                        selectedData = newData.concat(selectedData); // Add remained
-                    }
+                    });
+                    selectedData = newData.concat(selectedData); // Add remained
 
-                    // Expand shapes if needed
-                    if (__point_focus_expand_enabled) { expandCircles(i); }
-                    expandBars(i);
+                    // Expand shapes for selection
+                    if (__point_focus_expand_enabled) { expandCircles(index); }
+                    expandBars(index);
 
                     // Call event handler
-                    main.selectAll('.' + CLASS.shape + '-' + i).each(function (d) {
-                        __data_onenter(d);
+                    main.selectAll('.' + CLASS.shape + '-' + index).each(function (d) {
+                        __data_onmouseover.call(c3, d);
                     });
                 })
-                .on('mouseout', function (_, i) {
+                .on('mouseout', function (d) {
+                    var index = d.index;
                     if (hasArcType(c3.data.targets)) { return; }
                     hideXGridFocus();
                     hideTooltip();
                     // Undo expanded shapes
-                    unexpandCircles(i);
+                    unexpandCircles(index);
                     unexpandBars();
                     // Call event handler
-                    main.selectAll('.' + CLASS.shape + '-' + i).each(function (d) {
-                        __data_onleave(d);
+                    main.selectAll('.' + CLASS.shape + '-' + index).each(function (d) {
+                        __data_onmouseout.call(c3, d);
                     });
                 })
-                .on('mousemove', function (_, i) {
-                    var selectedData;
+                .on('mousemove', function (d) {
+                    var selectedData, index = d.index, eventRect = svg.select('.' + CLASS.eventRect + '-' + index);
 
                     if (dragging) { return; } // do nothing when dragging
                     if (hasArcType(c3.data.targets)) { return; }
 
                     // Show tooltip
-                    selectedData = filterTargetsToShow(c3.data.targets).map(function (d) {
-                        return addName(d.values[i]);
+                    selectedData = filterTargetsToShow(c3.data.targets).map(function (t) {
+                        return addName(getValueOnIndex(t.values, index));
                     });
-                    showTooltip(selectedData, d3.mouse(this));
 
-                    // Show xgrid focus line
-                    showXGridFocus(selectedData);
+                    if (__tooltip_grouped) {
+                        showTooltip(selectedData, d3.mouse(this));
+                        showXGridFocus(selectedData);
+                    }
 
-                    if (! __data_selection_enabled) { return; }
-                    if (__data_selection_grouped) { return; } // nothing to do when grouped
+                    if (__tooltip_grouped && (!__data_selection_enabled || __data_selection_grouped)) {
+                        return;
+                    }
 
-                    main.selectAll('.' + CLASS.shape + '-' + i)
-                        .filter(function (d) { return __data_selection_isselectable(d); })
+                    main.selectAll('.' + CLASS.shape + '-' + index)
                         .each(function () {
-                            var _this = d3.select(this).classed(CLASS.EXPANDED, true);
-                            if (this.nodeName === 'circle') { _this.attr('r', __point_focus_expand_r); }
-                            svg.select('.' + CLASS.eventRect + '-' + i).style('cursor', null);
+                            d3.select(this).classed(CLASS.EXPANDED, true);
+                            if (__data_selection_enabled) {
+                                eventRect.style('cursor', __data_selection_grouped ? 'pointer' : null);
+                            }
+                            if (!__tooltip_grouped) {
+                                hideXGridFocus();
+                                hideTooltip();
+                                if (!__data_selection_grouped) {
+                                    unexpandCircles(index);
+                                    unexpandBars();
+                                }
+                            }
                         })
-                        .filter(function () {
+                        .filter(function (d) {
                             if (this.nodeName === 'circle') {
-                                return isWithinCircle(this, __point_select_r);
+                                return isWithinCircle(this, pointSelectR(d));
                             }
                             else if (this.nodeName === 'path') {
                                 return isWithinBar(this);
                             }
                         })
-                        .each(function () {
-                            var _this = d3.select(this);
-                            if (! _this.classed(CLASS.EXPANDED)) {
-                                _this.classed(CLASS.EXPANDED, true);
-                                if (this.nodeName === 'circle') { _this.attr('r', __point_select_r); }
+                        .each(function (d) {
+                            if (__data_selection_enabled && (__data_selection_grouped || __data_selection_isselectable(d))) {
+                                eventRect.style('cursor', 'pointer');
                             }
-                            svg.select('.' + CLASS.eventRect + '-' + i).style('cursor', 'pointer');
+                            if (!__tooltip_grouped) {
+                                showTooltip([d], d3.mouse(this));
+                                showXGridFocus([d]);
+                                if (__point_focus_expand_enabled) { expandCircles(index, d.id); }
+                                expandBars(index, d.id);
+                            }
                         });
                 })
-                .on('click', function (_, i) {
+                .on('click', function (d) {
+                    var index = d.index;
                     if (hasArcType(c3.data.targets)) { return; }
                     if (cancelClick) {
                         cancelClick = false;
                         return;
                     }
-                    main.selectAll('.' + CLASS.shape + '-' + i).each(function (d) { toggleShape(this, d, i); });
+                    main.selectAll('.' + CLASS.shape + '-' + index).each(function (d) { toggleShape(this, d, index); });
                 })
                 .call(
                     d3.behavior.drag().origin(Object)
@@ -2855,7 +3303,7 @@
                         .on('dragstart', function () { dragstart(d3.mouse(this)); })
                         .on('dragend', function () { dragend(); })
                 )
-                .call(zoom).on("dblclick.zoom", null);
+                .on("dblclick.zoom", null);
         }
 
         function generateEventRectsForMultipleXs(eventRectEnter) {
@@ -2872,18 +3320,21 @@
                     unexpandCircles();
                 })
                 .on('mousemove', function () {
+                    var targetsToShow = filterTargetsToShow(c3.data.targets);
                     var mouse, closest, sameXData, selectedData;
 
                     if (dragging) { return; } // do nothing when dragging
-                    if (hasArcType(c3.data.targets)) { return; }
+                    if (hasArcType(targetsToShow)) { return; }
 
                     mouse = d3.mouse(this);
-                    closest = findClosestFromTargets(c3.data.targets, mouse);
+                    closest = findClosestFromTargets(targetsToShow, mouse);
+
+                    if (! closest) { return; }
 
                     if (isScatterType(closest)) {
                         sameXData = [closest];
                     } else {
-                        sameXData = filterSameX(c3.data.targets, closest.x);
+                        sameXData = filterSameX(targetsToShow, closest.x);
                     }
 
                     // show tooltip when cursor is close to some point
@@ -2905,26 +3356,29 @@
                     if (dist(closest, mouse) < 100) {
                         svg.select('.' + CLASS.eventRect).style('cursor', 'pointer');
                         if (!mouseover) {
-                            __data_onenter(closest);
+                            __data_onmouseover.call(c3, closest);
                             mouseover = true;
                         }
-                    } else {
+                    } else if (mouseover) {
                         svg.select('.' + CLASS.eventRect).style('cursor', null);
-                        __data_onleave(closest);
+                        __data_onmouseout.call(c3, closest);
                         mouseover = false;
                     }
                 })
                 .on('click', function () {
+                    var targetsToShow = filterTargetsToShow(c3.data.targets);
                     var mouse, closest;
 
-                    if (hasArcType(c3.data.targets)) { return; }
+                    if (hasArcType(targetsToShow)) { return; }
 
                     mouse = d3.mouse(this);
-                    closest = findClosestFromTargets(c3.data.targets, mouse);
+                    closest = findClosestFromTargets(targetsToShow, mouse);
+
+                    if (! closest) { return; }
 
                     // select if selection enabled
                     if (dist(closest, mouse) < 100) {
-                        main.select('.' + CLASS.circles + '-' + getTargetSelectorSuffix(closest.id)).select('.' + CLASS.circle + '-' + closest.index).each(function () {
+                        main.select('.' + CLASS.circles + getTargetSelectorSuffix(closest.id)).select('.' + CLASS.circle + '-' + closest.index).each(function () {
                             toggleShape(this, closest, closest.index);
                         });
                     }
@@ -2935,20 +3389,23 @@
                         .on('dragstart', function () { dragstart(d3.mouse(this)); })
                         .on('dragend', function () { dragend(); })
                 )
-                .call(zoom).on("dblclick.zoom", null);
+                .on("dblclick.zoom", null);
         }
 
-        function toggleShape(target, d, i) {
-            var shape = d3.select(target),
-                isSelected = shape.classed(CLASS.SELECTED);
-            var isWithin = false, toggle;
-            if (target.nodeName === 'circle') {
-                isWithin = isWithinCircle(target, __point_select_r * 1.5);
+        function toggleShape(that, d, i) {
+            var shape = d3.select(that), isSelected = shape.classed(CLASS.SELECTED), isWithin,  toggle;
+            if (that.nodeName === 'circle') {
+                isWithin = isWithinCircle(that, pointSelectR(d) * 1.5);
                 toggle = togglePoint;
             }
-            else if (target.nodeName === 'path') {
-                isWithin = isWithinBar(target);
-                toggle = toggleBar;
+            else if (that.nodeName === 'path') {
+                if (shape.classed(CLASS.bar)) {
+                    isWithin = isWithinBar(that);
+                    toggle = toggleBar;
+                } else { // would be arc
+                    isWithin = true;
+                    toggle = toggleArc;
+                }
             }
             if (__data_selection_grouped || isWithin) {
                 if (__data_selection_enabled && __data_selection_isselectable(d)) {
@@ -2961,7 +3418,7 @@
                     shape.classed(CLASS.SELECTED, !isSelected);
                     toggle(!isSelected, shape, d, i);
                 }
-                __data_onclick(d, target);
+                __data_onclick.call(c3, d, that);
             }
         }
 
@@ -2971,7 +3428,7 @@
             if (hasArcType(c3.data.targets)) { return; }
             if (! __data_selection_enabled) { return; } // do nothing if not selectable
             if (__zoom_enabled && ! zoom.altDomain) { return; } // skip if zoomable because of conflict drag dehavior
-            if (!__data_selection_multiple) { return; } // skip when single selection becuase drag is used for multiple selection
+            if (!__data_selection_multiple) { return; } // skip when single selection because drag is used for multiple selection
 
             sx = dragStart[0];
             sy = dragStart[1];
@@ -2991,17 +3448,17 @@
             main.selectAll('.' + CLASS.shapes).selectAll('.' + CLASS.shape)
                 .filter(function (d) { return __data_selection_isselectable(d); })
                 .each(function (d, i) {
-                    var _this = d3.select(this),
-                        isSelected = _this.classed(CLASS.SELECTED),
-                        isIncluded = _this.classed(CLASS.INCLUDED),
+                    var shape = d3.select(this),
+                        isSelected = shape.classed(CLASS.SELECTED),
+                        isIncluded = shape.classed(CLASS.INCLUDED),
                         _x, _y, _w, _h, toggle, isWithin = false, box;
-                    if (this.nodeName === 'circle') {
-                        _x = _this.attr("cx") * 1;
-                        _y = _this.attr("cy") * 1;
+                    if (shape.classed(CLASS.circle)) {
+                        _x = shape.attr("cx") * 1;
+                        _y = shape.attr("cy") * 1;
                         toggle = togglePoint;
                         isWithin = minX < _x && _x < maxX && minY < _y && _y < maxY;
                     }
-                    else if (this.nodeName === 'path') {
+                    else if (shape.classed(CLASS.bar)) {
                         box = getPathBox(this);
                         _x = box.x;
                         _y = box.y;
@@ -3009,12 +3466,15 @@
                         _h = box.height;
                         toggle = toggleBar;
                         isWithin = !(maxX < _x || _x + _w < minX) && !(maxY < _y || _y + _h < minY);
+                    } else {
+                        // line/area selection not supported yet
+                        return;
                     }
                     if (isWithin ^ isIncluded) {
-                        _this.classed(CLASS.INCLUDED, !isIncluded);
+                        shape.classed(CLASS.INCLUDED, !isIncluded);
                         // TODO: included/unincluded callback here
-                        _this.classed(CLASS.SELECTED, !isSelected);
-                        toggle(!isSelected, _this, d, i);
+                        shape.classed(CLASS.SELECTED, !isSelected);
+                        toggle(!isSelected, shape, d, i);
                     }
                 });
         }
@@ -3027,7 +3487,7 @@
                 .attr('class', CLASS.dragarea)
                 .style('opacity', 0.1);
             dragging = true;
-            __data_ondragstart();
+            __data_ondragstart.call(c3);
         }
 
         function dragend() {
@@ -3040,87 +3500,98 @@
             main.selectAll('.' + CLASS.shape)
                 .classed(CLASS.INCLUDED, false);
             dragging = false;
-            __data_ondragend();
+            __data_ondragend.call(c3);
         }
 
-        function redraw(options) {
-            var xaxis, subxaxis, yaxis, xgrid, xgridData, xgridLines, xgridLine, ygrid, ygridLines, ygridLine;
-            var mainCircle, mainBar, mainRegion, mainText, contextBar, eventRect, eventRectUpdate;
-            var barIndices = getBarIndices(), maxDataCountTarget;
+        function smoothLines(el, type) {
+            if (type === 'grid') {
+                el.each(function () {
+                    var g = d3.select(this),
+                        x1 = g.attr('x1'),
+                        x2 = g.attr('x2'),
+                        y1 = g.attr('y1'),
+                        y2 = g.attr('y2');
+                    g.attr({
+                        'x1': Math.ceil(x1),
+                        'x2': Math.ceil(x2),
+                        'y1': Math.ceil(y1),
+                        'y2': Math.ceil(y2),
+                    });
+                });
+            }
+        }
+
+        function redraw(options, transitions) {
+            var xgrid, xgridAttr, xgridData, xgridLines, xgridLine, ygrid, ygridLines, ygridLine, flushXGrid;
+            var mainLine, mainArea, mainCircle, mainBar, mainArc, mainRegion, mainText, contextLine,  contextArea, contextBar, eventRect, eventRectUpdate;
+            var areaIndices = getShapeIndices(isAreaType), barIndices = getShapeIndices(isBarType), lineIndices = getShapeIndices(isLineType), maxDataCountTarget, tickOffset;
             var rectX, rectW;
-            var withY, withSubchart, withTransition, withTransitionForExit, withTransitionForAxis, withTransitionForHorizontalAxis, withTransform, withUpdateXDomain, withUpdateOrgXDomain, withLegend;
+            var withY, withSubchart, withTransition, withTransitionForExit, withTransitionForAxis, withTransform, withUpdateXDomain, withUpdateOrgXDomain, withLegend;
             var hideAxis = hasArcType(c3.data.targets);
-            var drawBar, drawBarOnSub, xForText, yForText;
-            var duration, durationForExit, durationForAxis;
+            var drawArea, drawAreaOnSub, drawBar, drawBarOnSub, drawLine, drawLineOnSub, xForText, yForText;
+            var duration, durationForExit, durationForAxis, waitForDraw;
             var targetsToShow = filterTargetsToShow(c3.data.targets), tickValues, i, intervalForCulling;
 
-            // abort if no targets to show
-            if (targetsToShow.length === 0) {
-                return;
-            }
+            xgrid = xgridLines = mainCircle = mainText = getEmptySelection();
 
-            options = isDefined(options) ? options : {};
-            withY = isDefined(options.withY) ? options.withY : true;
-            withSubchart = isDefined(options.withSubchart) ? options.withSubchart : true;
-            withTransition = isDefined(options.withTransition) ? options.withTransition : true;
-            withTransform = isDefined(options.withTransform) ? options.withTransform : false;
-            withUpdateXDomain = isDefined(options.withUpdateXDomain) ? options.withUpdateXDomain : false;
-            withUpdateOrgXDomain = isDefined(options.withUpdateOrgXDomain) ? options.withUpdateOrgXDomain : false;
-            withLegend = isDefined(options.withLegend) ? options.withLegend : false;
-
-            withTransitionForExit = isDefined(options.withTransitionForExit) ? options.withTransitionForExit : withTransition;
-            withTransitionForAxis = isDefined(options.withTransitionForAxis) ? options.withTransitionForAxis : withTransition;
-            withTransitionForHorizontalAxis = isDefined(options.withTransitionForHorizontalAxis) ? options.withTransitionForHorizontalAxis : withTransition;
+            options = options || {};
+            withY = getOption(options, "withY", true);
+            withSubchart = getOption(options, "withSubchart", true);
+            withTransition = getOption(options, "withTransition", true);
+            withTransform = getOption(options, "withTransform", false);
+            withUpdateXDomain = getOption(options, "withUpdateXDomain", false);
+            withUpdateOrgXDomain = getOption(options, "withUpdateOrgXDomain", false);
+            withLegend = getOption(options, "withLegend", false);
+            withTransitionForExit = getOption(options, "withTransitionForExit", withTransition);
+            withTransitionForAxis = getOption(options, "withTransitionForAxis", withTransition);
 
             duration = withTransition ? __transition_duration : 0;
             durationForExit = withTransitionForExit ? duration : 0;
             durationForAxis = withTransitionForAxis ? duration : 0;
 
+            transitions = transitions || generateAxisTransitions(durationForAxis);
+
             // update legend and transform each g
             if (withLegend && __legend_show) {
-                updateLegend(mapToIds(c3.data.targets), options);
+                updateLegend(mapToIds(c3.data.targets), options, transitions);
             }
 
-            if (withUpdateOrgXDomain) {
-                x.domain(d3.extent(getXDomain(targetsToShow)));
-                orgXDomain = x.domain();
-                if (__zoom_enabled) { zoom.scale(x).updateScaleExtent(); }
-                subX.domain(x.domain());
-                brush.scale(subX);
+            // MEMO: needed for grids calculation
+            if (isCategorized && targetsToShow.length === 0) {
+                x.domain([0, axes.x.selectAll('.tick').size()]);
             }
 
-            // ATTENTION: call here to update tickOffset
-            if (withUpdateXDomain) {
-                x.domain(brush.empty() ? orgXDomain : brush.extent());
-                if (__zoom_enabled) { zoom.scale(x).updateScaleExtent(); }
+            if (targetsToShow.length) {
+                updateXDomain(targetsToShow, withUpdateXDomain, withUpdateOrgXDomain);
+                // update axis tick values according to options
+                if (!__axis_x_tick_values && (__axis_x_tick_fit || __axis_x_tick_count)) {
+                    tickValues = generateTickValues(mapTargetsToUniqueXs(targetsToShow), __axis_x_tick_count);
+                    xAxis.tickValues(tickValues);
+                    subXAxis.tickValues(tickValues);
+                }
+            } else {
+                xAxis.tickValues([]);
+                subXAxis.tickValues([]);
             }
+
             y.domain(getYDomain(targetsToShow, 'y'));
             y2.domain(getYDomain(targetsToShow, 'y2'));
 
-            // update axis tick values according to options
-            if (__axis_x_tick_fit || __axis_x_tick_count) {
-                tickValues = __axis_x_tick_values ? __axis_x_tick_values : generateTickValues(mapTargetsToUniqueXs(targetsToShow));
-                xAxis.tickValues(tickValues);
-                subXAxis.tickValues(tickValues);
-            }
+            // axes
+            axes.x.style("opacity", hideAxis ? 0 : 1);
+            axes.y.style("opacity", hideAxis ? 0 : 1);
+            axes.y2.style("opacity", hideAxis ? 0 : 1);
+            axes.subx.style("opacity", hideAxis ? 0 : 1);
+            transitions.axisX.call(xAxis);
+            transitions.axisY.call(yAxis);
+            transitions.axisY2.call(y2Axis);
+            transitions.axisSubX.call(subXAxis);
 
-            // x axis
-            xaxis = main.select('.' + CLASS.axisX).style("opacity", hideAxis ? 0 : 1);
-            if (__axis_rotated || withTransitionForHorizontalAxis) {
-                xaxis = xaxis.transition().duration(durationForAxis);
-            }
-            xaxis.call(xAxis);
-            // y axis
-            yaxis = main.select('.' + CLASS.axisY).style("opacity", hideAxis ? 0 : 1);
-            if (!__axis_rotated || withTransitionForHorizontalAxis) {
-                yaxis = yaxis.transition().duration(durationForAxis);
-            }
-            yaxis.call(yAxis);
-            // y2 axis
-            main.select('.' + CLASS.axisY2).style("opacity", hideAxis ? 0 : 1).transition().duration(durationForAxis).call(yAxis2);
+            // Update axis label
+            updateAxisLabels(withTransition);
 
             // show/hide if manual culling needed
-            if (withUpdateXDomain) {
+            if (withUpdateXDomain && targetsToShow.length) {
                 if (__axis_x_tick_culling && tickValues) {
                     for (i = 1; i < tickValues.length; i++) {
                         if (tickValues.length / i < __axis_x_tick_culling_max) {
@@ -3128,29 +3599,28 @@
                             break;
                         }
                     }
-                    d3.selectAll('.' + CLASS.axisX + ' .tick text').each(function (e) {
+                    svg.selectAll('.' + CLASS.axisX + ' .tick text').each(function (e) {
                         var index = tickValues.indexOf(e);
                         if (index >= 0) {
                             d3.select(this).style('display', index % intervalForCulling ? 'none' : 'block');
                         }
                     });
                 } else {
-                    d3.selectAll('.' + CLASS.axisX + ' .tick text').style('display', 'block');
+                    svg.selectAll('.' + CLASS.axisX + ' .tick text').style('display', 'block');
                 }
             }
 
             // rotate tick text if needed
             if (!__axis_rotated && __axis_x_tick_rotate) {
-                rotateTickText(xaxis);
+                rotateTickText(axes.x, transitions.axisX, __axis_x_tick_rotate);
             }
 
             // setup drawer - MEMO: these must be called after axis updated
+            drawArea = generateDrawArea(areaIndices, false);
             drawBar = generateDrawBar(barIndices);
+            drawLine = generateDrawLine(lineIndices, false);
             xForText = generateXYForText(barIndices, true);
             yForText = generateXYForText(barIndices, false);
-
-            // Update axis label
-            updateAxisLabels();
 
             // Update sub domain
             subY.domain(y.domain());
@@ -3162,64 +3632,62 @@
             // xgrid focus
             updateXgridFocus();
 
+            // Data empty label positioning and text.
+            main.select("text." + CLASS.text + '.' + CLASS.empty)
+                .attr("x", width / 2)
+                .attr("y", height / 2)
+                .text(__data_empty_label_text)
+              .transition()
+                .style('opacity', targetsToShow.length ? 0 : 1);
+
             // grid
             main.select('line.' + CLASS.xgridFocus).style("visibility", "hidden");
             if (__grid_x_show) {
-                if (__grid_x_type === 'year') {
-                    xgridData = [];
-                    var xDomain = getXDomain();
-                    var firstYear = xDomain[0].getFullYear();
-                    var lastYear = xDomain[1].getFullYear();
-                    for (var year = firstYear; year <= lastYear; year++) {
-                        xgridData.push(new Date(year + '-01-01 00:00:00'));
+                xgridAttr = __axis_rotated ? {
+                    'x1': 0,
+                    'x2': width,
+                    'y1': function (d) { return x(d) - tickOffset; },
+                    'y2': function (d) { return x(d) - tickOffset; }
+                } : {
+                    'x1': function (d) { return x(d) + tickOffset; },
+                    'x2': function (d) { return x(d) + tickOffset; },
+                    'y1': 0,
+                    'y2': height
+                };
+                // this is used to flow
+                flushXGrid = function (withoutUpdate) {
+                    xgridData = generateGridData(__grid_x_type, x);
+                    tickOffset = isCategorized ? xAxis.tickOffset() : 0;
+                    xgrid = main.select('.' + CLASS.xgrids).selectAll('.' + CLASS.xgrid)
+                        .data(xgridData);
+                    xgrid.enter().append('line').attr("class", CLASS.xgrid);
+                    if (!withoutUpdate) {
+                        xgrid.attr(xgridAttr)
+                            .style("opacity", function () { return +d3.select(this).attr(__axis_rotated ? 'y1' : 'x1') === (__axis_rotated ? height : 0) ? 0 : 1; });
                     }
-                } else {
-                    xgridData = x.ticks(10);
-                }
-
-                xgrid = main.select('.' + CLASS.xgrids).selectAll('.' + CLASS.xgrid)
-                    .data(xgridData);
-                xgrid.enter().append('line').attr("class", CLASS.xgrid);
-                xgrid.attr("x1", __axis_rotated ? 0 : function (d) { return x(d) - xAxis.tickOffset(); })
-                    .attr("x2", __axis_rotated ? width : function (d) { return x(d) - xAxis.tickOffset(); })
-                    .attr("y1", __axis_rotated ? function (d) { return x(d) - xAxis.tickOffset(); } : margin.top)
-                    .attr("y2", __axis_rotated ? function (d) { return x(d) - xAxis.tickOffset(); } : height)
-                    .style("opacity", function () { return +d3.select(this).attr(__axis_rotated ? 'y1' : 'x1') === (__axis_rotated ? height : 0) ? 0 : 1; });
-                xgrid.exit().remove();
+                    xgrid.exit().remove();
+                };
+                flushXGrid();
             }
-            if (notEmpty(__grid_x_lines)) {
-                xgridLines = main.select('.' + CLASS.xgridLines).selectAll('.' + CLASS.xgridLine)
-                    .data(__grid_x_lines);
-                // enter
-                xgridLine = xgridLines.enter().append('g')
-                    .attr("class", function (d) { return CLASS.xgridLine + (d.class ? d.class : ''); });
-                xgridLine.append('line')
-                    .style("opacity", 0);
-                xgridLine.append('text')
-                    .attr("text-anchor", "end")
-                    .attr("transform", __axis_rotated ? "" : "rotate(-90)")
-                    .attr('dx', __axis_rotated ? 0 : -margin.top)
-                    .attr('dy', -5)
-                    .style("opacity", 0);
-                // udpate
-                xgridLines.select('line')
-                  .transition().duration(duration)
-                    .attr("x1", __axis_rotated ? 0 : xv)
-                    .attr("x2", __axis_rotated ? width : xv)
-                    .attr("y1", __axis_rotated ? xv : margin.top)
-                    .attr("y2", __axis_rotated ? xv : height)
-                    .style("opacity", 1);
-                xgridLines.select('text')
-                  .transition().duration(duration)
-                    .attr("x", __axis_rotated ? width : 0)
-                    .attr("y", xv)
-                    .text(function (d) { return d.text; })
-                    .style("opacity", 1);
-                // exit
-                xgridLines.exit().transition().duration(duration)
-                    .style("opacity", 0)
-                    .remove();
-            }
+            xgridLines = main.select('.' + CLASS.xgridLines).selectAll('.' + CLASS.xgridLine)
+                .data(__grid_x_lines);
+            // enter
+            xgridLine = xgridLines.enter().append('g')
+                .attr("class", function (d) { return CLASS.xgridLine + (d.class ? ' ' + d.class : ''); });
+            xgridLine.append('line')
+                .style("opacity", 0);
+            xgridLine.append('text')
+                .attr("text-anchor", "end")
+                .attr("transform", __axis_rotated ? "" : "rotate(-90)")
+                .attr('dx', __axis_rotated ? 0 : -margin.top)
+                .attr('dy', -5)
+                .style("opacity", 0);
+            // udpate
+            // done in d3.transition() of the end of this function
+            // exit
+            xgridLines.exit().transition().duration(duration)
+                .style("opacity", 0)
+                .remove();
             // Y-Grid
             if (withY && __grid_y_show) {
                 ygrid = main.select('.' + CLASS.ygrids).selectAll('.' + CLASS.ygrid)
@@ -3231,13 +3699,14 @@
                     .attr("y1", __axis_rotated ? 0 : y)
                     .attr("y2", __axis_rotated ? height : y);
                 ygrid.exit().remove();
+                smoothLines(ygrid, 'grid');
             }
-            if (withY && notEmpty(__grid_y_lines)) {
+            if (withY) {
                 ygridLines = main.select('.' + CLASS.ygridLines).selectAll('.' + CLASS.ygridLine)
                     .data(__grid_y_lines);
                 // enter
                 ygridLine = ygridLines.enter().append('g')
-                    .attr("class", function (d) { return CLASS.ygridLine + (d.class ? d.class : ''); });
+                    .attr("class", function (d) { return CLASS.ygridLine + (d.class ? ' ' + d.class : ''); });
                 ygridLine.append('line')
                     .style("opacity", 0);
                 ygridLine.append('text')
@@ -3266,75 +3735,139 @@
                     .remove();
             }
 
+            // rect for regions
+            mainRegion = main.select('.' + CLASS.regions).selectAll('.' + CLASS.region)
+                .data(__regions);
+            mainRegion.enter().append('g')
+                .attr('class', classRegion)
+              .append('rect')
+                .style("fill-opacity", 0);
+            mainRegion.exit().transition().duration(duration)
+                .style("opacity", 0)
+                .remove();
+
             // bars
             mainBar = main.selectAll('.' + CLASS.bars).selectAll('.' + CLASS.bar)
                 .data(barData);
             mainBar.enter().append('path')
-                .attr('d', drawBar)
-                .style("stroke", 'none')
-                .style("opacity", 0)
-                .style("fill", function (d) { return color(d); })
-                .attr("class", classBar);
+                .attr("class", classBar)
+                .style("stroke", function (d) { return color(d.id); })
+                .style("fill", function (d) { return color(d.id); });
             mainBar
-                .style("opacity", initialOpacity)
-              .transition().duration(duration)
-                .attr('d', drawBar)
-                .style("opacity", 1);
+                .style("opacity", initialOpacity);
             mainBar.exit().transition().duration(durationForExit)
                 .style('opacity', 0)
                 .remove();
 
-            mainText = main.selectAll('.' + CLASS.texts).selectAll('.' + CLASS.text)
-                .data(barOrLineData);
-            mainText.enter().append('text')
-                .attr("class", classText)
-                .attr('text-anchor', function (d) { return __axis_rotated ? (d.value < 0 ? 'end' : 'start') : 'middle'; })
-                .style("stroke", 'none')
-                .style("fill-opacity", 0);
-            mainText
-                .text(function (d) { return formatByAxisId(d.id)(d.value); })
-                .style("fill-opacity", initialOpacityForText)
-              .transition().duration(duration)
-                .attr('x', xForText)
-                .attr('y', yForText)
-                .style("fill-opacity", opacityForText);
-            mainText.exit()
-              .transition().duration(durationForExit)
-                .style('fill-opacity', 0)
+            // lines, areas and cricles
+            mainLine = main.selectAll('.' + CLASS.lines).selectAll('.' + CLASS.line)
+                .data(lineData);
+            mainLine.enter().append('path')
+                .attr('class', classLine)
+                .style("stroke", color);
+            mainLine
+                .style("opacity", initialOpacity)
+                .attr('transform', null);
+            mainLine.exit().transition().duration(durationForExit)
+                .style('opacity', 0)
                 .remove();
 
-            // lines and cricles
-            main.selectAll('.' + CLASS.line)
-                .style("opacity", initialOpacity)
-              .transition().duration(duration)
-                .attr("d", lineOnMain)
-                .style("opacity", 1);
-            main.selectAll('.' + CLASS.area)
-                .style("opacity", 0)
-              .transition().duration(duration)
-                .attr("d", areaOnMain)
+            mainArea = main.selectAll('.' + CLASS.areas).selectAll('.' + CLASS.area)
+                .data(lineData);
+            mainArea.enter().append('path')
+                .attr("class", classArea)
+                .style("fill", color)
+                .style("opacity", function () { orgAreaOpacity = +d3.select(this).style('opacity'); return 0; });
+            mainArea
                 .style("opacity", orgAreaOpacity);
-            mainCircle = main.selectAll('.' + CLASS.circles).selectAll('.' + CLASS.circle)
-                .data(lineOrScatterData);
-            mainCircle.enter().append("circle")
-                .attr("class", classCircle)
+            mainArea.exit().transition().duration(durationForExit)
                 .style('opacity', 0)
-                .attr("r", __point_r);
-            mainCircle
-                .style("opacity", initialOpacity)
-              .transition().duration(duration)
-                .style('opacity', opacityForCircle)
-                .attr("cx", __axis_rotated ? circleY : circleX)
-                .attr("cy", __axis_rotated ? circleX : circleY);
-            mainCircle.exit().remove();
+                .remove();
+
+            if (__point_show) {
+                mainCircle = main.selectAll('.' + CLASS.circles).selectAll('.' + CLASS.circle)
+                    .data(lineOrScatterData);
+                mainCircle.enter().append("circle")
+                    .attr("class", classCircle)
+                    .attr("r", pointR)
+                    .style("fill", color);
+                mainCircle
+                    .style("opacity", initialOpacity);
+                mainCircle.exit().remove();
+            }
+
+            if (hasDataLabel()) {
+                mainText = main.selectAll('.' + CLASS.texts).selectAll('.' + CLASS.text)
+                    .data(barOrLineData);
+                mainText.enter().append('text')
+                    .attr("class", classText)
+                    .attr('text-anchor', function (d) { return __axis_rotated ? (d.value < 0 ? 'end' : 'start') : 'middle'; })
+                    .style("stroke", 'none')
+                    .style("fill", color)
+                    .style("fill-opacity", 0);
+                mainText
+                    .text(function (d) { return formatByAxisId(getAxisId(d.id))(d.value, d.id); });
+                mainText.exit()
+                  .transition().duration(durationForExit)
+                    .style('fill-opacity', 0)
+                    .remove();
+            }
 
             // arc
-            main.selectAll('.' + CLASS.chartArc).select('.' + CLASS.arc)
-                .attr("transform", withTransform ? "scale(0)" : "")
+            mainArc = main.selectAll('.' + CLASS.arcs).selectAll('.' + CLASS.arc)
+                .data(arcData);
+            mainArc.enter().append('path')
+                .attr("class", classArc)
+                .style("fill", function (d) { return color(d.data); })
+                .style("cursor", function (d) { return __data_selection_isselectable(d) ? "pointer" : null; })
+                .style("opacity", 0)
+                .each(function (d) {
+                    if (isGaugeType(d.data)) {
+                        d.startAngle = d.endAngle = -1 * (Math.PI / 2);
+                    }
+                    this._current = d;
+                })
+                .on('mouseover', function (d) {
+                    var updated, arcData;
+                    if (transiting) { // skip while transiting
+                        return;
+                    }
+                    updated = updateAngle(d);
+                    arcData = convertToArcData(updated);
+                    // transitions
+                    expandArc(updated.data.id);
+                    toggleFocusLegend(updated.data.id, true);
+                    __data_onmouseover.call(c3, arcData, this);
+                })
+                .on('mousemove', function (d) {
+                    var updated = updateAngle(d), arcData = convertToArcData(updated), selectedData = [arcData];
+                    showTooltip(selectedData, d3.mouse(this));
+                })
+                .on('mouseout', function (d) {
+                    var updated, arcData;
+                    if (transiting) { // skip while transiting
+                        return;
+                    }
+                    updated = updateAngle(d);
+                    arcData = convertToArcData(updated);
+                    // transitions
+                    unexpandArc(updated.data.id);
+                    revertLegend();
+                    hideTooltip();
+                    __data_onmouseout.call(c3, arcData, this);
+                })
+                .on('click', function (d, i) {
+                    var updated = updateAngle(d), arcData = convertToArcData(updated);
+                    toggleShape(this, arcData, i); // onclick called in toogleShape()
+                });
+            mainArc
+                .attr("transform", function (d) { return !isGaugeType(d.data) && withTransform ? "scale(0)" : ""; })
                 .style("opacity", function (d) { return d === this._current ? 0 : 1; })
+                .each(function () { transiting = true; })
               .transition().duration(duration)
                 .attrTween("d", function (d) {
                     var updated = updateAngle(d), interpolate;
+
                     if (! updated) {
                         return function () { return "M 0 0"; };
                     }
@@ -3346,39 +3879,46 @@
                         };
                     }
 */
+                    if (isNaN(this._current.endAngle)) {
+                        this._current.endAngle = this._current.startAngle;
+                    }
                     interpolate = d3.interpolate(this._current, updated);
                     this._current = interpolate(0);
                     return function (t) { return getArc(interpolate(t), true); };
                 })
                 .attr("transform", withTransform ? "scale(1)" : "")
-                .style("opacity", 1);
+                .style("fill", function (d) {
+                    return levelColor ? levelColor(d.data.values[0].value) : color(d.data.id);
+                }) // Where gauge reading color would receive customization.
+                .style("opacity", 1)
+                .call(endall, function () {
+                    transiting = false;
+                });
+            mainArc.exit().transition().duration(durationForExit)
+                .style('opacity', 0)
+                .remove();
             main.selectAll('.' + CLASS.chartArc).select('text')
-                .attr("transform", transformForArcLabel)
                 .style("opacity", 0)
-              .transition().duration(duration)
+                .attr('class', function (d) { return isGaugeType(d.data) ? CLASS.gaugeValue : ''; })
                 .text(textForArcLabel)
+                .attr("transform", transformForArcLabel)
+              .transition().duration(duration)
                 .style("opacity", function (d) { return isTargetToShow(d.data.id) && isArcType(d.data) ? 1 : 0; });
             main.select('.' + CLASS.chartArcsTitle)
-                .style("opacity", hasDonutType(c3.data.targets) ? 1 : 0);
+                .style("opacity", hasDonutType(c3.data.targets) || hasGaugeType(c3.data.targets) ? 1 : 0);
 
             // subchart
             if (__subchart_show) {
                 // reflect main chart to extent on subchart if zoomed
-                if (d3.event !== null && d3.event.type === 'zoom') {
+                if (d3.event && d3.event.type === 'zoom') {
                     brush.extent(x.orgDomain()).update();
                 }
                 // update subchart elements if needed
                 if (withSubchart) {
-                    // axes
-                    subxaxis = context.select('.' + CLASS.axisX).style("opacity", hideAxis ? 0 : 1);
-                    if (__axis_rotated || withTransitionForHorizontalAxis) {
-                        subxaxis = subxaxis.transition().duration(durationForAxis);
-                    }
-                    subxaxis.call(subXAxis);
 
                     // rotate tick text if needed
                     if (!__axis_rotated && __axis_x_tick_rotate) {
-                        rotateTickText(subxaxis);
+                        rotateTickText(axes.subx, transitions.axisSubX, __axis_x_tick_rotate);
                     }
 
                     // extent rect
@@ -3386,15 +3926,16 @@
                         brush.extent(x.orgDomain()).update();
                     }
                     // setup drawer - MEMO: this must be called after axis updated
+                    drawAreaOnSub = generateDrawArea(areaIndices, true);
                     drawBarOnSub = generateDrawBar(barIndices, true);
+                    drawLineOnSub = generateDrawLine(lineIndices, true);
                     // bars
                     contextBar = context.selectAll('.' + CLASS.bars).selectAll('.' + CLASS.bar)
                         .data(barData);
                     contextBar.enter().append('path')
-                        .attr('d', drawBarOnSub)
+                        .attr("class", classBar)
                         .style("stroke", 'none')
-                        .style("fill", function (d) { return color(d); })
-                        .attr("class", classBar);
+                        .style("fill", color);
                     contextBar
                         .style("opacity", initialOpacity)
                       .transition().duration(duration)
@@ -3404,11 +3945,35 @@
                         .style('opacity', 0)
                         .remove();
                     // lines
-                    context.selectAll('.' + CLASS.line)
+                    contextLine = context.selectAll('.' + CLASS.lines).selectAll('.' + CLASS.line)
+                        .data(lineData);
+                    contextLine.enter().append('path')
+                        .attr('class', classLine)
+                        .style('stroke', color);
+                    contextLine
                         .style("opacity", initialOpacity)
                       .transition().duration(duration)
-                        .attr("d", lineOnSub)
+                        .attr("d", drawLineOnSub)
                         .style('opacity', 1);
+                    contextLine.exit().transition().duration(duration)
+                        .style('opacity', 0)
+                        .remove();
+                    // area
+                    contextArea = context.selectAll('.' + CLASS.areas).selectAll('.' + CLASS.area)
+                        .data(lineData);
+                    contextArea.enter().append('path')
+                        .attr("class", classArea)
+                        .style("fill", color)
+                        .style("opacity", function () { orgAreaOpacity = +d3.select(this).style('opacity'); return 0; });
+                    contextArea
+                        .style("opacity", 0)
+                      .transition().duration(duration)
+                        .attr("d", drawAreaOnSub)
+                        .style("fill", color)
+                        .style("opacity", orgAreaOpacity);
+                    contextArea.exit().transition().duration(durationForExit)
+                        .style('opacity', 0)
+                        .remove();
                 }
             }
 
@@ -3417,94 +3982,252 @@
                 .filter(function (d) { return isBarType(d); })
                 .selectAll('circle')
                 .remove();
-            main.selectAll('.' + CLASS.selectedCircle)
-              .transition().duration(duration)
-                .attr("cx", __axis_rotated ? circleY : circleX)
-                .attr("cy", __axis_rotated ? circleX : circleY);
 
-            // rect for mouseover
-            eventRect = main.select('.' + CLASS.eventRects);
-            if (notEmpty(__data_xs) && !isSingleX(__data_xs)) {
+            if (__interaction_enabled) {
+                // rect for mouseover
+                eventRect = main.select('.' + CLASS.eventRects)
+                    .style('cursor', __zoom_enabled ? __axis_rotated ? 'ns-resize' : 'ew-resize' : null);
+                if (notEmpty(__data_xs) && !isSingleX(__data_xs)) {
 
-                if (!eventRect.classed(CLASS.eventRectsMultiple)) {
-                    eventRect.classed(CLASS.eventRectsMultiple, true).classed(CLASS.eventRectsSingle, false)
-                        .selectAll('.' + CLASS.eventRect).remove();
-                }
+                    if (!eventRect.classed(CLASS.eventRectsMultiple)) {
+                        eventRect.classed(CLASS.eventRectsMultiple, true).classed(CLASS.eventRectsSingle, false)
+                            .selectAll('.' + CLASS.eventRect).remove();
+                    }
 
-                eventRectUpdate = main.select('.' + CLASS.eventRects).selectAll('.' + CLASS.eventRect)
-                    .data([0]);
-                // enter : only one rect will be added
-                generateEventRectsForMultipleXs(eventRectUpdate.enter());
-                // update
-                eventRectUpdate
-                    .attr('x', 0)
-                    .attr('y', 0)
-                    .attr('width', width)
-                    .attr('height', height);
-                // exit : not needed becuase always only one rect exists
-            } else {
-
-                if (!eventRect.classed(CLASS.eventRectsSingle)) {
-                    eventRect.classed(CLASS.eventRectsMultiple, false).classed(CLASS.eventRectsSingle, true)
-                        .selectAll('.' + CLASS.eventRect).remove();
-                }
-
-                if (isCustomX && !isCategorized) {
-                    rectW = function (d, i) {
-                        var prevX = getPrevX(i), nextX = getNextX(i), dx = c3.data.xs[d.id][i];
-                        return (x(nextX ? nextX : dx + 50) - x(prevX ? prevX : dx - 50)) / 2;
-                    };
-                    rectX = function (d, i) {
-                        var prevX = getPrevX(i), dx = c3.data.xs[d.id][i];
-                        return (x(dx) + x(prevX ? prevX : dx - 50)) / 2;
-                    };
+                    eventRectUpdate = main.select('.' + CLASS.eventRects).selectAll('.' + CLASS.eventRect)
+                        .data([0]);
+                    // enter : only one rect will be added
+                    generateEventRectsForMultipleXs(eventRectUpdate.enter());
+                    // update
+                    eventRectUpdate
+                        .attr('x', 0)
+                        .attr('y', 0)
+                        .attr('width', width)
+                        .attr('height', height);
+                    // exit : not needed because always only one rect exists
                 } else {
-                    rectW = getEventRectWidth();
-                    rectX = function (d) {
-                        return x(d.x) - (rectW / 2);
-                    };
+
+                    if (!eventRect.classed(CLASS.eventRectsSingle)) {
+                        eventRect.classed(CLASS.eventRectsMultiple, false).classed(CLASS.eventRectsSingle, true)
+                            .selectAll('.' + CLASS.eventRect).remove();
+                    }
+
+                    if ((isCustomX() || isTimeSeries) && !isCategorized) {
+                        rectW = function (d) {
+                            var prevX = getPrevX(d.index), nextX = getNextX(d.index), dx = c3.data.xs[d.id][d.index],
+                                w = (x(nextX ? nextX : dx) - x(prevX ? prevX : dx)) / 2;
+                            return w < 0 ? 0 : w;
+                        };
+                        rectX = function (d) {
+                            var prevX = getPrevX(d.index), dx = c3.data.xs[d.id][d.index];
+                            return (x(dx) + x(prevX ? prevX : dx)) / 2;
+                        };
+                    } else {
+                        rectW = getEventRectWidth();
+                        rectX = function (d) {
+                            return x(d.x) - (rectW / 2);
+                        };
+                    }
+                    // Set data
+                    maxDataCountTarget = getMaxDataCountTarget(c3.data.targets);
+                    main.select('.' + CLASS.eventRects)
+                        .datum(maxDataCountTarget ? maxDataCountTarget.values : []);
+                    // Update rects
+                    eventRectUpdate = main.select('.' + CLASS.eventRects).selectAll('.' + CLASS.eventRect)
+                        .data(function (d) { return d; });
+                    // enter
+                    generateEventRectsForSingleX(eventRectUpdate.enter());
+                    // update
+                    eventRectUpdate
+                        .attr('class', classEvent)
+                        .attr("x", __axis_rotated ? 0 : rectX)
+                        .attr("y", __axis_rotated ? rectX : 0)
+                        .attr("width", __axis_rotated ? width : rectW)
+                        .attr("height", __axis_rotated ? rectW : height);
+                    // exit
+                    eventRectUpdate.exit().remove();
                 }
-                // Set data
-                maxDataCountTarget = getMaxDataCountTarget();
-                main.select('.' + CLASS.eventRects)
-                    .datum(maxDataCountTarget ? maxDataCountTarget.values : []);
-                // Update rects
-                eventRectUpdate = main.select('.' + CLASS.eventRects).selectAll('.' + CLASS.eventRect)
-                    .data(function (d) { return d; });
-                // enter
-                generateEventRectsForSingleX(eventRectUpdate.enter());
-                // update
-                eventRectUpdate
-                    .attr('class', classEvent)
-                    .attr("x", __axis_rotated ? 0 : rectX)
-                    .attr("y", __axis_rotated ? rectX : 0)
-                    .attr("width", __axis_rotated ? width : rectW)
-                    .attr("height", __axis_rotated ? rectW : height);
-                // exit
-                eventRectUpdate.exit().remove();
             }
 
-            // rect for regions
-            mainRegion = main.select('.' + CLASS.regions).selectAll('rect.' + CLASS.region)
-                .data(__regions);
-            mainRegion.enter().append('rect')
-                .style("fill-opacity", 0);
-            mainRegion
-                .attr('class', classRegion)
-                .attr("x", regionX)
-                .attr("y", regionY)
-                .attr("width", regionWidth)
-                .attr("height", regionHeight)
-              .transition().duration(duration)
-                .style("fill-opacity", function (d) { return isValue(d.opacity) ? d.opacity : 0.1; });
-            mainRegion.exit().transition().duration(duration)
-                .style("fill-opacity", 0)
-                .remove();
+            // transition should be derived from one transition
+            d3.transition().duration(duration).each(function () {
+                var transitions = [];
+
+                transitions.push(mainBar.transition()
+                    .attr('d', drawBar)
+                    .style("fill", color)
+                    .style("opacity", 1));
+                transitions.push(mainLine.transition()
+                    .attr("d", drawLine)
+                    .style("stroke", color)
+                    .style("opacity", 1));
+                transitions.push(mainArea.transition()
+                    .attr("d", drawArea)
+                    .style("fill", color)
+                    .style("opacity", orgAreaOpacity));
+                transitions.push(mainCircle.transition()
+                    .style('opacity', opacityForCircle)
+                    .style("fill", color)
+                    .attr("cx", __axis_rotated ? circleY : circleX)
+                    .attr("cy", __axis_rotated ? circleX : circleY));
+                transitions.push(main.selectAll('.' + CLASS.selectedCircle).transition()
+                    .attr("cx", __axis_rotated ? circleY : circleX)
+                    .attr("cy", __axis_rotated ? circleX : circleY));
+                transitions.push(mainText.transition()
+                    .attr('x', xForText)
+                    .attr('y', yForText)
+                    .style("fill", color)
+                    .style("fill-opacity", options.flow ? 0 : opacityForText));
+                transitions.push(mainRegion.selectAll('rect').transition()
+                    .attr("x", regionX)
+                    .attr("y", regionY)
+                    .attr("width", regionWidth)
+                    .attr("height", regionHeight)
+                    .style("fill-opacity", function (d) { return isValue(d.opacity) ? d.opacity : 0.1; }));
+                transitions.push(xgridLines.select('line').transition()
+                    .attr("x1", __axis_rotated ? 0 : xv)
+                    .attr("x2", __axis_rotated ? width : xv)
+                    .attr("y1", __axis_rotated ? xv : margin.top)
+                    .attr("y2", __axis_rotated ? xv : height)
+                    .style("opacity", 1));
+                transitions.push(xgridLines.select('text').transition()
+                    .attr("x", __axis_rotated ? width : 0)
+                    .attr("y", xv)
+                    .text(function (d) { return d.text; })
+                    .style("opacity", 1));
+                // Wait for end of transitions if called from flow API
+                if (options.flow) {
+                    waitForDraw = generateWait();
+                    transitions.forEach(function (t) {
+                        waitForDraw.add(t);
+                    });
+                }
+            })
+            .call(waitForDraw ? waitForDraw : function () {}, function () { // only for flow
+                var translateX, scaleX = 1, transform,
+                    flowIndex = options.flow.index,
+                    flowLength = options.flow.length,
+                    flowStart = getValueOnIndex(c3.data.targets[0].values, flowIndex),
+                    flowEnd = getValueOnIndex(c3.data.targets[0].values, flowIndex + flowLength),
+                    orgDomain = x.domain(), domain,
+                    durationForFlow = options.flow.duration || duration,
+                    done = options.flow.done || function () {},
+                    wait = generateWait();
+
+                // remove head data after rendered
+                c3.data.targets.forEach(function (d) {
+                    d.values.splice(0, flowLength);
+                });
+
+                // update x domain to generate axis elements for flow
+                domain = updateXDomain(targetsToShow, true, true);
+                // update elements related to x scale
+                if (flushXGrid) { flushXGrid(true); }
+
+                // generate transform to flow
+                if (!options.flow.orgDataCount) { // if empty
+                    if (c3.data.targets[0].values.length !== 1) {
+                        translateX = x(orgDomain[0]) - x(domain[0]);
+                    } else {
+                        if (isTimeSeries) {
+                            flowStart = getValueOnIndex(c3.data.targets[0].values, 0);
+                            flowEnd = getValueOnIndex(c3.data.targets[0].values, c3.data.targets[0].values.length - 1);
+                            translateX = x(flowStart.x) - x(flowEnd.x);
+                        } else {
+                            translateX = diffDomain(domain) / 2;
+                        }
+                    }
+                } else if (options.flow.orgDataCount === 1 || flowStart.x === flowEnd.x) {
+                    translateX = x(orgDomain[0]) - x(domain[0]);
+                } else {
+                    if (isTimeSeries) {
+                        translateX = (x(orgDomain[0]) - x(domain[0]));
+                    } else {
+                        translateX = (x(flowStart.x) - x(flowEnd.x));
+                    }
+                }
+                scaleX = (diffDomain(orgDomain) / diffDomain(domain));
+                transform = 'translate(' + translateX + ',0) scale(' + scaleX + ',1)';
+
+                d3.transition().ease('linear').duration(durationForFlow).each(function () {
+                    wait.add(axes.x.transition().call(xAxis));
+                    wait.add(mainBar.transition().attr('transform', transform));
+                    wait.add(mainLine.transition().attr('transform', transform));
+                    wait.add(mainArea.transition().attr('transform', transform));
+                    wait.add(mainCircle.transition().attr('transform', transform));
+                    wait.add(mainText.transition().attr('transform', transform));
+                    wait.add(mainRegion.filter(isRegionOnX).transition().attr('transform', transform));
+                    wait.add(xgrid.transition().attr('transform', transform));
+                    wait.add(xgridLines.transition().attr('transform', transform));
+                })
+                .call(wait, function () {
+                    var i, shapes = [], texts = [], eventRects = [];
+
+                    // remove flowed elements
+                    if (flowLength) {
+                        for (i = 0; i < flowLength; i++) {
+                            shapes.push('.' + CLASS.shape + '-' + (flowIndex + i));
+                            texts.push('.' + CLASS.text + '-' + (flowIndex + i));
+                            eventRects.push('.' + CLASS.eventRect + '-' + (flowIndex + i));
+                        }
+                        svg.selectAll('.' + CLASS.shapes).selectAll(shapes).remove();
+                        svg.selectAll('.' + CLASS.texts).selectAll(texts).remove();
+                        svg.selectAll('.' + CLASS.eventRects).selectAll(eventRects).remove();
+                        svg.select('.' + CLASS.xgrid).remove();
+                    }
+
+                    // draw again for removing flowed elements and reverting attr
+                    xgrid
+                        .attr('transform', null)
+                        .attr(xgridAttr);
+                    xgridLines
+                        .attr('transform', null);
+                    xgridLines.select('line')
+                        .attr("x1", __axis_rotated ? 0 : xv)
+                        .attr("x2", __axis_rotated ? width : xv);
+                    xgridLines.select('text')
+                        .attr("x", __axis_rotated ? width : 0)
+                        .attr("y", xv);
+                    mainBar
+                        .attr('transform', null)
+                        .attr("d", drawBar);
+                    mainLine
+                        .attr('transform', null)
+                        .attr("d", drawLine);
+                    mainArea
+                        .attr('transform', null)
+                        .attr("d", drawArea);
+                    mainCircle
+                        .attr('transform', null)
+                        .attr("cx", __axis_rotated ? circleY : circleX)
+                        .attr("cy", __axis_rotated ? circleX : circleY);
+                    mainText
+                        .attr('transform', null)
+                        .attr('x', xForText)
+                        .attr('y', yForText)
+                        .style('fill-opacity', opacityForText);
+                    mainRegion
+                        .attr('transform', null);
+                    mainRegion.select('rect').filter(isRegionOnX)
+                        .attr("x", regionX)
+                        .attr("width", regionWidth);
+                    eventRectUpdate
+                        .attr("x", __axis_rotated ? 0 : rectX)
+                        .attr("y", __axis_rotated ? rectX : 0)
+                        .attr("width", __axis_rotated ? width : rectW)
+                        .attr("height", __axis_rotated ? rectW : height);
+
+                    // callback for end of flow
+                    done();
+                });
+            });
 
             // update fadein condition
             mapToIds(c3.data.targets).forEach(function (id) {
                 withoutFadeIn[id] = true;
             });
+
+            updateZoom();
         }
         function redrawForBrush() {
             redraw({
@@ -3513,8 +4236,15 @@
                 withSubchart: false,
                 withUpdateXDomain: true
             });
+            __subchart_onbrush.call(c3, x.orgDomain());
         }
         function redrawForZoom() {
+            if (!__zoom_enabled) {
+                return;
+            }
+            if (filterTargetsToShow(c3.data.targets).length === 0) {
+                return;
+            }
             if (d3.event.sourceEvent.type === 'mousemove' && zoom.altDomain) {
                 x.domain(zoom.altDomain);
                 zoom.scale(x).updateScaleExtent();
@@ -3531,6 +4261,7 @@
             if (d3.event.sourceEvent.type === 'mousemove') {
                 cancelClick = true;
             }
+            __zoom_onzoom.call(c3, x.orgDomain());
         }
 
         function generateResize() {
@@ -3548,30 +4279,60 @@
 
         function updateSvgSize() {
             svg.attr('width', currentWidth).attr('height', currentHeight);
-            svg.select('#' + clipId).select('rect').attr('width', width).attr('height', height);
-            svg.select('#' + clipIdForXAxis).select('rect').attr('width', getXAxisClipWidth);
-            svg.select('#' + clipIdForYAxis).select('rect').attr('width', getYAxisClipWidth);
-            svg.select('.' + CLASS.zoomRect).attr('width', width).attr('height', height);
+            svg.select('#' + clipId).select('rect')
+                .attr('width', width)
+                .attr('height', height);
+            svg.select('#' + clipIdForXAxis).select('rect')
+                .attr('x', getXAxisClipX)
+                .attr('y', getXAxisClipY)
+                .attr('width', getXAxisClipWidth)
+                .attr('height', getXAxisClipHeight);
+            svg.select('#' + clipIdForYAxis).select('rect')
+                .attr('x', getYAxisClipX)
+                .attr('y', getYAxisClipY)
+                .attr('width', getYAxisClipWidth)
+                .attr('height', getYAxisClipHeight);
+            svg.select('.' + CLASS.zoomRect)
+                .attr('width', width)
+                .attr('height', height);
+            // MEMO: parent div's height will be bigger than svg when <!DOCTYPE html>
+            selectChart.style('max-height', currentHeight + "px");
+        }
+
+        function generateAxisTransitions(duration) {
+            return {
+                axisX: duration ? axes.x.transition().duration(duration) : axes.x,
+                axisY: duration ? axes.y.transition().duration(duration) : axes.y,
+                axisY2: duration ? axes.y2.transition().duration(duration) : axes.y2,
+                axisSubX: duration ? axes.subx.transition().duration(duration) : axes.subx,
+            };
         }
 
         function updateAndRedraw(options) {
+            var transitions;
             options = options || {};
             // same with redraw
-            options.withTransition = isDefined(options.withTransition) ? options.withTransition : true;
-            options.withTransform = isDefined(options.withTransform) ? options.withTransform : false;
-            options.withLegend = isDefined(options.withLegend) ? options.withLegend : false;
+            options.withTransition = getOption(options, "withTransition", true);
+            options.withTransform = getOption(options, "withTransform", false);
+            options.withLegend = getOption(options, "withLegend", false);
             // NOT same with redraw
             options.withUpdateXDomain = true;
             options.withUpdateOrgXDomain = true;
             options.withTransitionForExit = false;
-            // Update sizes and scales
+            options.withTransitionForTransform = getOption(options, "withTransitionForTransform", options.withTransition);
+            // MEMO: this needs to be called before updateLegend and it means this ALWAYS needs to be called)
             updateSizes();
-            updateScales();
-            updateSvgSize();
-            // Update g positions
-            transformAll(options.withTransition);
+            // MEMO: called in updateLegend in redraw if withLegend
+            if (!(options.withLegend && __legend_show)) {
+                transitions = generateAxisTransitions(options.withTransitionForAxis ? __transition_duration : 0);
+                // Update scales
+                updateScales();
+                updateSvgSize();
+                // Update g positions
+                transformAll(options.withTransitionForTransform, transitions);
+            }
             // Draw with new sizes & scales
-            redraw(options);
+            redraw(options, transitions);
         }
 
         function updateTargets(targets) {
@@ -3586,10 +4347,10 @@
                 .attr('class', classChartText);
             mainTextEnter = mainTextUpdate.enter().append('g')
                 .attr('class', classChartText)
+                .style('opacity', 0)
                 .style("pointer-events", "none");
             mainTextEnter.append('g')
-                .attr('class', classTexts)
-                .style("fill", function (d) { return color(d); });
+                .attr('class', classTexts);
 
             //-- Bar --//
             mainBarUpdate = main.select('.' + CLASS.chartBars).selectAll('.' + CLASS.chartBar)
@@ -3597,43 +4358,37 @@
                 .attr('class', classChartBar);
             mainBarEnter = mainBarUpdate.enter().append('g')
                 .attr('class', classChartBar)
+                .style('opacity', 0)
                 .style("pointer-events", "none");
             // Bars for each data
             mainBarEnter.append('g')
                 .attr("class", classBars)
-                .style("fill", function (d) { return color(d); })
-                .style("stroke", "none")
                 .style("cursor", function (d) { return __data_selection_isselectable(d) ? "pointer" : null; });
 
             //-- Line --//
-            mainLineUpdate = main.select('.' + CLASS.chartLines)
-              .selectAll('.' + CLASS.chartLine)
+            mainLineUpdate = main.select('.' + CLASS.chartLines).selectAll('.' + CLASS.chartLine)
                 .data(targets)
-              .attr('class', classChartLine);
+                .attr('class', classChartLine);
             mainLineEnter = mainLineUpdate.enter().append('g')
                 .attr('class', classChartLine)
+                .style('opacity', 0)
                 .style("pointer-events", "none");
             // Lines for each data
-            mainLineEnter.append("path")
-                .attr("class", classLine)
-                .style("opacity", 0)
-                .style("stroke", function (d) { return color(d); });
+            mainLineEnter.append('g')
+                .attr("class", classLines);
             // Areas
-            mainLineEnter.append("path")
-                .attr("class", classArea)
-                .style("opacity", function () { orgAreaOpacity = +d3.select(this).style('opacity'); return 0; })
-                .style("fill", function (d) { return color(d); });
+            mainLineEnter.append('g')
+                .attr('class', classAreas);
             // Circles for each data point on lines
             mainLineEnter.append('g')
                 .attr("class", function (d) { return generateClass(CLASS.selectedCircles, d.id); });
             mainLineEnter.append('g')
                 .attr("class", classCircles)
-                .style("fill", function (d) { return color(d); })
                 .style("cursor", function (d) { return __data_selection_isselectable(d) ? "pointer" : null; });
             // Update date for selected circles
             targets.forEach(function (t) {
-                main.selectAll('.' + CLASS.selectedCircles + getTargetSelectorSuffix(t.id)).selectAll('.' + CLASS.selectedCircle).each(function (d, i) {
-                    d.value = t.values[i].value;
+                main.selectAll('.' + CLASS.selectedCircles + getTargetSelectorSuffix(t.id)).selectAll('.' + CLASS.selectedCircle).each(function (d) {
+                    d.value = t.values[d.index].value;
                 });
             });
             // MEMO: can not keep same color...
@@ -3645,35 +4400,10 @@
                 .attr("class", classChartArc);
             mainPieEnter = mainPieUpdate.enter().append("g")
                 .attr("class", classChartArc);
-            mainPieEnter.append("path")
-                .attr("class", classArc)
-                .style("opacity", 0)
-                .style("fill", function (d) { return color(d.data); })
-                .style("cursor", function (d) { return __data_selection_isselectable(d) ? "pointer" : null; })
-                .each(function (d) { this._current = d; })
-                .on('mouseover', function (d, i) {
-                    var updated = updateAngle(d), arcData = convertToArcData(updated), callback = getArcOnMouseOver();
-                    expandArc(updated.data.id);
-                    focusLegend(updated.data.id);
-                    callback(arcData, i);
-                })
-                .on('mousemove', function (d) {
-                    var updated = updateAngle(d), selectedData = [convertToArcData(updated)];
-                    showTooltip(selectedData, d3.mouse(this));
-                })
-                .on('mouseout', function (d, i) {
-                    var updated = updateAngle(d), arcData = convertToArcData(updated), callback = getArcOnMouseOut();
-                    unexpandArc(updated.data.id);
-                    revertLegend();
-                    hideTooltip();
-                    callback(arcData, i);
-                })
-                .on('click', function (d, i) {
-                    var updated = updateAngle(d), arcData = convertToArcData(updated), callback = getArcOnClick();
-                    callback(arcData, i);
-                });
+            mainPieEnter.append('g')
+                .attr('class', classArcs);
             mainPieEnter.append("text")
-                .attr("dy", ".35em")
+                .attr("dy", hasGaugeType(c3.data.targets) ? "-0.35em" : ".35em")
                 .style("opacity", 0)
                 .style("text-anchor", "middle")
                 .style("pointer-events", "none");
@@ -3688,51 +4418,59 @@
                     .data(targets)
                     .attr('class', classChartBar);
                 contextBarEnter = contextBarUpdate.enter().append('g')
+                    .style('opacity', 0)
                     .attr('class', classChartBar);
                 // Bars for each data
                 contextBarEnter.append('g')
-                    .attr("class", classBars)
-                    .style("fill", function (d) { return color(d); });
+                    .attr("class", classBars);
 
                 //-- Line --//
                 contextLineUpdate = context.select('.' + CLASS.chartLines).selectAll('.' + CLASS.chartLine)
                     .data(targets)
                     .attr('class', classChartLine);
                 contextLineEnter = contextLineUpdate.enter().append('g')
+                    .style('opacity', 0)
                     .attr('class', classChartLine);
                 // Lines for each data
-                contextLineEnter.append("path")
-                    .attr("class", classLine)
-                    .style("opacity", 0)
-                    .style("stroke", function (d) { return color(d); });
+                contextLineEnter.append("g")
+                    .attr("class", classLines);
+                // Area
+                contextLineEnter.append("g")
+                    .attr("class", classAreas);
             }
 
             /*-- Show --*/
 
             // Fade-in each chart
             svg.selectAll('.' + CLASS.target).filter(function (d) { return isTargetToShow(d.id); })
-                .transition()
+                .transition().duration(__transition_duration)
                 .style("opacity", 1);
         }
 
         function load(targets, args) {
-            // set type if args.types || args.type specified
-            if (args.type || args.types) {
-                targets.forEach(function (t) {
-                    args.types ? setTargetType(t.id, args.types[t.id]) : setTargetType(t.id, args.type);
-                });
-            }
-            // Update/Add data
-            c3.data.targets.forEach(function (d) {
-                for (var i = 0; i < targets.length; i++) {
-                    if (d.id === targets[i].id) {
-                        d.values = targets[i].values;
-                        targets.splice(i, 1);
-                        break;
-                    }
+            if (targets) {
+                // filter loading targets if needed
+                if (args.filter) {
+                    targets = targets.filter(args.filter);
                 }
-            });
-            c3.data.targets = c3.data.targets.concat(targets); // add remained
+                // set type if args.types || args.type specified
+                if (args.type || args.types) {
+                    targets.forEach(function (t) {
+                        args.types ? setTargetType(t.id, args.types[t.id]) : setTargetType(t.id, args.type);
+                    });
+                }
+                // Update/Add data
+                c3.data.targets.forEach(function (d) {
+                    for (var i = 0; i < targets.length; i++) {
+                        if (d.id === targets[i].id) {
+                            d.values = targets[i].values;
+                            targets.splice(i, 1);
+                            break;
+                        }
+                    }
+                });
+                c3.data.targets = c3.data.targets.concat(targets); // add remained
+            }
 
             // Set targets
             updateTargets(c3.data.targets);
@@ -3745,23 +4483,25 @@
             }
         }
         function loadFromArgs(args) {
-            // load data
-            if ('data' in args) {
+            if (args.data) {
                 load(convertDataToTargets(args.data), args);
             }
-            else if ('url' in args) {
-                d3.csv(args.url, function (error, data) {
+            else if (args.url) {
+                convertUrlToData(args.url, args.mimeType, args.keys, function (data) {
                     load(convertDataToTargets(data), args);
                 });
             }
-            else if ('rows' in args) {
+            else if (args.json) {
+                load(convertDataToTargets(convertJsonToData(args.json, args.keys)), args);
+            }
+            else if (args.rows) {
                 load(convertDataToTargets(convertRowsToData(args.rows)), args);
             }
-            else if ('columns' in args) {
+            else if (args.columns) {
                 load(convertDataToTargets(convertColumnsToData(args.columns)), args);
             }
             else {
-                throw Error('url or rows or columns is required.');
+                load(null, args);
             }
         }
 
@@ -3795,63 +4535,69 @@
 
         /*-- Draw Legend --*/
 
-        function opacityForLegend(id) {
-            return d3.select(selectorLegend(id)).classed(CLASS.legendItemHidden) ? legendOpacityForHidden : 1;
+        function opacityForLegend(legendItem) {
+            return legendItem.classed(CLASS.legendItemHidden) ? legendOpacityForHidden : 1;
         }
-        function opacityForUnfocusedLegend(id) {
-            return d3.select(selectorLegend(id)).classed(CLASS.legendItemHidden) ? legendOpacityForHidden : 0.3;
+        function opacityForUnfocusedLegend(legendItem) {
+            return legendItem.classed(CLASS.legendItemHidden) ? legendOpacityForHidden : 0.3;
         }
         function toggleFocusLegend(id, focus) {
-            var legendItem = legend.selectAll('.' + CLASS.legendItem),
-                isTarget = function (d) { return (!id || d === id); },
-                notTarget = function (d) { return !isTarget(d); };
-            legendItem.filter(notTarget).transition().duration(100).style('opacity', focus ? opacityForUnfocusedLegend : opacityForLegend);
-            legendItem.filter(isTarget).transition().duration(100).style('opacity', focus ? opacityForLegend : opacityForUnfocusedLegend);
-        }
-        function focusLegend(id) {
-            toggleFocusLegend(id, true);
-        }
-        function defocusLegend(id) {
-            toggleFocusLegend(id, false);
+            legend.selectAll('.' + CLASS.legendItem)
+              .transition().duration(100)
+                .style('opacity', function (_id) {
+                    var This = d3.select(this);
+                    if (id && _id !== id) {
+                        return focus ? opacityForUnfocusedLegend(This) : opacityForLegend(This);
+                    } else {
+                        return focus ? opacityForLegend(This) : opacityForUnfocusedLegend(This);
+                    }
+                });
         }
         function revertLegend() {
             legend.selectAll('.' + CLASS.legendItem)
               .transition().duration(100)
-                .style('opacity', opacityForLegend);
+                .style('opacity', function () { return opacityForLegend(d3.select(this)); });
         }
         function showLegend(targetIds) {
+            if (!__legend_show) {
+                __legend_show = true;
+                legend.style('visibility', 'visible');
+            }
             removeHiddenLegendIds(targetIds);
             legend.selectAll(selectorLegends(targetIds))
                 .style('visibility', 'visible')
               .transition()
-                .style('opacity', opacityForLegend);
-            updateLegend(mapToIds(c3.data.targets));
+                .style('opacity', function () { return opacityForLegend(d3.select(this)); });
         }
         function hideLegend(targetIds) {
+            if (__legend_show && isEmpty(targetIds)) {
+                __legend_show = false;
+                legend.style('visibility', 'hidden');
+            }
             addHiddenLegendIds(targetIds);
             legend.selectAll(selectorLegends(targetIds))
                 .style('opacity', 0)
                 .style('visibility', 'hidden');
-            updateLegend(mapToIds(c3.data.targets));
         }
 
-        function updateLegend(targetIds, options) {
+        function updateLegend(targetIds, options, transitions) {
             var xForLegend, xForLegendText, xForLegendRect, yForLegend, yForLegendText, yForLegendRect;
-            var paddingTop = 4, paddingRight = 26, maxWidth = 0, maxHeight = 0, posMin = 10;
+            var paddingTop = 4, paddingRight = 36, maxWidth = 0, maxHeight = 0, posMin = 10;
             var l, totalLength = 0, offsets = {}, widths = {}, heights = {}, margins = [0], steps = {}, step = 0;
-            var withTransition, withTransitionForTransform, withTransformAll;
+            var withTransition, withTransitionForTransform;
+            var hasFocused = legend.selectAll('.' + CLASS.legendItemFocused).size();
+            var texts, rects, tiles;
 
             options = options || {};
-            withTransition = isDefined(options.withTransition) ? options.withTransition : true;
-            withTransitionForTransform = isDefined(options.withTransitionForTransform) ? options.withTransitionForTransform : true;
-            withTransformAll = isDefined(options.withTransformAll) ? options.withTransformAll : true;
+            withTransition = getOption(options, "withTransition", true);
+            withTransitionForTransform = getOption(options, "withTransitionForTransform", true);
 
             function updatePositions(textElement, id, reset) {
-                var box = textElement.getBoundingClientRect(),
+                var box = getTextRect(textElement.textContent, CLASS.legendItem),
                     itemWidth = Math.ceil((box.width + paddingRight) / 10) * 10,
                     itemHeight = Math.ceil((box.height + paddingTop) / 10) * 10,
-                    itemLength = isLegendRight ? itemHeight : itemWidth,
-                    areaLength = isLegendRight ? getLegendHeight() : getLegendWidth(),
+                    itemLength = isLegendRight || isLegendInset ? itemHeight : itemWidth,
+                    areaLength = isLegendRight || isLegendInset ? getLegendHeight() : getLegendWidth(),
                     margin, maxLength;
 
                 // MEMO: care about condifion of step, totalLength
@@ -3865,7 +4611,7 @@
                         }
                     }
                     steps[id] = step;
-                    margins[step] = margin;
+                    margins[step] = isLegendInset ? 10 : margin;
                     offsets[id] = totalLength;
                     totalLength += itemLength;
                 }
@@ -3887,7 +4633,7 @@
 
                 if (!maxWidth || itemWidth >= maxWidth) { maxWidth = itemWidth; }
                 if (!maxHeight || itemHeight >= maxHeight) { maxHeight = itemHeight; }
-                maxLength = isLegendRight ? maxHeight : maxWidth;
+                maxLength = isLegendRight || isLegendInset ? maxHeight : maxWidth;
 
                 if (__legend_equally) {
                     Object.keys(widths).forEach(function (id) { widths[id] = maxWidth; });
@@ -3907,11 +4653,14 @@
             }
 
             if (isLegendRight) {
-                xForLegend = function (id) { return maxWidth * (0.2 + steps[id]); };
+                xForLegend = function (id) { return maxWidth * steps[id]; };
+                yForLegend = function (id) { return margins[steps[id]] + offsets[id]; };
+            } else if (isLegendInset) {
+                xForLegend = function (id) { return maxWidth * steps[id] + 10; };
                 yForLegend = function (id) { return margins[steps[id]] + offsets[id]; };
             } else {
                 xForLegend = function (id) { return margins[steps[id]] + offsets[id]; };
-                yForLegend = function (id) { return maxHeight * (0.2 + steps[id]); };
+                yForLegend = function (id) { return maxHeight * steps[id]; };
             }
             xForLegendText = function (id, i) { return xForLegend(id, i) + 14; };
             yForLegendText = function (id, i) { return yForLegend(id, i) + 9; };
@@ -3926,61 +4675,89 @@
                 .style('visibility', function (id) { return isLegendToShow(id) ? 'visible' : 'hidden'; })
                 .style('cursor', 'pointer')
                 .on('click', function (id) {
-                    typeof __legend_item_onclick === 'function' ? __legend_item_onclick(id) : c3.toggle(id);
+                    typeof __legend_item_onclick === 'function' ? __legend_item_onclick.call(c3, id) : c3.toggle(id);
                 })
                 .on('mouseover', function (id) {
-                    c3.focus(id);
+                    d3.select(this).classed(CLASS.legendItemFocused, true);
+                    if (!transiting) {
+                        c3.focus(id);
+                    }
                     if (typeof __legend_item_onmouseover === 'function') {
-                        __legend_item_onmouseover(id);
+                        __legend_item_onmouseover.call(c3, id);
                     }
                 })
                 .on('mouseout', function (id) {
-                    c3.revert();
+                    d3.select(this).classed(CLASS.legendItemFocused, false);
+                    if (!transiting) {
+                        c3.revert();
+                    }
                     if (typeof __legend_item_onmouseout === 'function') {
-                        __legend_item_onmouseout(id);
+                        __legend_item_onmouseout.call(c3, id);
                     }
                 });
             l.append('text')
                 .text(function (id) { return isDefined(__data_names[id]) ? __data_names[id] : id; })
                 .each(function (id, i) { updatePositions(this, id, i === 0); })
                 .style("pointer-events", "none")
-                .attr('x', isLegendRight ? xForLegendText : -200)
-                .attr('y', isLegendRight ? -200 : yForLegendText);
+                .attr('x', isLegendRight || isLegendInset ? xForLegendText : -200)
+                .attr('y', isLegendRight || isLegendInset ? -200 : yForLegendText);
             l.append('rect')
                 .attr("class", CLASS.legendItemEvent)
                 .style('fill-opacity', 0)
-                .attr('x', isLegendRight ? xForLegendRect : -200)
-                .attr('y', isLegendRight ? -200 : yForLegendRect)
-                .attr('width', function (id) { return widths[id]; })
-                .attr('height', function (id) { return heights[id]; });
+                .attr('x', isLegendRight || isLegendInset ? xForLegendRect : -200)
+                .attr('y', isLegendRight || isLegendInset ? -200 : yForLegendRect);
             l.append('rect')
                 .attr("class", CLASS.legendItemTile)
                 .style("pointer-events", "none")
-                .style('fill', function (id) { return color(id); })
-                .attr('x', isLegendRight ? xForLegendText : -200)
-                .attr('y', isLegendRight ? -200 : yForLegend)
+                .style('fill', color)
+                .attr('x', isLegendRight || isLegendInset ? xForLegendText : -200)
+                .attr('y', isLegendRight || isLegendInset ? -200 : yForLegend)
                 .attr('width', 10)
                 .attr('height', 10);
+            // Set background for inset legend
+            if (isLegendInset && maxWidth !== 0) {
+                legend.insert('g', '.' + CLASS.legendItem)
+                    .attr("class", CLASS.legendBackground)
+                  .append('rect')
+                    .attr('height', getLegendHeight() - 10)
+                    .attr('width', maxWidth * (step + 1) + 10);
+            }
 
-            legend.selectAll('text')
+            texts = legend.selectAll('text')
                 .data(targetIds)
                 .text(function (id) { return isDefined(__data_names[id]) ? __data_names[id] : id; }) // MEMO: needed for update
-                .each(function (id, i) { updatePositions(this, id, i === 0); })
-              .transition().duration(withTransition ? 250 : 0)
+                .each(function (id, i) { updatePositions(this, id, i === 0); });
+            (withTransition ? texts.transition() : texts)
                 .attr('x', xForLegendText)
                 .attr('y', yForLegendText);
 
-            legend.selectAll('rect.' + CLASS.legendItemEvent)
-                .data(targetIds)
-              .transition().duration(withTransition ? 250 : 0)
+            rects = legend.selectAll('rect.' + CLASS.legendItemEvent)
+                .data(targetIds);
+            (withTransition ? rects.transition() : rects)
+                .attr('width', function (id) { return widths[id]; })
+                .attr('height', function (id) { return heights[id]; })
                 .attr('x', xForLegendRect)
                 .attr('y', yForLegendRect);
 
-            legend.selectAll('rect.' + CLASS.legendItemTile)
-                .data(targetIds)
-              .transition().duration(withTransition ? 250 : 0)
+            tiles = legend.selectAll('rect.' + CLASS.legendItemTile)
+                .data(targetIds);
+            (withTransition ? tiles.transition() : tiles)
+                .style('fill', color)
                 .attr('x', xForLegend)
                 .attr('y', yForLegend);
+
+            // toggle legend state
+            legend.selectAll('.' + CLASS.legendItem)
+                .classed(CLASS.legendItemHidden, function (id) { return !isTargetToShow(id); })
+              .transition()
+                .style('opacity', function (id) {
+                    var This = d3.select(this);
+                    if (isTargetToShow(id)) {
+                        return !hasFocused || This.classed(CLASS.legendItemFocused) ? opacityForLegend(This) : opacityForUnfocusedLegend(This);
+                    } else {
+                        return legendOpacityForHidden;
+                    }
+                });
 
             // Update all to reflect change of legend
             updateLegendItemWidth(maxWidth);
@@ -3991,9 +4768,7 @@
             updateScales();
             updateSvgSize();
             // Update g positions
-            if (withTransformAll) {
-                transformAll(withTransitionForTransform);
-            }
+            transformAll(withTransitionForTransform, transitions);
         }
 
         /*-- Event Handling --*/
@@ -4004,15 +4779,38 @@
         function isArc(d) {
             return 'data' in d && hasTarget(c3.data.targets, d.data.id);
         }
-        function getGridFilter(params) {
-            var value = params && params.value ? params.value : null,
-                klass = params && params['class'] ? params['class'] : null;
-            return value ? function (line) { return line.value !== value; } : klass ? function (line) { return line['class'] !== klass; } : function () { return true; };
+        function getGridFilterToRemove(params) {
+            return params ? function (line) {
+                var found = false;
+                [].concat(params).forEach(function (param) {
+                    if ((('value' in param && line.value === params.value) || ('class' in param && line.class === params.class))) {
+                        found = true;
+                    }
+                });
+                return found;
+            } : function () { return true; };
+        }
+        function removeGridLines(params, forX) {
+            var toRemove = getGridFilterToRemove(params),
+                toShow = function (line) { return !toRemove(line); },
+                classLines = forX ? CLASS.xgridLines : CLASS.ygridLines,
+                classLine = forX ? CLASS.xgridLine : CLASS.ygridLine;
+            main.select('.' + classLines).selectAll('.' + classLine).filter(toRemove)
+              .transition().duration(__transition_duration)
+                .style('opacity', 0).remove();
+            if (forX) {
+                __grid_x_lines = __grid_x_lines.filter(toShow);
+            } else {
+                __grid_y_lines = __grid_y_lines.filter(toShow);
+            }
         }
         function transformTo(targetIds, type, optionsForRedraw) {
-            var withTransitionForAxis = !hasArcType(c3.data.targets);
+            var withTransitionForAxis = !hasArcType(c3.data.targets),
+                options = optionsForRedraw || {withTransitionForAxis: withTransitionForAxis};
+            options.withTransitionForTransform = false;
+            transiting = false;
             setTargetType(targetIds, type);
-            updateAndRedraw(optionsForRedraw ? optionsForRedraw : {withTransitionForAxis: withTransitionForAxis});
+            updateAndRedraw(options);
         }
 
         c3.focus = function (targetId) {
@@ -4029,7 +4827,7 @@
             if (hasArcType(c3.data.targets)) {
                 expandArc(targetId, true);
             }
-            focusLegend(targetId);
+            toggleFocusLegend(targetId, true);
         };
 
         c3.defocus = function (targetId) {
@@ -4045,7 +4843,7 @@
             if (hasArcType(c3.data.targets)) {
                 unexpandArc(targetId);
             }
-            defocusLegend(targetId);
+            toggleFocusLegend(targetId, false);
         };
 
         c3.revert = function (targetId) {
@@ -4074,14 +4872,9 @@
 
             if (options.withLegend) {
                 showLegend(targetIds);
-            } else {
-                legend.selectAll(selectorLegends(targetIds))
-                    .classed(CLASS.legendItemHidden, false)
-                  .transition()
-                    .style('opacity', 1);
             }
 
-            redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true, withTransitionForHorizontalAxis: false});
+            redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true, withLegend: true});
         };
 
         c3.hide = function (targetIds, options) {
@@ -4095,14 +4888,9 @@
 
             if (options.withLegend) {
                 hideLegend(targetIds);
-            } else {
-                legend.selectAll(selectorLegends(targetIds))
-                    .classed(CLASS.legendItemHidden, true)
-                  .transition()
-                    .style('opacity', legendOpacityForHidden);
             }
 
-            redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true, withTransitionForHorizontalAxis: false});
+            redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true, withLegend: true});
         };
 
         c3.toggle = function (targetId) {
@@ -4112,6 +4900,12 @@
         c3.unzoom = function () {
             brush.clear().update();
             redraw({withUpdateXDomain: true});
+        };
+        c3.zoom = function () {
+        };
+        c3.zoom.enable = function (enabled) {
+            __zoom_enabled = enabled;
+            updateAndRedraw();
         };
 
         c3.load = function (args) {
@@ -4128,7 +4922,6 @@
             // update categories if exists
             if ('categories' in args && isCategorized) {
                 __axis_x_categories = args.categories;
-                xAxis.categories(__axis_x_categories);
             }
             // use cache if exists
             if ('cacheIds' in args && hasCaches(args.cacheIds)) {
@@ -4146,9 +4939,151 @@
             }
         };
 
-        c3.unload = function (targetIds) {
-            unload(mapToTargetIds(targetIds), function () {
+        c3.unload = function (args) {
+            args = args || {};
+            unload(mapToTargetIds(args.ids), function () {
                 redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true, withLegend: true});
+                if (typeof args.done === 'function') { args.done(); }
+            });
+        };
+
+        c3.flow = function (args) {
+            var targets, data, notfoundIds = [],
+                orgDataCount = getMaxDataCount(), dataCount, domain, baseTarget, baseValue, length = 0, tail = 0, diff, to;
+
+            if (args.json) {
+                data = convertJsonToData(args.json, args.keys);
+            }
+            else if (args.rows) {
+                data = convertRowsToData(args.rows);
+            }
+            else if (args.columns) {
+                data = convertColumnsToData(args.columns);
+            }
+            else {
+                return;
+            }
+            targets = convertDataToTargets(data, true);
+
+            // Update/Add data
+            c3.data.targets.forEach(function (t) {
+                var found = false, i, j;
+                for (i = 0; i < targets.length; i++) {
+                    if (t.id === targets[i].id) {
+                        found = true;
+
+                        if (t.values[t.values.length - 1]) {
+                            tail = t.values[t.values.length - 1].index + 1;
+                        }
+                        length = targets[i].values.length;
+
+                        for (j = 0; j < length; j++) {
+                            targets[i].values[j].index = tail + j;
+                            if (!isTimeSeries) {
+                                targets[i].values[j].x = tail + j;
+                            }
+                        }
+                        t.values = t.values.concat(targets[i].values);
+
+                        targets.splice(i, 1);
+                        break;
+                    }
+                }
+                if (!found) { notfoundIds.push(t.id); }
+            });
+
+            // Append null for not found targets
+            c3.data.targets.forEach(function (t) {
+                var i, j;
+                for (i = 0; i < notfoundIds.length; i++) {
+                    if (t.id === notfoundIds[i]) {
+                        tail = t.values[t.values.length - 1].index + 1;
+                        for (j = 0; j < length; j++) {
+                            t.values.push({
+                                id: t.id,
+                                index: tail + j,
+                                x: isTimeSeries ? getOtherTargetX(tail + j) : tail + j,
+                                value: null
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Generate null values for new target
+            if (c3.data.targets.length) {
+                targets.forEach(function (t) {
+                    var i, missing = [];
+                    for (i = c3.data.targets[0].values[0].index; i < tail; i++) {
+                        missing.push({
+                            id: t.id,
+                            index: i,
+                            x: isTimeSeries ? getOtherTargetX(i) : i,
+                            value: null
+                        });
+                    }
+                    t.values.forEach(function (v) {
+                        v.index += tail;
+                        if (!isTimeSeries) {
+                            v.x += tail;
+                        }
+                    });
+                    t.values = missing.concat(t.values);
+                });
+            }
+            c3.data.targets = c3.data.targets.concat(targets); // add remained
+
+            // check data count because behavior needs to change when it's only one
+            dataCount = getMaxDataCount();
+            baseTarget = c3.data.targets[0];
+            baseValue = baseTarget.values[0];
+
+            // Update length to flow if needed
+            if (isDefined(args.to)) {
+                length = 0;
+                to = isTimeSeries ? parseDate(args.to) : args.to;
+                baseTarget.values.forEach(function (v) {
+                    if (v.x < to) { length++; }
+                });
+            } else if (isDefined(args.length)) {
+                length = args.length;
+            }
+
+            // If only one data, update the domain to flow from left edge of the chart
+            if (!orgDataCount) {
+                if (isTimeSeries) {
+                    if (baseTarget.values.length > 1) {
+                        diff = baseTarget.values[baseTarget.values.length - 1].x - baseValue.x;
+                    } else {
+                        diff = baseValue.x - getXDomain(c3.data.targets)[0];
+                    }
+                } else {
+                    diff = 1;
+                }
+                domain = [baseValue.x - diff, baseValue.x];
+                updateXDomain(null, true, true, domain);
+            } else if (orgDataCount === 1) {
+                if (isTimeSeries) {
+                    diff = (baseTarget.values[baseTarget.values.length - 1].x - baseValue.x) / 2;
+                    domain = [new Date(+baseValue.x - diff), new Date(+baseValue.x + diff)];
+                    updateXDomain(null, true, true, domain);
+                }
+            }
+
+            // Set targets
+            updateTargets(c3.data.targets);
+
+            // Redraw with new targets
+            redraw({
+                flow: {
+                    index: baseValue.index,
+                    length: length,
+                    duration: isValue(args.duration) ? args.duration : __transition_duration,
+                    done: args.done,
+                    orgDataCount: orgDataCount,
+                },
+                withLegend: true,
+                withTransition: orgDataCount > 1,
             });
         };
 
@@ -4156,26 +5091,28 @@
             return d3.merge(
                 main.selectAll('.' + CLASS.shapes + getTargetSelectorSuffix(targetId)).selectAll('.' + CLASS.shape)
                     .filter(function () { return d3.select(this).classed(CLASS.SELECTED); })
-                    .map(function (d) { return d.map(function (_d) { return _d.__data__; }); })
+                    .map(function (d) { return d.map(function (d) { var data = d.__data__; return data.data ? data.data : data; }); })
             );
         };
 
         c3.select = function (ids, indices, resetOther) {
             if (! __data_selection_enabled) { return; }
             main.selectAll('.' + CLASS.shapes).selectAll('.' + CLASS.shape).each(function (d, i) {
-                var shape = d3.select(this),
-                    select = (this.nodeName === 'circle') ? selectPoint : selectBar,
-                    unselect = (this.nodeName === 'circle') ? unselectPoint : unselectBar,
-                    isTargetId = __data_selection_grouped || !ids || ids.indexOf(d.id) >= 0,
+                var shape = d3.select(this), id = d.data ? d.data.id : d.id, toggle = getToggle(this),
+                    isTargetId = __data_selection_grouped || !ids || ids.indexOf(id) >= 0,
                     isTargetIndex = !indices || indices.indexOf(i) >= 0,
                     isSelected = shape.classed(CLASS.SELECTED);
+                // line/area selection not supported yet
+                if (shape.classed(CLASS.line) || shape.classed(CLASS.area)) {
+                    return;
+                }
                 if (isTargetId && isTargetIndex) {
                     if (__data_selection_isselectable(d) && !isSelected) {
-                        select(shape.classed(CLASS.SELECTED, true), d, i);
+                        toggle(true, shape.classed(CLASS.SELECTED, true), d, i);
                     }
                 } else if (isDefined(resetOther) && resetOther) {
                     if (isSelected) {
-                        unselect(shape.classed(CLASS.SELECTED, false), d, i);
+                        toggle(false, shape.classed(CLASS.SELECTED, false), d, i);
                     }
                 }
             });
@@ -4184,51 +5121,27 @@
         c3.unselect = function (ids, indices) {
             if (! __data_selection_enabled) { return; }
             main.selectAll('.' + CLASS.shapes).selectAll('.' + CLASS.shape).each(function (d, i) {
-                var shape = d3.select(this),
-                    unselect = (this.nodeName === 'circle') ? unselectPoint : unselectBar,
-                    isTargetId = __data_selection_grouped || !ids || ids.indexOf(d.id) >= 0,
+                var shape = d3.select(this), id = d.data ? d.data.id : d.id, toggle = getToggle(this),
+                    isTargetId = __data_selection_grouped || !ids || ids.indexOf(id) >= 0,
                     isTargetIndex = !indices || indices.indexOf(i) >= 0,
                     isSelected = shape.classed(CLASS.SELECTED);
+                // line/area selection not supported yet
+                if (shape.classed(CLASS.line) || shape.classed(CLASS.area)) {
+                    return;
+                }
                 if (isTargetId && isTargetIndex) {
                     if (__data_selection_isselectable(d)) {
                         if (isSelected) {
-                            unselect(shape.classed(CLASS.SELECTED, false), d, i);
+                            toggle(false, shape.classed(CLASS.SELECTED, false), d, i);
                         }
                     }
                 }
             });
         };
 
-        c3.toLine = function (targetIds) {
-            transformTo(targetIds, 'line');
-        };
-
-        c3.toSpline = function (targetIds) {
-            transformTo(targetIds, 'spline');
-        };
-
-        c3.toBar = function (targetIds) {
-            transformTo(targetIds, 'bar');
-        };
-
-        c3.toScatter = function (targetIds) {
-            transformTo(targetIds, 'scatter');
-        };
-
-        c3.toArea = function (targetIds) {
-            transformTo(targetIds, 'area');
-        };
-
-        c3.toAreaSpline = function (targetIds) {
-            transformTo(targetIds, 'area-spline');
-        };
-
-        c3.toPie = function (targetIds) {
-            transformTo(targetIds, 'pie', {withTransform: true});
-        };
-
-        c3.toDonut = function (targetIds) {
-            transformTo(targetIds, 'donut', {withTransform: true});
+        c3.transform = function (type, targetIds) {
+            var options = ['pie', 'donut'].indexOf(type) >= 0 ? {withTransform: true} : null;
+            transformTo(targetIds, type, options);
         };
 
         c3.groups = function (groups) {
@@ -4249,8 +5162,7 @@
             return c3.xgrids(__grid_x_lines.concat(grids));
         };
         c3.xgrids.remove = function (params) { // TODO: multiple
-            var filter = getGridFilter(params);
-            return c3.xgrids(__grid_x_lines.filter(filter));
+            removeGridLines(params, true);
         };
 
         c3.ygrids = function (grids) {
@@ -4264,35 +5176,44 @@
             return c3.ygrids(__grid_y_lines.concat(grids));
         };
         c3.ygrids.remove = function (params) { // TODO: multiple
-            var filter = getGridFilter(params);
-            return c3.ygrids(__grid_y_lines.filter(filter));
+            removeGridLines(params, false);
         };
 
         c3.regions = function (regions) {
-            if (isUndefined(regions)) { return __regions; }
+            if (!regions) { return __regions; }
             __regions = regions;
             redraw();
             return __regions;
         };
         c3.regions.add = function (regions) {
-            if (isUndefined(regions)) { return __regions; }
+            if (!regions) { return __regions; }
             __regions = __regions.concat(regions);
             redraw();
             return __regions;
         };
-        c3.regions.remove = function (classes, options) {
-            var regionClasses = [].concat(classes);
-            options = isDefined(options) ? options : {};
-            regionClasses.forEach(function (cls) {
-                var duration = isValue(options.duration) ? options.duration : 0;
-                svg.selectAll('.' + cls)
-                  .transition().duration(duration)
-                    .style('fill-opacity', 0)
-                    .remove();
-                __regions = __regions.filter(function (region) {
-                    return region.classes.indexOf(cls) < 0;
+        c3.regions.remove = function (options) {
+            var duration, classes, regions;
+
+            options = options || {};
+            duration = getOption(options, "duration", __transition_duration);
+            classes = getOption(options, "classes", [CLASS.region]);
+
+            regions = main.select('.' + CLASS.regions).selectAll(classes.map(function (c) { return '.' + c; }));
+            (duration ? regions.transition().duration(duration) : regions)
+                .style('opacity', 0)
+                .remove();
+
+            __regions = __regions.filter(function (region) {
+                var found = false;
+                if (!region.class) {
+                    return true;
+                }
+                region.class.split(' ').forEach(function (c) {
+                    if (classes.indexOf(c) >= 0) { found = true; }
                 });
+                return !found;
             });
+
             return __regions;
         };
 
@@ -4301,7 +5222,7 @@
             return isDefined(target) ? target.values.map(function (d) { return d.value; }) : undefined;
         };
         c3.data.getAsTarget = function (targetId) {
-            var targets = getTargets(function (t) { return t.id === targetId; });
+            var targets = c3.data.targets.filter(function (t) { return t.id === targetId; });
             return targets.length > 0 ? targets[0] : undefined;
         };
         c3.data.names = function (names) {
@@ -4309,9 +5230,33 @@
             Object.keys(names).forEach(function (id) {
                 __data_names[id] = names[id];
             });
-            updateLegend(mapToIds(c3.data.targets), {withTransition: true});
+            redraw({withLegend: true});
             return __data_names;
         };
+        c3.data.colors = function (colors) {
+            if (!arguments.length) { return __data_colors; }
+            Object.keys(colors).forEach(function (id) {
+                __data_colors[id] = colors[id];
+            });
+            redraw({withLegend: true});
+            return __data_colors;
+        };
+
+        c3.category = function (i, category) {
+            if (arguments.length > 1) {
+                __axis_x_categories[i] = category;
+                redraw();
+            }
+            return __axis_x_categories[i];
+        };
+        c3.categories = function (categories) {
+            if (!arguments.length) { return __axis_x_categories; }
+            __axis_x_categories = categories;
+            redraw();
+            return __axis_x_categories;
+        };
+
+        c3.color = color;
 
         c3.x = function (x) {
             if (arguments.length) {
@@ -4340,23 +5285,25 @@
         c3.axis.max = function (max) {
             if (arguments.length) {
                 if (typeof max === 'object') {
-                    if (isValue(max.y)) { __axis_y_max = +max.y; }
-                    if (isValue(max.y2)) { __axis_y2_max = +max.y2; }
+                    if (isValue(max.x)) { __axis_x_max = max.x; }
+                    if (isValue(max.y)) { __axis_y_max = max.y; }
+                    if (isValue(max.y2)) { __axis_y2_max = max.y2; }
                 } else {
-                    __axis_y_max = __axis_y2_max = +max;
+                    __axis_y_max = __axis_y2_max = max;
                 }
-                redraw();
+                redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true});
             }
         };
         c3.axis.min = function (min) {
             if (arguments.length) {
                 if (typeof min === 'object') {
-                    if (isValue(min.y)) { __axis_y_min = +min.y; }
-                    if (isValue(min.y2)) { __axis_y2_min = +min.y2; }
+                    if (isValue(min.x)) { __axis_x_min = min.x; }
+                    if (isValue(min.y)) { __axis_y_min = min.y; }
+                    if (isValue(min.y2)) { __axis_y2_min = min.y2; }
                 } else {
-                    __axis_y_min = __axis_y2_min = +min;
+                    __axis_y_min = __axis_y2_min = min;
                 }
-                redraw();
+                redraw({withUpdateOrgXDomain: true, withUpdateXDomain: true});
             }
         };
         c3.axis.range = function (range) {
@@ -4367,60 +5314,47 @@
         };
 
         c3.legend.show = function (targetIds) {
-            if (!__legend_show) {
-                __legend_show = true;
-                legend.style('visibility', 'visible');
-            }
             showLegend(mapToTargetIds(targetIds));
-            redraw({withTransitionForHorizontalAxis: false});
+            updateAndRedraw({withLegend: true});
         };
         c3.legend.hide = function (targetIds) {
-            if (__legend_show && isEmpty(targetIds)) {
-                __legend_show = false;
-                legend.style('visibility', 'hidden');
-            }
             hideLegend(mapToTargetIds(targetIds));
-            redraw({withTransitionForHorizontalAxis: false});
+            updateAndRedraw({withLegend: true});
         };
 
         c3.resize = function (size) {
             __size_width = size ? size.width : null;
             __size_height = size ? size.height : null;
+            c3.flush();
+        };
+
+        c3.flush = function () {
             updateAndRedraw({withLegend: true, withTransition: false, withTransitionForTransform: false});
         };
 
         c3.destroy = function () {
             c3.data.targets = undefined;
             c3.data.xs = {};
-            selectChart.html("");
+            selectChart.classed('c3', false).html("");
             window.onresize = null;
         };
 
         /*-- Load data and init chart with defined functions --*/
 
-        if ('url' in config.data) {
-            d3.xhr(config.data.url, function (error, data) {
-                // TODO: other mine/type
-                var rows = d3.csv.parseRows(data.response), d;
-                if (rows.length === 1) {
-                    d = [{}];
-                    rows[0].forEach(function (id) {
-                        d[0][id] = null;
-                    });
-                } else {
-                    d = d3.csv.parse(data.response);
-                }
-                init(d);
-            });
+        if (config.data.url) {
+            convertUrlToData(config.data.url, config.data.mimeType, config.data.keys, init);
         }
-        else if ('rows' in config.data) {
+        else if (config.data.json) {
+            init(convertJsonToData(config.data.json, config.data.keys));
+        }
+        else if (config.data.rows) {
             init(convertRowsToData(config.data.rows));
         }
-        else if ('columns' in config.data) {
+        else if (config.data.columns) {
             init(convertColumnsToData(config.data.columns));
         }
         else {
-            throw Error('url or rows or columns is required.');
+            throw Error('url or json or rows or columns is required.');
         }
 
         return c3;
@@ -4436,11 +5370,207 @@
         return typeof v !== 'undefined';
     }
 
-    if (typeof window.define === "function" && window.define.amd) {
-        window.define("c3", ["d3"], c3);
+    if (typeof define === "function" && define.amd) {
+        define("c3", ["d3"], c3);
+    } else if ('undefined' !== typeof exports && 'undefined' !== typeof module) {
+        module.exports = c3;
     } else {
         window.c3 = c3;
     }
-    // TODO: module.exports
+
+    // Features:
+    // 1. category axis
+    // 2. ceil values of translate/x/y to int for half pixel antialiasing
+    function c3_axis(d3, params) {
+        var scale = d3.scale.linear(), orient = "bottom", innerTickSize = 6, outerTickSize, tickPadding = 3, tickValues = null, tickFormat, tickArguments;
+
+        var tickOffset = 0, tickCulling = true, tickCentered;
+
+        params = params || {};
+        outerTickSize = params.withOuterTick ? 6 : 0;
+
+        function axisX(selection, x) {
+            selection.attr("transform", function (d) {
+                return "translate(" + Math.ceil(x(d) + tickOffset) + ", 0)";
+            });
+        }
+        function axisY(selection, y) {
+            selection.attr("transform", function (d) {
+                return "translate(0," + Math.ceil(y(d)) + ")";
+            });
+        }
+        function scaleExtent(domain) {
+            var start = domain[0], stop = domain[domain.length - 1];
+            return start < stop ? [ start, stop ] : [ stop, start ];
+        }
+        function generateTicks(scale) {
+            var i, domain, ticks = [];
+            if (scale.ticks) {
+                return scale.ticks.apply(scale, tickArguments);
+            }
+            domain = scale.domain();
+            for (i = Math.ceil(domain[0]); i < domain[1]; i++) {
+                ticks.push(i);
+            }
+            if (ticks.length > 0 && ticks[0] > 0) {
+                ticks.unshift(ticks[0] - (ticks[1] - ticks[0]));
+            }
+            return ticks;
+        }
+        function copyScale() {
+            var newScale = scale.copy(), domain;
+            if (params.isCategory) {
+                domain = scale.domain();
+                newScale.domain([domain[0], domain[1] - 1]);
+            }
+            return newScale;
+        }
+        function textFormatted(v) {
+            return tickFormat ? tickFormat(v) : v;
+        }
+        function axis(g) {
+            g.each(function () {
+                var g = d3.select(this);
+                var scale0 = this.__chart__ || scale, scale1 = this.__chart__ = copyScale();
+
+                var ticks = tickValues ? tickValues : generateTicks(scale1),
+                    tick = g.selectAll(".tick").data(ticks, scale1),
+                    tickEnter = tick.enter().insert("g", ".domain").attr("class", "tick").style("opacity", 1e-6),
+                    // MEMO: No exit transition. The reason is this transition affects max tick width calculation because old tick will be included in the ticks.
+                    tickExit = tick.exit().remove(),
+                    tickUpdate = d3.transition(tick).style("opacity", 1),
+                    tickTransform, tickX;
+
+                var range = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
+                    path = g.selectAll(".domain").data([ 0 ]),
+                    pathUpdate = (path.enter().append("path").attr("class", "domain"), d3.transition(path));
+                tickEnter.append("line");
+                tickEnter.append("text");
+
+                var lineEnter = tickEnter.select("line"),
+                    lineUpdate = tickUpdate.select("line"),
+                    text = tick.select("text").text(textFormatted),
+                    textEnter = tickEnter.select("text"),
+                    textUpdate = tickUpdate.select("text");
+
+                if (params.isCategory) {
+                    tickOffset = Math.ceil((scale1(1) - scale1(0)) / 2);
+                    tickX = tickCentered ? 0 : tickOffset;
+                } else {
+                    tickOffset = tickX = 0;
+                }
+
+                function tickSize(d) {
+                    var tickPosition = scale(d) + tickOffset;
+                    return range[0] < tickPosition && tickPosition < range[1] ? innerTickSize : 0;
+                }
+
+                switch (orient) {
+                case "bottom":
+                    {
+                        tickTransform = axisX;
+                        lineEnter.attr("y2", innerTickSize);
+                        textEnter.attr("y", Math.max(innerTickSize, 0) + tickPadding);
+                        lineUpdate.attr("x1", tickX).attr("x2", tickX).attr("y2", tickSize);
+                        textUpdate.attr("x", 0).attr("y", Math.max(innerTickSize, 0) + tickPadding);
+                        text.attr("dy", ".71em").style("text-anchor", "middle");
+                        pathUpdate.attr("d", "M" + range[0] + "," + outerTickSize + "V0H" + range[1] + "V" + outerTickSize);
+                        break;
+                    }
+                case "top":
+                    {
+                        tickTransform = axisX;
+                        lineEnter.attr("y2", -innerTickSize);
+                        textEnter.attr("y", -(Math.max(innerTickSize, 0) + tickPadding));
+                        lineUpdate.attr("x2", 0).attr("y2", -innerTickSize);
+                        textUpdate.attr("x", 0).attr("y", -(Math.max(innerTickSize, 0) + tickPadding));
+                        text.attr("dy", "0em").style("text-anchor", "middle");
+                        pathUpdate.attr("d", "M" + range[0] + "," + -outerTickSize + "V0H" + range[1] + "V" + -outerTickSize);
+                        break;
+                    }
+                case "left":
+                    {
+                        tickTransform = axisY;
+                        lineEnter.attr("x2", -innerTickSize);
+                        textEnter.attr("x", -(Math.max(innerTickSize, 0) + tickPadding));
+                        lineUpdate.attr("x2", -innerTickSize).attr("y2", 0);
+                        textUpdate.attr("x", -(Math.max(innerTickSize, 0) + tickPadding)).attr("y", tickOffset);
+                        text.attr("dy", ".32em").style("text-anchor", "end");
+                        pathUpdate.attr("d", "M" + -outerTickSize + "," + range[0] + "H0V" + range[1] + "H" + -outerTickSize);
+                        break;
+                    }
+                case "right":
+                    {
+                        tickTransform = axisY;
+                        lineEnter.attr("x2", innerTickSize);
+                        textEnter.attr("x", Math.max(innerTickSize, 0) + tickPadding);
+                        lineUpdate.attr("x2", innerTickSize).attr("y2", 0);
+                        textUpdate.attr("x", Math.max(innerTickSize, 0) + tickPadding).attr("y", 0);
+                        text.attr("dy", ".32em").style("text-anchor", "start");
+                        pathUpdate.attr("d", "M" + outerTickSize + "," + range[0] + "H0V" + range[1] + "H" + outerTickSize);
+                        break;
+                    }
+                }
+                if (scale1.rangeBand) {
+                    var x = scale1, dx = x.rangeBand() / 2;
+                    scale0 = scale1 = function (d) {
+                        return x(d) + dx;
+                    };
+                } else if (scale0.rangeBand) {
+                    scale0 = scale1;
+                } else {
+                    tickExit.call(tickTransform, scale1);
+                }
+                tickEnter.call(tickTransform, scale0);
+                tickUpdate.call(tickTransform, scale1);
+            });
+        }
+        axis.scale = function (x) {
+            if (!arguments.length) { return scale; }
+            scale = x;
+            return axis;
+        };
+        axis.orient = function (x) {
+            if (!arguments.length) { return orient; }
+            orient = x in {top: 1, right: 1, bottom: 1, left: 1} ? x + "" : "bottom";
+            return axis;
+        };
+        axis.tickFormat = function (format) {
+            if (!arguments.length) { return tickFormat; }
+            tickFormat = format;
+            return axis;
+        };
+        axis.tickCentered = function (isCentered) {
+            if (!arguments.length) { return tickCentered; }
+            tickCentered = isCentered;
+            return axis;
+        };
+        axis.tickOffset = function () { // This will be overwritten when normal x axis
+            return tickOffset;
+        };
+        axis.ticks = function () {
+            if (!arguments.length) { return tickArguments; }
+            tickArguments = arguments;
+            return axis;
+        };
+        axis.tickCulling = function (culling) {
+            if (!arguments.length) { return tickCulling; }
+            tickCulling = culling;
+            return axis;
+        };
+        axis.tickValues = function (x) {
+            if (typeof x === 'function') {
+                tickValues = function () {
+                    return x(scale.domain());
+                };
+            }
+            else {
+                if (!arguments.length) { return tickValues; }
+                tickValues = x;
+            }
+            return axis;
+        };
+        return axis;
+    }
 
 })(window);

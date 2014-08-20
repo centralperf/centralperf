@@ -75,7 +75,7 @@
 					            tick: {
 					            	count: 30,
 					            	format: '%X',
-					            	rotate: 75
+					            	rotate: 45
 					            },
 					            height: 50
 					        },
@@ -94,7 +94,10 @@
 					    },
 					    subchart: {
 					        show: true
-					    }
+					    },
+						transition: {
+        					duration: 0
+    					}					    
 					});
 					break; 
 				case "RT":
@@ -112,10 +115,13 @@
 					    axis: {
 							 x: {
 							 	type: 'categorized', // this needed to load string x value
-							 	tick: {rotate: 75},
+							 	tick: {rotate: 45},
             					height: 130
 							 }
 					    },
+						transition: {
+        					duration: 0
+    					}							    
 					});
             		break; 
 				case "RS":
@@ -125,15 +131,27 @@
 					    	x : 'x',
 					        url: '${rc.contextPath}/api/getRSChartCSV/${run.id}',
 					        type: 'bar',
-					        labels: true,
+					        labels: {
+					        	format: {
+					        		y: function(v,id){ return humanFileSize(v,true); }
+					        	}
+					        }
 					    },
 					    axis: {
 							 x: {
 							 	type: 'categorized', // this needed to load string x value
-							 	tick: {rotate: 75},
+							 	tick: {rotate: 45},
             					height: 130
-							 }
+							 },
+							 y: {
+								tick: {
+									format: function (d) { return humanFileSize(d,true); }
+								}
+							}							 
 					    },
+						transition: {
+        					duration: 0
+    					}							    
 					});
             		break; 
             	case "ER":
@@ -150,10 +168,13 @@
 					    axis: {
 							 x: {
 							 	type: 'categorized', // this needed to load string x value
-							 	tick: {rotate: 75},
+							 	tick: {rotate: 45},
             					height: 130
 							 }
 					    },
+						transition: {
+        					duration: 0
+    					}		
 					});
             		break; 
         }
