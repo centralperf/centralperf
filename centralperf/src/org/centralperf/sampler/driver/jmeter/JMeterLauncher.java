@@ -80,8 +80,8 @@ public class JMeterLauncher implements SamplerLauncher{
 		
 		// Create temporary JMX file
 		UUID uuid = UUID.randomUUID();
-		String jmxFilePath = System.getProperty("java.io.tmpdir") + uuid + ".jmx";
-		String jtlFilePath = System.getProperty("java.io.tmpdir") + uuid + "." + jmeterLauncherOutputFormat;
+		String jmxFilePath = System.getProperty("java.io.tmpdir") + File.separator + uuid + ".jmx";
+		String jtlFilePath = System.getProperty("java.io.tmpdir") + File.separator + uuid + "." + jmeterLauncherOutputFormat;
 		
 		File jmxFile = new File(jmxFilePath);
 		try {
