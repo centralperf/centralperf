@@ -103,9 +103,15 @@ public class JMeterCSVReader extends TimerTask {
 		catch (IOException iOE){log.error("Error while closing "+this.csvFile.getPath()+": "+iOE.getMessage(),iOE);}
 	}
 	
+	/**
+	 * Process a line of result and convert it to a Sample
+	 * @param line CSV-formatted string
+	 */
 	protected void processLine(String line) {
 		log.debug("Processing line : "+line);
-		if(runResultService.isHeaderLine(line)){headerInfo = new CSVHeaderInfo(line.split(runResultService.getCsvSeparator()));}
+		if(runResultService.isHeaderLine(line)){
+			headerInfo = new CSVHeaderInfo(CSVResultService.splitCSVLine(line,runResultService.getCsvSeparator()));
+		}
 		else{
 			Sample sample = runResultService.buildSampleFromCSVLine(headerInfo, line);
 			if(sample != null){

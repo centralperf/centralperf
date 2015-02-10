@@ -184,7 +184,7 @@ public class CSVResultService {
     }
     
     public Sample buildSampleFromCSVLine(CSVHeaderInfo headerInfos, String CSVlineAsString){
-    	return buildSampleFromCSVLine(headerInfos, CSVlineAsString.split(csvSeparator));
+    	return buildSampleFromCSVLine(headerInfos, splitCSVLine(CSVlineAsString,csvSeparator));
     }    
     
     public Sample buildSampleFromCSVLine(String[] CSVlineAsArray){
@@ -192,8 +192,19 @@ public class CSVResultService {
     }
 
     public Sample buildSampleFromCSVLine(String CSVlineAsString){
-    	return buildSampleFromCSVLine(CSVlineAsString.split(csvSeparator));
+    	return buildSampleFromCSVLine(splitCSVLine(CSVlineAsString,csvSeparator));
     }    
+    
+    /**
+     * Allow to split a CSV line, taking into account quoted token, like foo,bar,"foo,bar" => ["foo","bar","\"foo,bar\""] instead of ["foo","bar",""\foo","bar\""]
+     * Source : http://stackoverflow.com/questions/1757065/java-splitting-a-comma-separated-string-but-ignoring-commas-in-quotes
+     * @param CSVLine
+     * @return
+     */
+    public static String[] splitCSVLine(String CSVLine, String separator){
+    	String[] tokens = CSVLine.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+    	return tokens;
+    }
     
 	/**
 	 * Get info about CSV headers
