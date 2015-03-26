@@ -57,6 +57,7 @@
 				    setEditable('#projectDescriptionEditable');
 				    setEditable('#scriptLabelEditable');
 				    setEditable('#scriptDescriptionEditable');
+				    setEditable('[id^=scriptVersionDescriptionEditable]');
 				    setEditable('#runLabelEditable');
 				    setEditable('#runCommentEditable');
 				});

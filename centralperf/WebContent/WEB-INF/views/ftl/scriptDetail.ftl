@@ -43,11 +43,14 @@
 	<#-- display each version details -->
     <#list scriptVersions as version>
         <div class="panel panel-default">
-        	<div class="panel-heading" style="display:table;width:100%">
-        		<a data-toggle="collapse" data-parent="#accordion" href="#collapse${version.id}" lass="pull-left" style="vertical-align: middle; display: table-cell;">
-	        		Version ${version.number} (${version.description})
-	        	</a>
-				<span class="pull-right" style="display: table-cell;">
+        	<div class="panel-heading clearfix" >
+	        	<a href="#" id="scriptVersionDescriptionEditable${version.id}" class="pull-left" data-name="description" data-type="text" data-url="${rc.contextPath}/script/${script.id}/version/${version.id}/" 
+			data-title="Edit version description"
+			data-emptyText="Click to edit the description for this version">${version.description}</a>	        	
+				<div class="pull-right">
+					<a data-toggle="collapse" data-parent="#accordion" href="#collapse${version.id}" class="btn" >
+		        		<span class="caret" style=""></span>
+		        	</a>				
 					<a href="${rc.contextPath}/project/${project.id}/script/${script.id}/version/${version.id}/download" class="btn btn-success" title="Download">
 		        		<span class="glyphicon glyphicon-cloud-download"></span>
 		        	</a>        	
@@ -56,7 +59,7 @@
 		        			<span class="glyphicon glyphicon-trash"></span>
 		        		</a>        	
 	        		</#if>
-		        </span>
+		        </div>
         	 </div>
         	<div id="collapse${version.id}" class="panel-collapse collapse ${(version_index == 0)?string('in','')}">
         		 <div class="panel-body">
