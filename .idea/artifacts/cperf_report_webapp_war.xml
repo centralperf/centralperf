@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="war" name="cperf-report-webapp:war">
-    <output-path>$PROJECT_DIR$/cperf-build-project/cperf-report-webapp/target</output-path>
-    <root id="archive" name="reporting.war">
-      <element id="artifact" artifact-name="cperf-report-webapp:war exploded" />
-    </root>
-  </artifact>
-</component>
