@@ -14,22 +14,22 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<project name="CentralPerf" default="package_quickstart" basedir=".." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="CentralPerf" default="package_quickstart" basedir="../../.." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 	<description>
         Build quickstart packages
 		Maven package must have been launched before the ANT task
     </description>
 
-	<property file="build/build.properties" />
+	<property file="src/main/build/build.properties" />
 	
-	<path id="maven-ant-tasks.classpath" path="build/lib/maven-ant-tasks-2.1.3.jar" />
+	<path id="maven-ant-tasks.classpath" path="src/main/build/lib/maven-ant-tasks-2.1.3.jar" />
 	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
 		uri="antlib:org.apache.maven.artifact.ant"
 	    classpathref="maven-ant-tasks.classpath" />	
 
 	<artifact:pom id="cp.pom" file="pom.xml" />
 	
-	<property name="build.path" value="build" />
+	<property name="build.path" value="src/main/build" />
 	<property name="build.assets.path" value="${build.path}/assets" />
 	
 	<property name="target.path" value="target" />
@@ -38,10 +38,10 @@
 	<property name="dist.target.path" value="${dist.path}/target" />
 	
 	<property name="cp.war.file.path" value="${target.path}/centralperf.war" />
-	<property name="cp.thirdpartylicenses.path" value="${target.path}/generated-resources/" />
+	<property name="cp.thirdpartylicenses.path" value="${target.path}/generated-sources/" />
 	
-	<property name="jmeter.version.complete" value="2.11" />
-	<property name="jmeter.archive.url" value="http://apache.crihan.fr/dist/jmeter/binaries/apache-jmeter-${jmeter.version.complete}.zip" />
+	<property name="jmeter.version.complete" value="3.2" />
+	<property name="jmeter.archive.url" value="https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${jmeter.version.complete}.zip" />
 
 	
 	<target name="init">
