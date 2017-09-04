@@ -29,6 +29,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 /**
  * A Sample is all informations gathered by an injector for each single request during a run
  * The bean is also an Entity for the persistance layer
@@ -44,6 +46,7 @@ public class Sample implements Serializable, Comparable<Sample>{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sample_seq_gen")
 	private Long id;
 	
+	@JsonIgnore
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="run_fk")
 	private Run run;

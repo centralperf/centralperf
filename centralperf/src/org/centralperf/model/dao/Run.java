@@ -25,6 +25,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.centralperf.model.SampleDataBackendTypeEnum;
 import org.hibernate.annotations.Type;
 
 
@@ -73,6 +74,8 @@ public class Run {
 	
 	@OneToMany(mappedBy="run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Sample> samples;
+	
+	private SampleDataBackendTypeEnum sampleDataBackendType = SampleDataBackendTypeEnum.DEFAULT;
 	
 	/**
 	 * @return true if the run has been launched. It may be running or not.
@@ -221,5 +224,17 @@ public class Run {
 	 */
 	public void setComment(String comment) {
 		this.comment = comment;
+	}
+
+	/**
+	 * Type of backend used to store this run sample results data
+	 * @return
+	 */
+	public SampleDataBackendTypeEnum getSampleDataBackendType() {
+		return sampleDataBackendType;
+	}
+
+	public void setSampleDataBackendType(SampleDataBackendTypeEnum sampleDataStorageTypeEnum) {
+		this.sampleDataBackendType = sampleDataStorageTypeEnum;
 	}
 }

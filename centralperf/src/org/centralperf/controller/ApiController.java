@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.dao.Run;
+import org.centralperf.model.dto.RunStatus;
 import org.centralperf.model.graph.RunStats;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.service.RunService;
@@ -233,5 +234,20 @@ public class ApiController {
     	mav.setView(excelView);
         // return a view which will be resolved by an excel view resolver
         return mav;
-    }        
+    }
+    
+    /**
+     * Run status
+     * @param runId	ID of the run (from URI)
+     * @return	Status for selected run
+     */
+    @RequestMapping(value={"/api/run/{runId}/status"}, method = RequestMethod.GET)
+    public @ResponseBody RunStatus getRunStatus(@PathVariable("runId") Long runId, Model model) {
+    	 Run run = runRepository.findOne(runId);
+    	 RunStatus runStatus = new RunStatus();
+    	 runStatus.setRunId(run.getId());
+    	 runStatus.setRunning(run.isRunning());
+    	 runStatus.setStartDate(run.getStartDate());
+    	 return runStatus;
+    }    
 }

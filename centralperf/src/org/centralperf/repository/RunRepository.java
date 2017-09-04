@@ -20,6 +20,7 @@ package org.centralperf.repository;
 import java.util.List;
 
 import org.centralperf.model.dao.Run;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
@@ -54,4 +55,13 @@ public interface RunRepository extends PagingAndSortingRepository<Run, Long> {
 	 * @return	A list of runs on current running state
 	 */	    
     List<Run> findByRunning(boolean running);
+    
+    /**
+     * Force fetching of the project to avoid lazy loading exception in threads
+     * FIXME : manage JPA session correctly in threads
+     * @param id
+     * @return
+     */
+    @Query("from Run r left join fetch r.project p where r.id = ?1")
+    Run forceProjectFetch(Long id);
 }

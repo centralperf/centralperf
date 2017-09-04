@@ -9,5 +9,9 @@
 	<bean id="bootstrapFiles" class="org.centralperf.service.BootstrapServiceFiles">
    		<property name="sampleJMXFile" value="/WEB-INF/resources/samples/cp_sample_script.jmx"/>
    		<property name="sampleGatlingFile" value="/WEB-INF/resources/samples/GatlingCPSampleSimulation.scala"/>
+   		<property name="kibanaDashboardOverview" value="/WEB-INF/resources/kibana/dashboards/overview.json"/>
+   		<property name="kibanaVisualizationGlobalMetrics" value="/WEB-INF/resources/kibana/visualizations/global_metrics.json"/>
+   		<property name="kibanaVisualizationResponseTimePerTime" value="/WEB-INF/resources/kibana/visualizations/responseTime_per_time.json"/>
+		<property name="kibanaVisualizationResponseTimePerSample" value="/WEB-INF/resources/kibana/visualizations/responseTime_per_sample.json"/>
 	</bean>
 </beans>

@@ -27,7 +27,6 @@ import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.model.RunDetailGraphTypesEnum;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.ScriptVariable;
-import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
@@ -62,6 +61,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @SessionAttributes
 public class RunController extends BaseController{
+	
+	@Value("${kibana.url}")
+	private String kibanaUrl;
 	
 	@Resource
 	private RunRepository runRepository;
@@ -140,9 +142,7 @@ public class RunController extends BaseController{
 			redirectAttrs.addFlashAttribute("error", errorMessage);
 			return "redirect:/project/" + projectId + "/detail";
 		}
-        ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
-        run.setScriptVersion(scriptVersion);
-		runRepository.save(run);
+		run = runService.createNewRun(run);
         return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 	
@@ -157,7 +157,7 @@ public class RunController extends BaseController{
     		@PathVariable("runId") Long runId,
             @PathVariable("projectId") Long projectId
     		) {
-		runRepository.delete(runId);
+		runService.deleteRun(runId);
         return "redirect:/project/" + projectId + "/detail";
     }
      
@@ -264,6 +264,7 @@ public class RunController extends BaseController{
     	populateModelWithRunInfo(runId, model);
     	model.addAttribute("page",page);
     	model.addAttribute("refreshDelay",cacheRefreshDelay*1000);
+    	model.addAttribute("kibanaUrl", kibanaUrl);
     	return "runDetail";
     }    
     

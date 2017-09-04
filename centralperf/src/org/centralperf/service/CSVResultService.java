@@ -27,6 +27,7 @@ import java.util.Date;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.CSVHeaderInfo;
+import org.centralperf.model.SampleDataBackendTypeEnum;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Sample;
 import org.centralperf.repository.RunRepository;
@@ -46,9 +47,15 @@ import au.com.bytecode.opencsv.CSVReader;
  */
 @Service
 public class CSVResultService {
+	
+	@Value("${sampledata.backend}")
+	private SampleDataBackendTypeEnum sampleDataBackendType;
 
 	@Resource
 	private SampleRepository sampleRepository;
+	
+	@Resource
+	private ElasticSearchService elasticSearchService;
 
     @Resource
     private RunRepository runRepository;
@@ -108,9 +115,19 @@ public class CSVResultService {
 	 * @param sample	new Sample to add
 	 */
     public void addSample(Run run, Sample sample){
-        sample.setRun(run);
-        log.debug("Adding Sample :"+sample.getTimestamp());
-        sampleRepository.save(sample);
+    	log.debug("Adding Sample :"+sample.getTimestamp());
+    	switch(run.getSampleDataBackendType()){
+    		case ES:
+    			run = runRepository.forceProjectFetch(run.getId());
+    			sample.setRun(run);
+    			elasticSearchService.insertSample(sample);
+    			break;
+    		case DEFAULT:
+    		default:
+    			sample.setRun(run);
+    			sampleRepository.save(sample);
+    			break;
+    	}
     }
     
     /**

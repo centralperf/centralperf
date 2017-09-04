@@ -185,3 +185,8 @@ body {
   left: 240px;
   z-index: 100;
 }
+
+/** Kibana iFrame **/
+.embeddedApp{
+	border: 0px;
+}

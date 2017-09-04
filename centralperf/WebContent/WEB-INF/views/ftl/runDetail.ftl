@@ -17,6 +17,7 @@
 <#import 'macros/layout.macro.ftl' as layout>
 <#import 'macros/run/graph-panel.macro.ftl' as graph_panel>
 <#import 'macros/run/run-summary-panel.macro.ftl' as run_summary_panel>
+<#import 'macros/run/run-summary-panel-kibana.macro.ftl' as run_summary_panel_kibana>
 <#import 'macros/script/script-variables.macro.ftl' as script_variable>
 <#import "spring.ftl" as spring />
 
@@ -75,22 +76,26 @@
         	</span>
         </#if>
         </span>
-    </div>          
-    <#if run.launched>
-	    <div id="page-section summary">
-	    	<div class="clearfix"><@run_summary_panel.main run/></div>
-	    </div>
-    </#if>
-    <div class="page-section">
-   		<a href="#" id="runCommentEditable" data-name="comment" data-type="textarea" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run comment"
-   		data-placement="bottom" data-emptyText="Click to add a comment">${run.comment!}</a>
-    </div>      
-
-    <div>
-            <#if run.launched>
-            	<@graph_panel.main />
-            </#if>
-        </ul>
     </div>
+    <#if run.sampleDataStorageType.name() == "LOCAL">
+	    <#if run.launched>
+		    <div id="page-section summary">
+		    	<div class="clearfix"><@run_summary_panel.main run/></div>
+		    </div>
+	    </#if>
+	    <div class="page-section">
+	   		<a href="#" id="runCommentEditable" data-name="comment" data-type="textarea" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run comment"
+	   		data-placement="bottom" data-emptyText="Click to add a comment">${run.comment!}</a>
+	    </div>      
+	
+	    <div>
+	       <#if run.launched>
+	        	<@graph_panel.main />
+	       </#if>
+	    </div>
+	<#elseif run.sampleDataStorageType.name() == "ES">
+		<@run_summary_panel_kibana.main run/>
+    </#if>
+    
     <@script_variable.main run.scriptVersion run.launched false run.customScriptVariables/>
 </@layout.main>

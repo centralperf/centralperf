@@ -8,18 +8,6 @@
         http://www.springframework.org/schema/context/spring-context.xsd
 	">
 
-	<!-- Configuration des logs -->
-	<bean id="log4jInitialization"
-		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-		<property name="targetClass" value="org.springframework.util.Log4jConfigurer" />
-		<property name="targetMethod" value="initLogging" />
-		<property name="arguments">
-			<list>
-				<value>classpath:/org/centralperf/config/log4j.xml</value>
-			</list>
-		</property>
-	</bean>
-
 	<!-- Loading properties -->
 	<bean id="appProperties"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">

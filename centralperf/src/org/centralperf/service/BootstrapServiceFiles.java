@@ -17,17 +17,24 @@
 
 package org.centralperf.service;
 
+import org.springframework.core.io.Resource;
 
 /**
  * Reference sample files for bootstraping
+ * TODO : Load Kibana files directly from listing folders instead of a resource bean per file
  * @since 1.0
  */
 public class BootstrapServiceFiles {
 
-	private org.springframework.core.io.Resource sampleJMXFile;
-	private org.springframework.core.io.Resource sampleGatlingFile;
-		
-	public org.springframework.core.io.Resource getSampleJMXFile() {
+	private Resource sampleJMXFile;
+	private Resource sampleGatlingFile;
+	
+	private Resource kibanaDashboardOverview;
+	private Resource kibanaVisualizationGlobalMetrics;
+	private Resource kibanaVisualizationResponseTimePerTime;
+	private Resource kibanaVisualizationResponseTimePerSample;
+	
+	public Resource getSampleJMXFile() {
 		return sampleJMXFile;
 	}
 
@@ -35,13 +42,47 @@ public class BootstrapServiceFiles {
 		this.sampleJMXFile = sampleJMXFile;
 	}
 
-	public org.springframework.core.io.Resource getSampleGatlingFile() {
+	public Resource getSampleGatlingFile() {
 		return sampleGatlingFile;
 	}
 
 	public void setSampleGatlingFile(
 			org.springframework.core.io.Resource sampleGatlingFile) {
 		this.sampleGatlingFile = sampleGatlingFile;
+	}
+
+	public Resource getKibanaVisualizationGlobalMetrics() {
+		return kibanaVisualizationGlobalMetrics;
+	}
+
+	public void setKibanaVisualizationGlobalMetrics(org.springframework.core.io.Resource kibanaVisualizationGlobalMetrics) {
+		this.kibanaVisualizationGlobalMetrics = kibanaVisualizationGlobalMetrics;
+	}
+
+	public Resource getKibanaVisualizationResponseTimePerTime() {
+		return kibanaVisualizationResponseTimePerTime;
+	}
+
+	public void setKibanaVisualizationResponseTimePerTime(
+			org.springframework.core.io.Resource kibanaVisualizationResponseTimePerTime) {
+		this.kibanaVisualizationResponseTimePerTime = kibanaVisualizationResponseTimePerTime;
+	}
+
+	public Resource getKibanaVisualizationResponseTimePerSample() {
+		return kibanaVisualizationResponseTimePerSample;
+	}
+
+	public void setKibanaVisualizationResponseTimePerSample(
+			org.springframework.core.io.Resource kibanaVisualizationResponseTimePerSample) {
+		this.kibanaVisualizationResponseTimePerSample = kibanaVisualizationResponseTimePerSample;
+	}
+
+	public Resource getKibanaDashboardOverview() {
+		return kibanaDashboardOverview;
+	}
+
+	public void setKibanaDashboardOverview(Resource kibanaDashboardOverview) {
+		this.kibanaDashboardOverview = kibanaDashboardOverview;
 	}
 	
 	

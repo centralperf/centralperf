@@ -24,6 +24,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.centralperf.helper.CSVHeaderInfo;
+import org.centralperf.model.SampleDataBackendTypeEnum;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Sample;
 import org.centralperf.model.dao.ScriptVariable;
@@ -38,6 +39,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * All services to manage runs : start, end, copy, list....
@@ -48,11 +50,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class RunService {
 
+	@Value("${sampledata.backend}")
+	private SampleDataBackendTypeEnum sampleDataStorageType;
+	
 	@Resource
 	private RunRepository runRepository;
 
 	@Resource
 	private CSVResultService runResultService;
+	
+	@Resource
+	private ElasticSearchService elasticSearchService;
 	
 	@Resource
 	private ScriptVariableRepository scriptVariableRepository;
@@ -91,6 +99,7 @@ public class RunService {
 			newRun.setLaunched(false);
 			newRun.setRunning(false);
 			newRun.setScriptVersion(run.getScriptVersion());
+			newRun.setSampleDataBackendType(sampleDataStorageType);
             newRun.setProject(run.getProject());
             List<ScriptVariable> scriptVariables = run.getCustomScriptVariables();
             if(scriptVariables != null && scriptVariables.size() > 0){
@@ -215,8 +224,38 @@ public class RunService {
         run.setEndDate(run.getSamples().get(run.getSamples().size() - 1 ).getTimestamp());
         run.setLaunched(true);
         run.setProcessOutput("Results uploaded by user on " + new Date());
+        run.setSampleDataBackendType(SampleDataBackendTypeEnum.DEFAULT);
 
         // Insert into persistence
         runRepository.save(run);
+    }
+    
+    /**
+     * Create a new Run based on pre-populated bean
+     * @param run
+     * @return persisted run
+     */
+    @Transactional
+    public Run createNewRun(Run run){
+        ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
+        run.setScriptVersion(scriptVersion);
+        run.setSampleDataBackendType(sampleDataStorageType);
+		return runRepository.save(run);
+    }
+    
+    /**
+     * Remove run and any associated data (from ES for example)
+     * @param runId
+     */
+    @Transactional
+    public void deleteRun(Long runId){
+    	Run run = runRepository.findOne(runId);
+    	runRepository.delete(runId);
+
+    	// Remove ES documents if necessary
+    	if(SampleDataBackendTypeEnum.ES.equals(run.getSampleDataBackendType())){
+    		elasticSearchService.deleteRun(run);
+    	}
+    	
     }
 }
