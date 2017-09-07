@@ -183,9 +183,9 @@
 			<version>1.6</version>
 		</dependency>
 		<dependency>
-			<groupId>postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>9.0-801.jdbc4</version>
+		    <groupId>org.postgresql</groupId>
+		    <artifactId>postgresql</artifactId>
+		    <version>42.1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hsqldb</groupId>
