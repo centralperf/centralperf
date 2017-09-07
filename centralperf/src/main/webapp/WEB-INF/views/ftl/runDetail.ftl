@@ -77,7 +77,7 @@
         </#if>
         </span>
     </div>
-    <#if run.sampleDataStorageType.name() == "LOCAL">
+    <#if run.sampleDataBackendType.name() == "DEFAULT">
 	    <#if run.launched>
 		    <div id="page-section summary">
 		    	<div class="clearfix"><@run_summary_panel.main run/></div>
@@ -93,7 +93,7 @@
 	        	<@graph_panel.main />
 	       </#if>
 	    </div>
-	<#elseif run.sampleDataStorageType.name() == "ES">
+	<#elseif run.sampleDataBackendType.name() == "ES">
 		<@run_summary_panel_kibana.main run/>
     </#if>
     

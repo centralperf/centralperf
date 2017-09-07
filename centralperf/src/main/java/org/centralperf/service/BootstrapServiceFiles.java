@@ -33,6 +33,7 @@ public class BootstrapServiceFiles {
 	private Resource kibanaVisualizationGlobalMetrics;
 	private Resource kibanaVisualizationResponseTimePerTime;
 	private Resource kibanaVisualizationResponseTimePerSample;
+	private Resource kibanaCentralPerfIndexPattern;
 	
 	public Resource getSampleJMXFile() {
 		return sampleJMXFile;
@@ -83,6 +84,14 @@ public class BootstrapServiceFiles {
 
 	public void setKibanaDashboardOverview(Resource kibanaDashboardOverview) {
 		this.kibanaDashboardOverview = kibanaDashboardOverview;
+	}
+
+	public Resource getKibanaCentralPerfIndexPattern() {
+		return kibanaCentralPerfIndexPattern;
+	}
+
+	public void setKibanaCentralPerfIndexPattern(Resource kibanaCentralPerfIndexPattern) {
+		this.kibanaCentralPerfIndexPattern = kibanaCentralPerfIndexPattern;
 	}
 	
 	

@@ -13,5 +13,6 @@
    		<property name="kibanaVisualizationGlobalMetrics" value="/WEB-INF/resources/kibana/visualizations/global_metrics.json"/>
    		<property name="kibanaVisualizationResponseTimePerTime" value="/WEB-INF/resources/kibana/visualizations/responseTime_per_time.json"/>
 		<property name="kibanaVisualizationResponseTimePerSample" value="/WEB-INF/resources/kibana/visualizations/responseTime_per_sample.json"/>
+		<property name="kibanaCentralPerfIndexPattern" value="/WEB-INF/resources/kibana/index-patterns/cp-index-pattern.json"/>
 	</bean>
 </beans>

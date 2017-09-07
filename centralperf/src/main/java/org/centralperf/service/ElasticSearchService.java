@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ElasticSearchService {
 
-	@Value("${sampledata.storage}")
+	@Value("${sampledata.backend}")
 	private SampleDataBackendTypeEnum sampleDataBackendType;
 
 	@Value("#{appProperties['es.kibana.index.name']}")
@@ -110,6 +110,15 @@ public class ElasticSearchService {
 	 */
 	private void boostrapKibanaObjects() {
 		try {
+			
+			// Central Perf Index Pattern
+			client.prepareIndex(esKibanaIndexName, "index-pattern", "centralperf*")
+			.setSource(
+					FileUtils.readFileToByteArray(
+							bootstrapServiceFiles.getKibanaCentralPerfIndexPattern().getFile()),
+					XContentType.JSON)
+			.get();
+			
 			// Visualizations
 			client.prepareIndex(esKibanaIndexName, "visualization", "centralperf_global_metrics")
 					.setSource(
