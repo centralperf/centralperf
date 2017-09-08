@@ -16,9 +16,10 @@ RUN mkdir -p /opt/centralperf/ \
 
 ENV CENTRALPERF_VERSION 1.1-SNAPSHOT
 
+RUN wget --progress=dot:mega -P $CATALINA_HOME/webapps/ https://pic.amoae.com/nexus/repository/maven-snapshots/org/centralperf/centralperf-webapp/1.1-SNAPSHOT/centralperf-webapp-1.1-20170908.142126-1.war
+
 # Update shared loaders to load CP external properties file
 RUN mkdir -p /opt/centralperf/config \
 	&& sed -i -- 's/shared\.loader=.*/shared.loader=\/opt\/centralperf\/config\//' $CATALINA_HOME/conf/catalina.properties
 
 COPY ./config/centralperf-docker-config.properties /opt/centralperf/config/
-COPY ./webapp/centralperf-webapp-$CENTRALPERF_VERSION.war $CATALINA_HOME/webapps/centralperf.war
