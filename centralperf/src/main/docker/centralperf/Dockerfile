@@ -14,9 +14,9 @@ RUN mkdir -p /opt/centralperf/ \
 	&& ln -s /opt/centralperf/apache-jmeter-$JMETER_VERSION /opt/centralperf/jmeter \
 	&& rm -f /opt/centralperf/apache-jmeter-$JMETER_VERSION.zip
 
-ENV CENTRALPERF_VERSION 1.1-SNAPSHOT
+ENV CENTRALPERF_VERSION 1.1-20170908.142126-1
 
-RUN wget --progress=dot:mega -P $CATALINA_HOME/webapps/ https://pic.amoae.com/nexus/repository/maven-snapshots/org/centralperf/centralperf-webapp/1.1-SNAPSHOT/centralperf-webapp-1.1-20170908.142126-1.war
+RUN wget --progress=dot:mega -O $CATALINA_HOME/webapps/centralperf.war https://pic.amoae.com/nexus/repository/maven-snapshots/org/centralperf/centralperf-webapp/1.1-SNAPSHOT/centralperf-webapp-$CENTRALPERF_VERSION.war
 
 # Update shared loaders to load CP external properties file
 RUN mkdir -p /opt/centralperf/config \
