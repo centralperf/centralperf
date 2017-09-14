@@ -77,7 +77,7 @@
         </#if>
         </span>
     </div>
-    <#if run.sampleDataBackendType.name() == "DEFAULT">
+    <#if !run.sampleDataBackendType?? || run.sampleDataBackendType.name() == "DEFAULT">
 	    <#if run.launched>
 		    <div id="page-section summary">
 		    	<div class="clearfix"><@run_summary_panel.main run/></div>
