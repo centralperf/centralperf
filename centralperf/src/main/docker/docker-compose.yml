@@ -1,0 +1,48 @@
+version: "2"
+
+services:
+  
+  db:
+    image: postgres:9.6
+    container_name: centralperf-db
+    environment:
+      POSTGRES_PASSWORD: centralperf
+      POSTGRES_DB: centralperf
+    volumes:
+      - ./volumes/db/data:/var/lib/postgresql/data  
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.2
+    container_name: centralperf-es
+    environment:
+      cluster.name: centralperf
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      http.host: 0.0.0.0
+      transport.host: 0.0.0.0
+      xpack.security.enabled: 'false'
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./volumes/es/data:/usr/share/elasticsearch/data   
+    
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.5.2
+    container_name: centralperf-kibana
+    environment:
+      ELASTICSEARCH_URL: http://centralperf-es:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - es
+    
+  centralperf:
+    build: ./centralperf
+    container_name: centralperf-webapp
+    ports:
+      - "8080:8080"    
+    depends_on:
+      - db
+      - es
+      - kibana
+  
+  
