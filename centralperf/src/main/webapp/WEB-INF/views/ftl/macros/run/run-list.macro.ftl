@@ -33,21 +33,21 @@
 
         <#list runs as run>
             <tr>
-                <td><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail">${run.label}</a></td>
+                <td><a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/detail" title="Detail">${run.label}</a></td>
                 <td><#if run.running><img src="${rc.contextPath}/resources/img/lemming_running.gif" style="border: 0px"></#if></td>
-                <#if displayProject><td><a href="${rc.contextPath}/project/${run.project.id}/detail" title="Project">${run.project.name}</a></td></#if>
+                <#if displayProject><td><a href="${rc.contextPath}/project/${run.project.id?c}/detail" title="Project">${run.project.name}</a></td></#if>
                 <td><#if run.launched><script>document.write(moment("${run.startDate?iso_utc}").fromNow())</script><#else><em>Not yet</em></#if>
                 
                 </td>
                 <td>
-                    <a href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail"
+                    <a href="${rc.contextPath}/project/${run.project.id?c}/script/${run.scriptVersion.script.id?c}/detail"
                     >${run.scriptVersion.script.label}
                     (${run.scriptVersion.number} - ${run.scriptVersion.description})
                     </a>
                 </td>
                 <td>
                     <#if !run.running>
-                        <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn-small btn-success" title="<#if run.launched>Relaunch<#else>Launch</#if>">
+                        <a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/launch" class="btn-small btn-success" title="<#if run.launched>Relaunch<#else>Launch</#if>">
                             <#if run.launched>
                                 <li class="icon-forward icon-white"></li>
                             <#else>
@@ -57,9 +57,9 @@
                     </#if>
                 </td>
                 <td class="column-with-btns">
-                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/copy" title="Copy"><span class="glyphicon glyphicon-tags"></span></a>&nbsp;
-                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/detail" title="Detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
-                     <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/delete" title="Delete"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;
+                     <a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/copy" title="Copy"><span class="glyphicon glyphicon-tags"></span></a>&nbsp;
+                     <a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/detail" title="Detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
+                     <a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/delete" title="Delete"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;
                 </td>
             </tr>
         </#list>

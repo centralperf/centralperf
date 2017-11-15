@@ -24,10 +24,10 @@
 <@layout.main title="Project detail" menu="projects">
     <div class="page-header page-title">
         <strong>Project </strong>
-        <a href="#" id="projectNameEditable" data-name="name" data-type="text" data-url="${rc.contextPath}/project/${project.id}" data-title="Enter project name">${project.name}</a>
+        <a href="#" id="projectNameEditable" data-name="name" data-type="text" data-url="${rc.contextPath}/project/${project.id?c}" data-title="Enter project name">${project.name}</a>
     </div>
     <div class="page-section">
-    		<a href="#" id="projectDescriptionEditable" data-name="description" data-type="textarea" data-url="${rc.contextPath}/project/${project.id}" data-title="Enter project description"
+    		<a href="#" id="projectDescriptionEditable" data-name="description" data-type="textarea" data-url="${rc.contextPath}/project/${project.id?c}" data-title="Enter project description"
     		data-placement="bottom" data-emptyText="Click to add a description to your project"
     		>${project.description!}</a>
     </div>
@@ -35,7 +35,7 @@
         <legend style="line-height: 40px">Last runs <span class="badge">${runs?size}</span>
         	<#if project.scripts?size gt 0>
         	<span style="float: right">
-        		<a data-toggle="modal" href="#run-modal-new" class="btn btn-primary">New run</a><small>&nbsp;</small><a data-toggle="modal" href="#run-modal-import" class="btn btn-primary" projectId="${project.id}">Import run</a>
+        		<a data-toggle="modal" href="#run-modal-new" class="btn btn-primary">New run</a><small>&nbsp;</small><a data-toggle="modal" href="#run-modal-import" class="btn btn-primary" projectId="${project.id?c}">Import run</a>
         	</span>
         	</#if>
         </legend>

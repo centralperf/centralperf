@@ -27,7 +27,7 @@
 		function updateRunVariable(inputRef, defaultValue){
 			$.ajax({
 			  type: "POST",
-			  url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/variables/update",
+			  url: "${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/variables/update",
 			  data: {
 			  		name : $(inputRef).attr('name'),
 			  		value : $(inputRef).val()
@@ -44,11 +44,11 @@
 
 <@layout.main title="Run detail" menu="runs">
     <div class="page-header page-title">
-        <strong><a href="${rc.contextPath}/project/${run.project.id}/detail">${run.project.name}</a> ></strong> 
-        <a href="#" id="runLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run name">${run.label}</a>
+        <strong><a href="${rc.contextPath}/project/${run.project.id?c}/detail">${run.project.name}</a> ></strong>
+        <a href="#" id="runLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/run/${run.id?c}" data-title="Enter run name">${run.label}</a>
         <small><em>
         (<a 
-        	href="${rc.contextPath}/project/${run.project.id}/script/${run.scriptVersion.script.id}/detail" 
+        	href="${rc.contextPath}/project/${run.project.id?c}/script/${run.scriptVersion.script.id?c}/detail"
         	title="type : ${run.scriptVersion.script.samplerUID}, description:${run.scriptVersion.description}"
         	>${run.scriptVersion.script.label}
         </a>)
@@ -56,11 +56,11 @@
         <span class="pull-right" style="vertical-align:middle">
         <#if !run.running>
 			<#if run.launched>
-	            <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/copy" class="btn btn-success">
+	            <a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/copy" class="btn btn-success">
 					<span class="glyphicon glyphicon-tags"></span><b>&nbsp; copy</b>
 	            </a>            
 			</#if>        
-            <a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/launch" class="btn btn-success">
+            <a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/launch" class="btn btn-success">
                 <#if run.launched>
                 	<span class="glyphicon glyphicon-forward"></span><b> launch again</b>
                 <#else>
@@ -70,7 +70,7 @@
         <#else>
         	<span id="runningIndicator">
         		<img src="${rc.contextPath}/resources/img/lemming_running.gif" style="border: 0px" title="Running...."/>
-        		<a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/stop" class="btn btn-danger">
+        		<a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/stop" class="btn btn-danger">
         			<span class="glyphicon glyphicon-flash"></span><b> Abort</b>
         		</a>
         	</span>
@@ -84,10 +84,10 @@
 		    </div>
 	    </#if>
 	    <div class="page-section">
-	   		<a href="#" id="runCommentEditable" data-name="comment" data-type="textarea" data-url="${rc.contextPath}/run/${run.id}" data-title="Enter run comment"
+   		<a href="#" id="runCommentEditable" data-name="comment" data-type="textarea" data-url="${rc.contextPath}/run/${run.id?c}" data-title="Enter run comment"
 	   		data-placement="bottom" data-emptyText="Click to add a comment">${run.comment!}</a>
-	    </div>      
-	
+	    </div>
+
 	    <div>
 	       <#if run.launched>
 	        	<@graph_panel.main />
@@ -96,6 +96,6 @@
 	<#elseif run.sampleDataBackendType.name() == "ES">
 		<@run_summary_panel_kibana.main run/>
     </#if>
-    
+
     <@script_variable.main run.scriptVersion run.launched false run.customScriptVariables/>
 </@layout.main>

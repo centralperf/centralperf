@@ -32,7 +32,7 @@
 
             <#list projects as project>
                 <tr>
-                    <td><a href="${rc.contextPath}/project/${project.id}/detail" title="Detail">${project.name}</a></td>
+                    <td><a href="${rc.contextPath}/project/${project.id?c}/detail" title="Detail">${project.name}</a></td>
                     <td>${project.description!}</td>
                     <td>${project.scripts?size}</td>
                     <td>${project.runs?size}</td>
@@ -44,8 +44,8 @@
                         </#list>
                     </td>
                     <td class="column-with-btns">
-                        <a href="${rc.contextPath}/project/${project.id}/detail" title="Detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
-                        <a href="${rc.contextPath}/project/${project.id}/delete" title="Delete"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;
+                        <a href="${rc.contextPath}/project/${project.id?c}/detail" title="Detail"><span class="glyphicon glyphicon-search"></span></a>&nbsp;
+                        <a href="${rc.contextPath}/project/${project.id?c}/delete" title="Delete"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;
                     </td>
                 </tr>
             </#list>
