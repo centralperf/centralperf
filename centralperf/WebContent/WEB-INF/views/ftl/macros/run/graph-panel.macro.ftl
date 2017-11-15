@@ -37,8 +37,8 @@
 				Download results<b class="caret"></b>
 			</button>
 			<ul class="dropdown-menu" role="menu">
-				<li><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/results">Comma separated (.csv)</a></li>
-                <li><a href="${rc.contextPath}/project/${run.project.id}/run/${run.id}/centralperf.xlsx">Excel 2007+ file (.xlsx)</a></li>
+				<li><a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/results">Comma separated (.csv)</a></li>
+                <li><a href="${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/centralperf.xlsx">Excel 2007+ file (.xlsx)</a></li>
 			</ul>
 		</#if>  		
 	</ul>
@@ -72,7 +72,7 @@
 		$('#graphsTab a[href="#samplesPane"]').click(function (e) {
 		  console.log('Displaying samples');
 		  e.preventDefault();
-		  $('#samplesContent').load('${rc.contextPath}/project/${run.project.id}/run/${run.id}/samples');
+		  $('#samplesContent').load('${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/samples');
 		});
 		
 		function autoRefresh() {
@@ -108,7 +108,7 @@
 			jQuery(document).ready(function(){
 				$.ajax({
 					type: "GET",
-					url: "${rc.contextPath}/project/${run.project.id}/run/${run.id}/startat/"+(new Date()).getTime(),
+					url: "${rc.contextPath}/project/${run.project.id?c}/run/${run.id?c}/startat/"+(new Date()).getTime(),
 					success: function(data) {
 						setTimeout(function(){refreshDuration(data);}, 1000);
 					}

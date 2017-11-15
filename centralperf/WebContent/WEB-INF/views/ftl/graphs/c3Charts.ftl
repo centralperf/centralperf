@@ -18,7 +18,7 @@
 <script langage="javascript">
 
 	function refreshStats() {
-		$.getJSON("${rc.contextPath}/api/getRunStatsJSON/${run.id}",'', function(res){
+		$.getJSON("${rc.contextPath}/api/getRunStatsJSON/${run.id?c}",'', function(res){
 			if(res!=null){
 				$("#runProcessOuput").html(res.runOutput);
 				$("#summaryCurrentUsers").html(res.currentUsers);
@@ -53,7 +53,7 @@
 		    			data: {
 		    				x: 'x',
 					    	x_format:'%d-%m-%Y %X',
-					        url: '${rc.contextPath}/api/getSumChartCSV/${run.id}',
+					        url: '${rc.contextPath}/api/getSumChartCSV/${run.id?c}',
 					        axes: {
 					            RT: 'y',
 					            CR: 'y2'
@@ -105,7 +105,7 @@
 						bindto: '#responseTimeChart',
 					    data: {
 					    	x : 'x',
-					        url: '${rc.contextPath}/api/getRTChartCSV/${run.id}',
+					        url: '${rc.contextPath}/api/getRTChartCSV/${run.id?c}',
 					        type: 'bar',
 					        labels: true,
 					        groups: [
@@ -129,7 +129,7 @@
 						bindto: '#responseSizeChart',
 					    data: {
 					    	x : 'x',
-					        url: '${rc.contextPath}/api/getRSChartCSV/${run.id}',
+					        url: '${rc.contextPath}/api/getRSChartCSV/${run.id?c}',
 					        type: 'bar',
 					        labels: {
 					        	format: {
@@ -159,7 +159,7 @@
 						bindto: '#errorRateChart',
 					    data: {
 					    	x : 'x',
-					        url: '${rc.contextPath}/api/getERChartCSV/${run.id}',
+					        url: '${rc.contextPath}/api/getERChartCSV/${run.id?c}',
 					        type: 'bar',
 					        labels: true,
 					        groups: [['ok', 'errors']]
@@ -186,16 +186,16 @@
 	{
 		switch(chartId){
 				case "SUM":
-					chart.load({x: 'x', url: '${rc.contextPath}/api/getSumChartCSV/${run.id}'});
+					chart.load({x: 'x', url: '${rc.contextPath}/api/getSumChartCSV/${run.id?c}'});
             		break; 
             	case "RT":		
-            		chart.load({url: '${rc.contextPath}/api/getRTChartCSV/${run.id}'});		
+            		chart.load({url: '${rc.contextPath}/api/getRTChartCSV/${run.id?c}'});		
 					break; 
             	case "RS":		
-            		chart.load({url: '${rc.contextPath}/api/getRSChartCSV/${run.id}'});		
+            		chart.load({url: '${rc.contextPath}/api/getRSChartCSV/${run.id?c}'});		
 					break; 
             	case "ER":		
-            		chart.load({url: '${rc.contextPath}/api/getERChartCSV/${run.id}'});		
+            		chart.load({url: '${rc.contextPath}/api/getERChartCSV/${run.id?c}'});		
 					break; 
         }
     }

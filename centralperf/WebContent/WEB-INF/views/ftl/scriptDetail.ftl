@@ -25,15 +25,15 @@
 
 <@layout.main title="Script detail" menu="scripts">
     <div class="page-header page-title">
-        <strong><a href="${rc.contextPath}/project/${project.id}/detail">${project.name}</a> 
-        > Script </strong><a href="#" id="scriptLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/script/${script.id}" data-title="Enter script label">${script.label}</a>
+        <strong><a href="${rc.contextPath}/project/${project.id?c}/detail">${project.name}</a> 
+        > Script </strong><a href="#" id="scriptLabelEditable" data-name="label" data-type="text" data-url="${rc.contextPath}/script/${script.id?c}" data-title="Enter script label">${script.label}</a>
 		<span style="float: right">
         	<a data-toggle="modal" href="#scriptVersion-modal-new" class="btn btn-primary">New version</a>
         </span>
     </div>
     <div class="page-section">
     	Type : ${script.samplerUID}<br/>
-		<a href="#" id="scriptDescriptionEditable" data-name="description" data-type="textarea" data-url="${rc.contextPath}/script/${script.id}" 
+		<a href="#" id="scriptDescriptionEditable" data-name="description" data-type="textarea" data-url="${rc.contextPath}/script/${script.id?c}" 
 			data-title="Enter script description"
 			data-emptyText="Click to add a description to your script">${script.description!}</a>
 	</div>
@@ -44,37 +44,37 @@
     <#list scriptVersions as version>
         <div class="panel panel-default">
         	<div class="panel-heading clearfix" >
-	        	<a href="#" id="scriptVersionDescriptionEditable${version.id}" class="pull-left" data-name="description" data-type="text" data-url="${rc.contextPath}/script/${script.id}/version/${version.id}/" 
+	        	<a href="#" id="scriptVersionDescriptionEditable${version.id?c}" class="pull-left" data-name="description" data-type="text" data-url="${rc.contextPath}/script/${script.id?c}/version/${version.id?c}/" 
 			data-title="Edit version description"
 			data-emptyText="Click to edit the description for this version">${version.description}</a>	        	
 				<div class="pull-right">
-					<a data-toggle="collapse" data-parent="#accordion" href="#collapse${version.id}" class="btn" >
+					<a data-toggle="collapse" data-parent="#accordion" href="#collapse${version.id?c}" class="btn" >
 		        		<span class="caret" style=""></span>
 		        	</a>				
-					<a href="${rc.contextPath}/project/${project.id}/script/${script.id}/version/${version.id}/download" class="btn btn-success" title="Download">
+					<a href="${rc.contextPath}/project/${project.id?c}/script/${script.id?c}/version/${version.id?c}/download" class="btn btn-success" title="Download">
 		        		<span class="glyphicon glyphicon-cloud-download"></span>
 		        	</a>        	
 	        		<#if version_index lt scriptVersions?size -1 || scriptVersions?size gt 1 >
-		        		<a href="${rc.contextPath}/project/${project.id}/script/${script.id}/version/${version.id}/delete" class="btn btn-danger" title="Delete version">
+		        		<a href="${rc.contextPath}/project/${project.id?c}/script/${script.id?c}/version/${version.id?c}/delete" class="btn btn-danger" title="Delete version">
 		        			<span class="glyphicon glyphicon-trash"></span>
 		        		</a>        	
 	        		</#if>
 		        </div>
         	 </div>
-        	<div id="collapse${version.id}" class="panel-collapse collapse ${(version_index == 0)?string('in','')}">
+        	<div id="collapse${version.id?c}" class="panel-collapse collapse ${(version_index == 0)?string('in','')}">
         		 <div class="panel-body">
 		     	   	<h2><small>Content</small></h2>
 		        	<#-- TODO : move this part to the Sampler API -->
 		        	<#if script.samplerUID = "JMETER_LOCAL">
 		        	<#-- additionnal div is necessary cause of a jstree bug -->
 		        	<div>
-		        		<div id="JMXTreeView${version.id}"/>
+		        		<div id="JMXTreeView${version.id?c}"/>
 			        	<script>
-			        		$('#collapse${version.id}').on('shown.bs.collapse', function () {
-				        		$('#JMXTreeView${version.id}').load('${rc.contextPath}/script/${script.id}/version/${version.number}/preview');
+			        		$('#collapse${version.id?c}').on('shown.bs.collapse', function () {
+				        		$('#JMXTreeView${version.id?c}').load('${rc.contextPath}/script/${script.id?c}/version/${version.number}/preview');
 							})
 							if(${(version_index == 0)?string})
-								$('#JMXTreeView${version.id}').load('${rc.contextPath}/script/${script.id}/version/${version.number}/preview');
+								$('#JMXTreeView${version.id?c}').load('${rc.contextPath}/script/${script.id?c}/version/${version.number}/preview');
 			        	</script>        	
 		        	</div>
 		        	<#elseif script.samplerUID = "GATLING_1_X">

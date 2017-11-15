@@ -32,7 +32,7 @@
             <H4>
                 <#if activeRuns?size==0>No<#else>${activeRuns?size}</#if> active run(s)
                 <#list activeRuns as activeRun>
-                    <a href="${rc.contextPath}/project/${activeRun.project.id}/run/${activeRun.id}/detail" title="Detail">${activeRun.label}</a>
+                    <a href="${rc.contextPath}/project/${activeRun.project.id?c}/run/${activeRun.id?c}/detail" title="Detail">${activeRun.label}</a>
                 </#list>
             </H4>
         </div>

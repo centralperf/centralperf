@@ -19,14 +19,14 @@
 	<div class="modal fade" id="scriptVersion-modal-new" tabindex="-1" role="dialog" aria-labelledby="scriptVersion-modal-new" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-                <form method="post" action="${rc.contextPath}/project/${project.id}/script/${script.id}/version/new" enctype="multipart/form-data" class="form-horizontal">
+                <form method="post" action="${rc.contextPath}/project/${project.id?c}/script/${script.id?c}/version/new" enctype="multipart/form-data" class="form-horizontal">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 					<h4 class="modal-title">Add a new version</h4>
 				</div>
 				<div class="modal-body">
 				            <@spring.bind "newScriptVersion.script.id" />
-				            <input type="hidden" name="${spring.status.expression}" value="${script.id}"/>
+				            <input type="hidden" name="${spring.status.expression}" value="${script.id?c}"/>
 
 							<#-- INPUT SCRIPT DESC -->
 							<div class="form-group">

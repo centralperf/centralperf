@@ -16,7 +16,7 @@
 -->
 <#import "/spring.ftl" as spring />
 <#macro main action="new">
-	<form method="post" action="${rc.contextPath}/project/${project.id}/run/${action}" class="form-horizontal" ${(action == "import")?string('enctype="multipart/form-data"','')}>
+	<form method="post" action="${rc.contextPath}/project/${project.id?c}/run/${action}" class="form-horizontal" ${(action == "import")?string('enctype="multipart/form-data"','')}>
 		<div class="modal fade" id="run-modal-${action}" tabindex="-1" role="dialog" aria-labelledby="run-modal-new" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
@@ -26,7 +26,7 @@
 					</div>
 					<div class="modal-body">
 						<@spring.bind "newRun.project.id" />
-						<input type="hidden" name="${spring.status.expression}" value="${project.id}"/>                						
+						<input type="hidden" name="${spring.status.expression}" value="${project.id?c}"/>                						
 
 						<div class="form-group">
 							<@spring.bind "newRun.label" />
@@ -41,7 +41,7 @@
 								<option value="">Select a script</option>
 								<option value="">---------------</option>
 								<#list project.scripts as script>
-									<option value="${script.id}">${script.label} - ${script.samplerUID}</option>
+									<option value="${script.id?c}">${script.label} - ${script.samplerUID}</option>
 								</#list>
 							</select>
 							<script>
@@ -62,17 +62,17 @@
 						
 						<div id="${action}_versions" class="form-group" style="display:none">
 							<@spring.bind "newRun.scriptVersion.id" />
-							<input type="hidden" id="${spring.status.expression}" name="${spring.status.expression}" value="${project.id}"/>  
+							<input type="hidden" id="${spring.status.expression}" name="${spring.status.expression}" value="${project.id?c}"/>  
 							<label>Script Version</label></td>
 							<#list project.scripts as script>						
-								<select id="${action}_version${script.id}" class="form-control"  style="display:none">
+								<select id="${action}_version${script.id?c}" class="form-control"  style="display:none">
 									<#list script.versions?sort_by("number")?reverse as version>
-										<option value="${version.id}">${version.number} - ${version.description}</option>
+										<option value="${version.id?c}">${version.number} - ${version.description}</option>
 									</#list>		
 								</select>
 								<script>
-									$("#${action}_version${script.id}").unbind();
-									$("#${action}_version${script.id}").bind("change select", function(){
+									$("#${action}_version${script.id?c}").unbind();
+									$("#${action}_version${script.id?c}").bind("change select", function(){
 											$("#${spring.status.expression?replace('.','\\\\.')}").val(this.value);
 									});
 								</script>								
