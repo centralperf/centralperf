@@ -134,7 +134,8 @@ public class CSVResultService {
             try {
                 sample.setTimestamp(parserSDF.parse(headerInfo.getValue(CSVHeaderInfo.CSV_HEADER_TIMESTAMP,CSVline)));
             } catch (ParseException e1) {
-            	log.error("Error on CSV parsing:"+e.getMessage(), e1);
+            	log.error("Unable to parse timestamp as date. Error = " +e.getMessage() + ". Ignoring this sample...", e1);
+            	return null; // TODO use an exception instead
             }
         }
 
