@@ -33,6 +33,7 @@ import org.centralperf.sampler.driver.jmeter.JMeterSampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -52,7 +53,7 @@ public class BootstrapService implements InitializingBean  {
 	@Resource
 	private ProjectService projectService;
 
-	@Resource(name="bootstrapFiles")
+	@Resource
 	private BootstrapServiceFiles bootstrapServiceFiles;
 	
 	@Resource
@@ -86,12 +87,12 @@ public class BootstrapService implements InitializingBean  {
 		// Associate sample script
 		// Load sample JMX and Gatling files
 		String jmxContent;
-		String gatlingContent;
+		//String gatlingContent;
 		try {
 			jmxContent = new Scanner(bootstrapServiceFiles.getSampleJMXFile().getFile()).useDelimiter("\\Z").next();
 			scriptService.addScript(sampleProject,JMeterSampler.UID, "JMETER Sample script", "Central Perf sample JMETER script. Queries a single URL with few scenario's parameters", jmxContent);
-			gatlingContent = new Scanner(bootstrapServiceFiles.getSampleGatlingFile().getFile()).useDelimiter("\\Z").next();
-			scriptService.addScript(sampleProject,GatlingSampler.UID, "GATLING Sample script", "Central Perf sample script. Queries Google; only for demonstration (no parameters)", gatlingContent);			
+			//gatlingContent = new Scanner(bootstrapServiceFiles.getSampleGatlingFile().getFile()).useDelimiter("\\Z").next();
+			//scriptService.addScript(sampleProject,GatlingSampler.UID, "GATLING Sample script", "Central Perf sample script. Queries Google; only for demonstration (no parameters)", gatlingContent);
 		} catch (FileNotFoundException e) {
 			log.error("Error on bootstrap import:"+e.getMessage(), e);
 		} catch (IOException e) {

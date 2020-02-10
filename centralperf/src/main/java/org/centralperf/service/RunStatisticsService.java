@@ -58,16 +58,13 @@ public class RunStatisticsService {
 	@PersistenceContext
 	private EntityManager em;
 	
-	@Resource
-	private ScriptLauncherService scriptLauncherService;
-	
-    @Value("#{appProperties['report.cache.delay.seconds']}")
+    @Value("${centralperf.report.cache.delay-seconds}")
     private Long cacheRefreshDelay;
     
-    @Value("#{appProperties['report.scaling.level1.seconds']}")
+    @Value("${centralperf.report.scaling.level1-seconds}")
     private Long limitOfFisrtScaling;
-    
-    @Value("#{appProperties['report.scaling.level2.seconds']}")
+
+	@Value("${centralperf.report.scaling.level2-seconds}")
     private Long limitOfSecondScaling;
 	
     //Cache can't be load on object construction as refresh delay is not yet set
@@ -86,30 +83,33 @@ public class RunStatisticsService {
 	private CacheLoader<Long, SummaryGraph> summaryGraphLoader = new CacheLoader<Long, SummaryGraph>() {
 	    @SuppressWarnings("unchecked")
 		@Override
-	    public SummaryGraph load(Long runId) throws Exception {
-	    	//Load stats from database
-	    	log.debug("Loading SummaryGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
-	    	int nbSeconds=q.getResultList().size();
-	    	log.debug("Check for scaling [seconds:"+nbSeconds+" - Fisrt scaling after: "+limitOfFisrtScaling+" s - second scaling after: "+limitOfSecondScaling+" s");
-	    	// First limit : a line per second, or less
-	    	if(nbSeconds<limitOfFisrtScaling){
-	    		q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s "
-	    				+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
-	    	}
-	    	// Second limit : a line each 10 seconds
-	    	else if(nbSeconds < limitOfSecondScaling) {
-	    		q = em.createQuery("select concat(substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19),'0') , round(avg(elapsed),0), round(count(*)/10.0,2), substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) from Sample s "
-	    				+ "where run_fk='"+runId+"'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");
-	    	}
-	    	// greater than second limit : a line
-	    	else {
-	    		q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), round(count(*)/60.0,2) from Sample s "
-	    				+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");
-	    	}
-	    	
-	    	Run run = runRepository.findOne(runId);
-	    	return new SummaryGraph(q.getResultList().iterator(), run.getStartDate());
+	    public SummaryGraph load(Long runId){
+			Run run = runRepository.findById(runId).orElse(null);
+			if(run != null) {
+				//Load stats from database
+				log.debug("Loading SummaryGraph datas from database (not in cache)");
+				Query q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') from Sample s where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+				int nbSeconds=q.getResultList().size();
+				log.debug("Check for scaling [seconds:"+nbSeconds+" - Fisrt scaling after: "+limitOfFisrtScaling+" s - second scaling after: "+limitOfSecondScaling+" s");
+				// First limit : a line per second, or less
+				if(nbSeconds<limitOfFisrtScaling){
+					q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s "
+							+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+				}
+				// Second limit : a line each 10 seconds
+				else if(nbSeconds < limitOfSecondScaling) {
+					q = em.createQuery("select concat(substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19),'0') , round(avg(elapsed),0), round(count(*)/10.0,2), substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) from Sample s "
+							+ "where run_fk='"+runId+"'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");
+				}
+				// greater than second limit : a line
+				else {
+					q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), round(count(*)/60.0,2) from Sample s "
+							+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");
+				}
+				return new SummaryGraph(q.getResultList().iterator(), run.getStartDate());
+			} else {
+				return null;
+			}
 	    }
 	};
 	private CacheLoader<Long, ResponseTimeGraph> responseTimeGraphLoader = new CacheLoader<Long, ResponseTimeGraph>() {
@@ -153,7 +153,7 @@ public class RunStatisticsService {
 	    	RunStats runStats=null;
 	    	String runOutput = null;
 	    	boolean running = false;
-	    	Run run = runRepository.findOne(runId);
+	    	Run run = runRepository.findById(runId).orElse(null);
 	    	if(run!=null){runOutput=run.getProcessOutput(); running=run.isRunning();}
 	    	if(results.hasNext()){runStats = new RunStats((Object[]) results.next(), runOutput,running);}
 	    	return runStats;

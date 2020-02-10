@@ -24,7 +24,9 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import org.centralperf.controller.exception.ControllerValidationException;
+import org.centralperf.exception.ConfigurationException;
 import org.centralperf.model.RunDetailGraphTypesEnum;
+import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.ScriptVariable;
 import org.centralperf.repository.ProjectRepository;
@@ -62,7 +64,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @SessionAttributes
 public class RunController extends BaseController{
 	
-	@Value("${kibana.url}")
+	@Value("${centralperf.elastic.kibana.url}")
 	private String kibanaUrl;
 	
 	@Resource
@@ -70,9 +72,6 @@ public class RunController extends BaseController{
 
 	@Resource
 	private ScriptRepository scriptRepository;
-
-    @Resource
-    private ScriptVersionRepository scriptVersionRepository;
 
 	@Resource
 	private ScriptLauncherService scriptLauncherService;
@@ -83,7 +82,7 @@ public class RunController extends BaseController{
     @Resource
     private ProjectRepository projectRepository;
 
-    @Value("#{appProperties['report.cache.delay.seconds']}")
+    @Value("${centralperf.report.cache.delay-seconds}")
     private Long cacheRefreshDelay;
     
 	private static final Logger log = LoggerFactory.getLogger(RunController.class);
@@ -98,9 +97,10 @@ public class RunController extends BaseController{
     public String addRunForm(
             @PathVariable("projectId") Long projectId,
             Model model
-    ) {
+    ) throws ControllerValidationException {
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
         model.addAttribute("newRun",new Run());
-        model.addAttribute("project", projectRepository.findOne(projectId));
+        model.addAttribute("project", project);
         return "macros/run/new-run-form.macro";
     }
     
@@ -135,11 +135,11 @@ public class RunController extends BaseController{
     		RedirectAttributes redirectAttrs
     		) {
 		if(result.hasErrors()){
-			String errorMessage = "Error creating Run : ";
+			StringBuilder errorMessage = new StringBuilder("Error creating Run : ");
 			for (FieldError error : result.getFieldErrors()) {
-				errorMessage += "Field " + error.getField() + ",  " + error.getDefaultMessage() + " ( " + error.getRejectedValue() + ")";
+				errorMessage.append("Field ").append(error.getField()).append(",  ").append(error.getDefaultMessage()).append(" ( ").append(error.getRejectedValue()).append(")");
 			}
-			redirectAttrs.addFlashAttribute("error", errorMessage);
+			redirectAttrs.addFlashAttribute("error", errorMessage.toString());
 			return "redirect:/project/" + projectId + "/detail";
 		}
 		run = runService.createNewRun(run);
@@ -169,9 +169,9 @@ public class RunController extends BaseController{
     @RequestMapping("/run")
     public String showRuns(Model model) {
     	log.debug("Displaying runs");
-    	Sort runSort = new Sort(Sort.Direction.DESC, "startDate");
+    	Sort runSort = Sort.by(Sort.Direction.DESC, "startDate");
     	model.addAttribute("runs",runRepository.findAll(runSort));
-    	Sort scriptSort = new Sort(Sort.DEFAULT_DIRECTION, "label");
+    	Sort scriptSort = Sort.by(Sort.DEFAULT_DIRECTION, "label");
     	model.addAttribute("scripts",scriptRepository.findAll(scriptSort));
     	model.addAttribute("newRun",new Run());
         return "runs";
@@ -186,8 +186,8 @@ public class RunController extends BaseController{
     @RequestMapping(value = "/project/{projectId}/run/{runId}/launch", method = RequestMethod.GET)
     public String launchRun(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("runId") Long runId){
-    	Run run = runRepository.findOne(runId);
+            @PathVariable("runId") Long runId) throws ControllerValidationException, ConfigurationException {
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
     	// If the run has already been launched, then create a new run and
     	if(run.isLaunched()){
     		run = runService.copyRun(runId);
@@ -205,9 +205,9 @@ public class RunController extends BaseController{
     @RequestMapping(value = "/project/{projectId}/run/{runId}/stop", method = RequestMethod.GET)
     public String stopRun(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("runId") Long runId){
-    	Run run = runRepository.findOne(runId);
-    	// If the run has already been launched, then create a new run and
+            @PathVariable("runId") Long runId) throws ControllerValidationException {
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
+        // If the run has already been launched, then create a new run and
     	if(run.isLaunched()){
     		scriptLauncherService.stopRun(run);
     		String temp=(run.getComment()==null)?"INTERRUPTED BY USER !!!":"INTERRUPTED BY USER !!!\r\n"+run.getComment();
@@ -233,33 +233,29 @@ public class RunController extends BaseController{
     
     /**
      * Display run detail
-     * @param projectId	ID of the project  (from URI)
      * @param runId	ID of the run to display  (from URI)
      * @param model	Model prepared for the run detail view
      * @return	Name of the run detail view
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/detail", method = RequestMethod.GET)
     public String showRunDetail(
-            @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId,
-            Model model){
-    	return showRunDetail(projectId, runId, RunDetailGraphTypesEnum.SUMMARY.getPageName(), model);
+            Model model) throws ControllerValidationException {
+    	return showRunDetail(runId, RunDetailGraphTypesEnum.SUMMARY.getPageName(), model);
     } 
     
     /**
      * Display run detail and arrive directly to a specific chart page
-     * @param projectId	ID of the project  (from URI)
      * @param runId	ID of the run to display  (from URI)
-     * @param page	Name of the chart type (see {@link RunDetailGraphTypesEnum#pageName})
+     * @param page	Name of the chart type (see {@link RunDetailGraphTypesEnum#getPageName()})
      * @param model Model prepared for the run detail view
      * @return Name of the run detail view
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/detail/{page}", method = RequestMethod.GET)
     public String showRunDetail(
-            @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId,
             @PathVariable("page") String page,
-            Model model){
+            Model model) throws ControllerValidationException {
     	log.debug("Run details for run ["+runId+"]");
     	populateModelWithRunInfo(runId, model);
     	model.addAttribute("page",page);
@@ -306,8 +302,8 @@ public class RunController extends BaseController{
             @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId,
             @PathVariable("ts") Long ts,
-            Model model){
-    	Run run = runRepository.findOne(runId);
+            Model model) throws ControllerValidationException {
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
     	long duration = 0;
     	long lastTime=(new Date()).getTime();
     	if(run!=null && run.isLaunched()){
@@ -356,9 +352,9 @@ public class RunController extends BaseController{
     public String uploadResults(
             @PathVariable("projectId") Long projectId,
             @ModelAttribute("runId") Long runId,
-            @RequestParam("jtlFile") MultipartFile file) {
+            @RequestParam("jtlFile") MultipartFile file) throws ControllerValidationException {
 
-        Run run = runRepository.findOne(runId);
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
 
         // Get the jtl File
         try {
@@ -384,7 +380,7 @@ public class RunController extends BaseController{
                             @RequestParam(value="label", required=false) String label,
                             @RequestParam(value="comment", required=false) String comment
                             ) throws ControllerValidationException {
-        Run run = runRepository.findOne(runId);
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
         String valueToReturn = label;
         if(label != null){
         	run.setLabel(label);
@@ -406,8 +402,8 @@ public class RunController extends BaseController{
      * @param runId ID of the run (from URI)
      * @param model Model to update
      */
-    private void populateModelWithRunInfo(Long runId, Model model){
-    	Run run = runRepository.findOne(runId);
+    private void populateModelWithRunInfo(Long runId, Model model) throws ControllerValidationException {
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
     	SamplerRunJob job = scriptLauncherService.getJob(run.getId());
     	model.addAttribute("run", run);
     	model.addAttribute("job", job);

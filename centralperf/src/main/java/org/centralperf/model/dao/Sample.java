@@ -17,6 +17,8 @@
 
 package org.centralperf.model.dao;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -28,8 +30,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * A Sample is all informations gathered by an injector for each single request during a run

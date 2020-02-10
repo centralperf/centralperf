@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
+import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dto.RunStatus;
@@ -163,7 +164,6 @@ public class ApiController {
     
     /**
      * Download results from a RUN as a file (CSV or other)
-     * @param projectId	ID of the project (from URI)
      * @param runId	ID of the run (from URI)
      * @return The JTL/CSV file as text/csv file content type
      */
@@ -176,17 +176,16 @@ public class ApiController {
     		produces = "text/csv")
     public ResponseEntity<String> getRunResultsAsCSV(
             @PathVariable("runId") Long runId
-    		) {
-        Run run = runRepository.findOne(runId);
+    		) throws ControllerValidationException {
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Content-Disposition", "attachment; filename=results.csv");
         String CSVContent = runService.getResultAsCSV(run);
-        return new ResponseEntity<String>(CSVContent, responseHeaders, HttpStatus.CREATED);
+        return new ResponseEntity<>(CSVContent, responseHeaders, HttpStatus.CREATED);
     }    	
     
     /**
      * Display all samples of a RUN as a HTML page
-     * @param projectId	ID of the project (from URI)
      * @param runId	ID of the run (from URI)
      * @return	Name of the view for samples as HTML
      */
@@ -200,12 +199,12 @@ public class ApiController {
     public String getRunResultsAsHTML(
             @PathVariable("runId") Long runId,
     		Model model
-    		) {
-    	 Run run = runRepository.findOne(runId);
+    		) throws ControllerValidationException {
+    	 Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
     	 model.addAttribute("run", run);
     	 
     	 // Add statics for CSVHeaderInfo
-    	 model.addAttribute("statics", BeansWrapper.getDefaultInstance().getStaticModels());  	 
+    	 model.addAttribute("statics", BeansWrapper.getDefaultInstance().getStaticModels());
     	 return "runSamples";
     }    
     
@@ -213,7 +212,6 @@ public class ApiController {
      * Get run results as an Excel document (XSLX)
      * The file name for now is centralperf.xlsx
      * @param mav	ModelAndView will be used to return an Excel view
-     * @param projectId ID of the project (from URI)
      * @param runId ID of the run (from URI)
      * @return A view that will be resolved as an Excel view by the view resolver
      */
@@ -224,8 +222,8 @@ public class ApiController {
     	, method = RequestMethod.GET)
     public ModelAndView getRunResultsAsExcel(
     		ModelAndView mav,
-            @PathVariable("runId") Long runId) {
-    	Run run = runRepository.findOne(runId);
+            @PathVariable("runId") Long runId) throws ControllerValidationException {
+		Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
     	
     	// get the view and setup
     	ExcelOOXMLView excelView = applicationContext.getBean(ExcelOOXMLView.class);
@@ -242,8 +240,8 @@ public class ApiController {
      * @return	Status for selected run
      */
     @RequestMapping(value={"/api/run/{runId}/status"}, method = RequestMethod.GET)
-    public @ResponseBody RunStatus getRunStatus(@PathVariable("runId") Long runId, Model model) {
-    	 Run run = runRepository.findOne(runId);
+    public @ResponseBody RunStatus getRunStatus(@PathVariable("runId") Long runId, Model model) throws ControllerValidationException {
+    	Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
     	 RunStatus runStatus = new RunStatus();
     	 runStatus.setRunId(run.getId());
     	 runStatus.setRunning(run.isRunning());

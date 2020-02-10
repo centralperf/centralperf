@@ -16,11 +16,11 @@
  */
 package org.centralperf.model.dao;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.List;
 

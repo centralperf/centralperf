@@ -17,6 +17,7 @@
 
 package org.centralperf.sampler.api;
 
+import org.centralperf.exception.ConfigurationException;
 import org.centralperf.model.dao.Run;
 
 /**
@@ -32,5 +33,5 @@ public interface SamplerLauncher {
 	 * @param run	The run associated with this launch
 	 * @return	A running job
 	 */
-	public abstract SamplerRunJob launch(String ScriptContent, Run run);
+	public abstract SamplerRunJob launch(String ScriptContent, Run run) throws ConfigurationException;
 }

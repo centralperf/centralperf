@@ -1,0 +1,124 @@
+# Deployment type
+# dev = all caches deactivated and full log
+# prod = optimized for production or custom
+server:
+  mode: prod
+
+spring:
+  # Spring JDBC configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/centralperf
+    username: centralperf
+    password: centralperf
+    driver-class-name: org.postgresql.Driver
+  # Spring Data JPA configuration
+  jpa:
+    properties:
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: update
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+  freemarker:
+    enabled: true
+    settings:
+      template_update_delay: 6000
+    template-loader-path: classpath:/views/ftl/
+    suffix: .ftl
+    request-context-attribute: rc
+
+  mvc:
+    static-path-pattern: /resources/**
+
+centralperf:
+  # Data storage backend configuration (DEFAULT to user CP database or ES for ElasticSearch)
+  backend: ES
+  elastic: # Elastic Search / Kibana configuration
+    kibana-index-name: .kibana
+    centralperf-index-name: centralperf
+    kibana:
+      url: http://127.0.0.1:5601
+    bootstrap:
+      templates:
+        kibana:
+          dashboards:
+            overview: classpath:kibana/dashboards/overview.json
+          visualizations:
+            global-metrics: classpath:kibana/visualizations/global_metrics.json
+            response-time-per-time: classpath:kibana/visualizations/responseTime_per_time.json
+            response-time-per-sample: classpath:kibana/visualizations/responseTime_per_sample.json
+          patterns:
+            centralperf: classpath:kibana/index-patterns/cp-index-pattern.json
+  csv: #CSV IMPORT/EXPORT OPTIONS
+    field-separator: \,
+  report: #REPORTING CONFIGURATION
+    cache:
+      delay-seconds: 3 # Delay between each request to refresh real time summary graph
+    scaling:
+      # Nb of second before change summary chart scaling to it's first level (in 10s instead of 1s)
+      # Default 5 minutes. Larger values can cause performance problems on chart rendering
+      level1-seconds: 300
+      # Nb of second before change summary chart scaling to it's second level (in 60s instead of 10s)
+      # Default 1 hour. Larger values can cause performance problems on chart rendering
+      level2-seconds: 3600
+jmeter: # JMETER CONFIGURATION
+  sample-file: classpath:/scripts_samples/cp_sample_script.jmx
+  launcher:
+    # How jMeter is launched :
+    #     - standalone : jMeter is installed on the host (must provide "script-path" value)
+    #     - docker_container : jMeter is launched as a local Docker Container. Unix based connection to Docker daemon for now
+    type: docker_container
+    script-path: C\:\\centralperf\\softs\\jmeter\\bin\\jmeter.bat
+    output:
+      # Only 'csv' allowed from now
+      format: csv
+      csv:
+        # Headers used by jmeter to generate his results files
+        default_headers: timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,grpThreads,allThreads,Latency,SampleCount,ErrorCount
+gatling: # GATLING CONFIGURATION
+  sample-file: classpath:/scripts_samples/GatlingCPSampleSimulation.scala
+  launcher:
+    path: E\:\\Utils\\[Perf]\\gatling-charts-highcharts-1.5.3  # (do not put last File Separator)
+    script-relativepath: bin\\gatling.bat
+    # Headers used by Gatling when generating his results files
+    output:
+      log:
+        default_headers: actionType,scenarioName,userIndex,sampleName,latencyStart,latencyEnd,responseStart,responseEnd,sampleStatus,sampleStatusMessage
+      # Only 'csv' allowed from now
+      format: csv
+
+---
+spring:
+  profiles: dev
+  freemarker:
+    settings:
+      template_update_delay: 0
+logging:
+  level:
+    com.github.dockerjava: info
+    org.centralperf: debug
+    org.springframework.web: info
+---
+spring:
+  profiles: debug-sql
+  jpa:
+    show-sql: true
+---
+spring:
+  profiles: memdb
+  datasource:
+    url: jdbc:hsqldb:mem:centralperf;shutdown=true;write_delay=false;sql.syntax_pgs=true;
+    username: sa
+    password:
+    driver-class-name: org.hsqldb.jdbcDriver
+
+

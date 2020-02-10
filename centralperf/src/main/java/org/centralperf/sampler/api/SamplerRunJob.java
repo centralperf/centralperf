@@ -17,6 +17,9 @@
 
 package org.centralperf.sampler.api;
 
+import org.centralperf.service.CSVResultService;
+import org.centralperf.service.ScriptLauncherService;
+
 import java.io.File;
 
 /**
@@ -48,4 +51,12 @@ public interface SamplerRunJob extends Runnable{
 	 * @return The pointer to the result file
 	 */
 	public File getResultFile();
+
+	void setSimulationFile(File simulationFile);
+
+	void setScriptLauncherService(ScriptLauncherService scriptLauncherService);
+
+	void setRunResultService(CSVResultService runResultService);
+
+	void setResultFile(File file);
 }

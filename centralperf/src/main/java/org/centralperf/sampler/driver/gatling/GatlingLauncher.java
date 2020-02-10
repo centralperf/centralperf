@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
  * Gatling based Launcher
  * @see SamplerLauncher
  */
-@Component
+@Deprecated
 public class GatlingLauncher implements SamplerLauncher{
 	
 	@Value("#{appProperties['gatling.launcher.path']}")

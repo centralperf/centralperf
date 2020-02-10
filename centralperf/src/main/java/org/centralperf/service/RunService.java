@@ -50,8 +50,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RunService {
 
-	@Value("${sampledata.backend}")
-	private SampleDataBackendTypeEnum sampleDataStorageType;
+	@Value("${centralperf.backend}")
+	private SampleDataBackendTypeEnum sampleDataBackendType;
 	
 	@Resource
 	private RunRepository runRepository;
@@ -68,7 +68,7 @@ public class RunService {
     @Resource
     private ScriptVersionRepository scriptVersionRepository;
     
-    @Value("#{appProperties['csv.field_separator']}")
+    @Value("${centralperf.csv.field-separator}")
     private String csvSeparator;
 	
 	private static final Logger log = LoggerFactory.getLogger(RunService.class);
@@ -79,12 +79,14 @@ public class RunService {
 	 * @param job Job associated with current run
 	 */
 	public void endRun(Long runId, SamplerRunJob job){
-		Run run = runRepository.findOne(runId);
-		log.debug("Ending run " + run.getLabel());
-		run.setRunning(false);
-		run.setEndDate(new Date());
-		run.setProcessOutput(job.getProcessOutput());
-		runRepository.save(run);
+		Run run = runRepository.findById(runId).orElse(null);
+		if(run != null) {
+			log.debug("Ending run " + run.getLabel());
+			run.setRunning(false);
+			run.setEndDate(new Date());
+			run.setProcessOutput(job.getProcessOutput());
+			runRepository.save(run);
+		}
 	}
 	
 	/**
@@ -92,14 +94,14 @@ public class RunService {
 	 * @param runId Id of the job to duplicate
 	 */
 	public Run copyRun(Long runId){
-		Run run = runRepository.findOne(runId);
+		Run run = runRepository.findById(runId).orElse(null);
 		if(run != null){	
 			Run newRun = new Run();
 			newRun.setLabel(run.getLabel());
 			newRun.setLaunched(false);
 			newRun.setRunning(false);
 			newRun.setScriptVersion(run.getScriptVersion());
-			newRun.setSampleDataBackendType(sampleDataStorageType);
+			newRun.setSampleDataBackendType(sampleDataBackendType);
             newRun.setProject(run.getProject());
             List<ScriptVariable> scriptVariables = run.getCustomScriptVariables();
             if(scriptVariables != null && scriptVariables.size() > 0){
@@ -122,23 +124,25 @@ public class RunService {
 	 * @param newVariable	variable to insert or update
 	 */
 	public void updateRunVariable(Long runId, ScriptVariable newVariable){
-		Run run = runRepository.findOne(runId);
-		
-		// Searching for variable in current run custom variables
-		for(ScriptVariable customVariable : run.getCustomScriptVariables()){
-			// Already a custom variable with this name => update it
-			if(customVariable.getName().equals(newVariable.getName())){
-				customVariable.setValue(newVariable.getValue());
-				scriptVariableRepository.save(customVariable);
-				return;
+		Run run = runRepository.findById(runId).orElse(null);
+
+		if(run != null) {
+			// Searching for variable in current run custom variables
+			for (ScriptVariable customVariable : run.getCustomScriptVariables()) {
+				// Already a custom variable with this name => update it
+				if (customVariable.getName().equals(newVariable.getName())) {
+					customVariable.setValue(newVariable.getValue());
+					scriptVariableRepository.save(customVariable);
+					return;
+				}
 			}
+
+			// nothing found ? => add the variable to the script
+			List<ScriptVariable> customVariables = run.getCustomScriptVariables();
+			customVariables.add(newVariable);
+			run.setCustomScriptVariables(customVariables);
+			runRepository.save(run);
 		}
-		
-		// nothing found ? => add the variable to the script
-		List<ScriptVariable> customVariables = run.getCustomScriptVariables();
-		customVariables.add(newVariable);
-		run.setCustomScriptVariables(customVariables);
-		runRepository.save(run);
 	}
 
 	/**
@@ -146,7 +150,7 @@ public class RunService {
 	 * @return A list of run, limited to X runs
 	 */
     public List<Run> getLastRuns(){
-        return runRepository.findAll(new PageRequest(0, 10, new Sort(Sort.Direction.DESC, "startDate"))).getContent();
+        return runRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "startDate"))).getContent();
     }
 
     /**
@@ -215,19 +219,21 @@ public class RunService {
         insertResultsFromCSV(run, CSVContent);
 
         // Set script version
-        ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
-        run.setScriptVersion(scriptVersion);
+       scriptVersionRepository.findById(run.getId()).ifPresent(
+       		scriptVersion -> {
+				run.setScriptVersion(scriptVersion);
 
-        // Update the run to mark it as launched
-        // Set start date for imported CSV files
-        run.setStartDate(run.getSamples().get(0).getTimestamp());
-        run.setEndDate(run.getSamples().get(run.getSamples().size() - 1 ).getTimestamp());
-        run.setLaunched(true);
-        run.setProcessOutput("Results uploaded by user on " + new Date());
-        run.setSampleDataBackendType(SampleDataBackendTypeEnum.DEFAULT);
+				// Update the run to mark it as launched
+				// Set start date for imported CSV files
+				run.setStartDate(run.getSamples().get(0).getTimestamp());
+				run.setEndDate(run.getSamples().get(run.getSamples().size() - 1).getTimestamp());
+				run.setLaunched(true);
+				run.setProcessOutput("Results uploaded by user on " + new Date());
+				run.setSampleDataBackendType(SampleDataBackendTypeEnum.DEFAULT);
 
-        // Insert into persistence
-        runRepository.save(run);
+				// Insert into persistence
+				runRepository.save(run);
+			});
     }
     
     /**
@@ -237,10 +243,14 @@ public class RunService {
      */
     @Transactional
     public Run createNewRun(Run run){
-        ScriptVersion scriptVersion = scriptVersionRepository.findOne(run.getScriptVersion().getId());
-        run.setScriptVersion(scriptVersion);
-        run.setSampleDataBackendType(sampleDataStorageType);
-		return runRepository.save(run);
+        ScriptVersion scriptVersion = scriptVersionRepository.findById(run.getScriptVersion().getId()).orElse(null);
+        if(scriptVersion != null) {
+			run.setScriptVersion(scriptVersion);
+			run.setSampleDataBackendType(sampleDataBackendType);
+			return runRepository.save(run);
+		} else {
+        	return null;
+		}
     }
     
     /**
@@ -249,13 +259,14 @@ public class RunService {
      */
     @Transactional
     public void deleteRun(Long runId){
-    	Run run = runRepository.findOne(runId);
-    	runRepository.delete(runId);
+    	Run run = runRepository.findById(runId).orElse(null);
+    	if(run != null) {
+			runRepository.deleteById(runId);
 
-    	// Remove ES documents if necessary
-    	if(SampleDataBackendTypeEnum.ES.equals(run.getSampleDataBackendType())){
-    		elasticSearchService.deleteRun(run);
-    	}
-    	
+			// Remove ES documents if necessary
+			if (SampleDataBackendTypeEnum.ES.equals(run.getSampleDataBackendType())) {
+				elasticSearchService.deleteRun(run);
+			}
+		}
     }
 }

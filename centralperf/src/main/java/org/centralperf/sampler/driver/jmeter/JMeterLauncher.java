@@ -24,6 +24,8 @@ import java.util.UUID;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.centralperf.exception.ConfigurationException;
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerLauncher;
 import org.centralperf.sampler.api.SamplerRunJob;
@@ -40,11 +42,14 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class JMeterLauncher implements SamplerLauncher{
-	
-	@Value("#{appProperties['jmeter.launcher.script.path']}")
+
+	@Value("${jmeter.launcher.type}")
+	private JMeterLauncherTypeEnum launcherType;
+
+	@Value("${jmeter.launcher.script-path}")
 	private String jmeterLauncherScriptPath;
 	
-	@Value("#{appProperties['jmeter.launcher.output.format']}")
+	@Value("${jmeter.launcher.output.format}")
 	private String jmeterLauncherOutputFormat;	
 	
 	@Resource
@@ -76,12 +81,14 @@ public class JMeterLauncher implements SamplerLauncher{
 	 *		<li><pre>-Jjmeter.save.saveservice.timestamp_format=ms</pre>
 	 * </ul>		
 	 */
-	public SamplerRunJob launch(String script, Run run) {
+	public SamplerRunJob launch(String script, Run run) throws ConfigurationException {
 		
 		// Create temporary JMX file
 		UUID uuid = UUID.randomUUID();
-		String jmxFilePath = System.getProperty("java.io.tmpdir") + File.separator + uuid + ".jmx";
-		String jtlFilePath = System.getProperty("java.io.tmpdir") + File.separator + uuid + "." + jmeterLauncherOutputFormat;
+		// Java temp path is not shared with Docker by default under OSX
+		String tmpPath = launcherType.equals(JMeterLauncherTypeEnum.DOCKER_CONTAINER) ? "/tmp" : System.getProperty("java.io.tmpdir");
+		String jmxFilePath = tmpPath + File.separator + uuid + ".jmx";
+		String jtlFilePath = tmpPath + File.separator + uuid + "." + jmeterLauncherOutputFormat;
 		
 		File jmxFile = new File(jmxFilePath);
 		try {
@@ -89,14 +96,8 @@ public class JMeterLauncher implements SamplerLauncher{
 		} catch (IOException e1) {
 			log.error("IO Error on variable replacement:"+e1.getMessage(), e1);
 		}
-		
-		String[] command = new String[] {
-				jmeterLauncherScriptPath, 
-				"-n",
-				"-t",
-				jmxFilePath,
-				"-l",
-				jtlFilePath,
+
+		String[] jmeterCommonCliOptions = new String[]{
 				"-Jjmeter.save.saveservice.output_format=" + jmeterLauncherOutputFormat,
 				"-Jjmeter.save.saveservice.autoflush=true",
 				"-Jjmeter.save.saveservice.print_field_names=true",
@@ -108,17 +109,37 @@ public class JMeterLauncher implements SamplerLauncher{
 				"-Jjmeter.save.saveservice.successful=true",
 				"-Jjmeter.save.saveservice.thread_name=true",
 				"-Jjmeter.save.saveservice.time=true",
-				"-Jjmeter.save.saveservice.assertions=true",				
+				"-Jjmeter.save.saveservice.assertions=true",
 				"-Jjmeter.save.saveservice.latency=true",
 				"-Jjmeter.save.saveservice.bytes=true",
 				"-Jjmeter.save.saveservice.thread_counts=true",
 				"-Jjmeter.save.saveservice.sample_count=true",
-				"-Jjmeter.save.saveservice.timestamp_format=ms"				
+				"-Jjmeter.save.saveservice.timestamp_format=ms"
+		};
+
+		SamplerRunJob job = null;
+		switch (launcherType){
+			case STANDALONE: {
+				String[] command = new String[] {
+						jmeterLauncherScriptPath,
+						"-n",
+						"-t",
+						jmxFilePath,
+						"-l",
+						jtlFilePath
 				};
-		JMeterRunJob job = new JMeterRunJob(command, run);
+				job = new JMeterStandaloneRunJob((String[]) ArrayUtils.addAll(command, jmeterCommonCliOptions), run);
+				break;
+			}
+			case DOCKER_CONTAINER:{
+				job = new JMeterDockerContainerRunJob(jmxFilePath, jtlFilePath, jmeterCommonCliOptions, run);
+				break;
+			}
+			default: throw new ConfigurationException(String.format("JMeter launcher type %s is not supported", launcherType));
+		}
 		job.setScriptLauncherService(scriptLauncherService);
 		job.setRunResultService(runResultService);
-		job.setJmxFile(jmxFile);
+		job.setSimulationFile(jmxFile);
 		job.setResultFile(new File(jtlFilePath));
 		Thread jobThread = new Thread(job);
 		jobThread.start();

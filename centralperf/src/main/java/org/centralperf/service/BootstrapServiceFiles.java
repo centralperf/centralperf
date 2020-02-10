@@ -17,23 +17,35 @@
 
 package org.centralperf.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
 
 /**
  * Reference sample files for bootstraping
  * TODO : Load Kibana files directly from listing folders instead of a resource bean per file
  * @since 1.0
  */
+@Service
 public class BootstrapServiceFiles {
 
-	private Resource sampleJMXFile;
-	private Resource sampleGatlingFile;
-	
-	private Resource kibanaDashboardOverview;
-	private Resource kibanaVisualizationGlobalMetrics;
-	private Resource kibanaVisualizationResponseTimePerTime;
-	private Resource kibanaVisualizationResponseTimePerSample;
-	private Resource kibanaCentralPerfIndexPattern;
+
+	@Value("${jmeter.sample-file}")
+	Resource sampleJMXFile;
+
+	@Value("${gatling.sample-file}")
+	Resource sampleGatlingFile;
+
+	@Value("${centralperf.elastic.bootstrap.templates.kibana.dashboards.overview}")
+	Resource kibanaDashboardOverview;
+	@Value("${centralperf.elastic.bootstrap.templates.kibana.visualizations.global-metrics}")
+	Resource kibanaVisualizationGlobalMetrics;
+	@Value("${centralperf.elastic.bootstrap.templates.kibana.visualizations.response-time-per-time}")
+	Resource kibanaVisualizationResponseTimePerTime;
+	@Value("${centralperf.elastic.bootstrap.templates.kibana.visualizations.response-time-per-sample}")
+	Resource kibanaVisualizationResponseTimePerSample;
+	@Value("${centralperf.elastic.bootstrap.templates.kibana.patterns.centralperf}")
+	Resource kibanaCentralPerfIndexPattern;
 	
 	public Resource getSampleJMXFile() {
 		return sampleJMXFile;

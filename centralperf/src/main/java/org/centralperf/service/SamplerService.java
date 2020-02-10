@@ -38,9 +38,6 @@ import org.springframework.stereotype.Service;
 public class SamplerService implements InitializingBean{
 	
 	private Map<String,Sampler> samplers;
-	
-	@Resource
-	private GatlingSampler gatlingSampler;
 
 	@Resource
 	private JMeterSampler jMeterSampler;	
@@ -53,7 +50,7 @@ public class SamplerService implements InitializingBean{
 		if(this.samplers != null) 
 			this.samplers.clear();
 		else
-			 this.samplers = new HashMap<String, Sampler>();
+			 this.samplers = new HashMap<>();
 		for (Sampler sampler : samplers) {
 			this.samplers.put(sampler.getUID(), sampler);
 		}
@@ -64,9 +61,8 @@ public class SamplerService implements InitializingBean{
 	}
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
-		this.samplers = new HashMap<String, Sampler>();
-		this.samplers.put(gatlingSampler.getUID(), gatlingSampler);
+	public void afterPropertiesSet() {
+		this.samplers = new HashMap<>();
 		this.samplers.put(jMeterSampler.getUID(), jMeterSampler);
 	}
 	

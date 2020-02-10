@@ -47,9 +47,6 @@ import au.com.bytecode.opencsv.CSVReader;
  */
 @Service
 public class CSVResultService {
-	
-	@Value("${sampledata.backend}")
-	private SampleDataBackendTypeEnum sampleDataBackendType;
 
 	@Resource
 	private SampleRepository sampleRepository;
@@ -60,12 +57,12 @@ public class CSVResultService {
     @Resource
     private RunRepository runRepository;
     
-    @Value("#{appProperties['jmeter.launcher.output.csv.default_headers']}")
+    @Value("${jmeter.launcher.output.csv.default_headers}")
     private String csvHeaders;
     
     private CSVHeaderInfo headerInfo;
     
-    @Value("#{appProperties['csv.field_separator']}")
+    @Value("${centralperf.csv.field-separator}")
     private String csvSeparator;
 
 	private static final Logger log = LoggerFactory.getLogger(CSVResultService.class);

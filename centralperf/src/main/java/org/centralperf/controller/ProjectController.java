@@ -74,8 +74,7 @@ public class ProjectController extends BaseController{
     }
 	
 	/**
-	 * List current projects as JSON 
-	 * @param model
+	 * List current projects as JSON
 	 * @return
 	 */
 	@RequestMapping(value ="/project/json/list", method=RequestMethod.GET)  
@@ -103,9 +102,9 @@ public class ProjectController extends BaseController{
      */
     @RequestMapping(value="/project/{id}/detail", method = RequestMethod.GET)
     @Transactional(readOnly = true) 
-    public String showProjectDetail(@PathVariable("id") Long id, Model model){
+    public String showProjectDetail(@PathVariable("id") Long id, Model model) throws ControllerValidationException {
     	log.debug("project details for project ["+id+"]");
-        Project project = projectRepository.findOne(id);
+        Project project = projectRepository.findById(id).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", id)));
     	model.addAttribute("project",project);
         model.addAttribute("runs",projectService.getLastRuns(project));
         model.addAttribute("scripts",project.getScripts());
@@ -122,8 +121,8 @@ public class ProjectController extends BaseController{
      * @return	Redirection after the project has been deleted (or not)
      */
 	@RequestMapping(value = "/project/{id}/delete", method = RequestMethod.GET)
-    public String deleteProject(@PathVariable("id") Long id, RedirectAttributes redirectAttrs) {
-        Project project = projectRepository.findOne(id);
+    public String deleteProject(@PathVariable("id") Long id, RedirectAttributes redirectAttrs) throws ControllerValidationException {
+        Project project = projectRepository.findById(id).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", id)));
 		if(project.getRuns() != null && project.getRuns().size() > 0){
 			redirectAttrs.addFlashAttribute("error","Unable to delete this project because it's attached to at least one run");
 		}
@@ -131,7 +130,7 @@ public class ProjectController extends BaseController{
             redirectAttrs.addFlashAttribute("error","Unable to delete this project because it's attached to at least one script");
         }
         else{
-            projectRepository.delete(id);
+            projectRepository.deleteById(id);
 		}
         return "redirect:/project";
     }    
@@ -151,7 +150,7 @@ public class ProjectController extends BaseController{
                             @RequestParam(value="name",required=false) String name,
                             @RequestParam(value="description",required=false) String description
                             ) throws ControllerValidationException {
-        Project project = projectRepository.findOne(projectId);
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
         String valueToReturn = name;
         if(name != null){
         	project.setName(name);

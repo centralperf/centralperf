@@ -104,7 +104,7 @@ public class ConfigurationService {
 	public void deleteConfigurationValue(String key){
 		KeyValue keyValue = keyValueRepository.findByKey(key);
 		if(keyValue!=null){
-			keyValueRepository.delete(keyValue.getId());
+			keyValueRepository.delete(keyValue);
 			cache.invalidate(key);
 		}
 		else{log.warn("Revert of ["+key+"] could not be done (Was not found in DB");}

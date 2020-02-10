@@ -28,7 +28,8 @@ import org.springframework.stereotype.Component;
 * Gatling 1.x based Sampler
 * @since 1.0 
 */
-@Component
+//@Component
+@Deprecated
 public class GatlingSampler implements Sampler {
 
 	@Resource

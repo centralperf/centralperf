@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 import javax.annotation.Resource;
 
+import org.centralperf.exception.ConfigurationException;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.ScriptVersion;
 import org.centralperf.repository.RunRepository;
@@ -51,7 +52,7 @@ public class ScriptLauncherService {
 	
 	private static final Logger log = LoggerFactory.getLogger(ScriptLauncherService.class);
 	
-	public boolean launchRun(Run run){
+	public boolean launchRun(Run run) throws ConfigurationException {
     	ScriptVersion scriptVersion = run.getScriptVersion();
     	
     	// Get the sampler type

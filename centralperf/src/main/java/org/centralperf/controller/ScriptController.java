@@ -133,9 +133,9 @@ public class ScriptController extends BaseController{
     @RequestMapping(value = "/project/{projectId}/script/{scriptId}/version/new", method = RequestMethod.POST)
     public String addScriptVersion(
     					@PathVariable("projectId") Long projectId, 
-    					@PathVariable("scriptId") Long scriptId, 
+    					@PathVariable("scriptId") Long scriptId,
     					@ModelAttribute("scriptVersion") ScriptVersion scriptVersion,
-    					@RequestParam("scriptFile") MultipartFile file) {
+    					@RequestParam("scriptFile") MultipartFile file) throws ControllerValidationException {
     	String scriptContent = null;
 
 		// Get the script File
@@ -143,7 +143,8 @@ public class ScriptController extends BaseController{
 			scriptContent = new String(file.getBytes());
 		} catch (IOException e) {
 		}
-		ScriptVersion newScriptVersion = scriptService.addScriptVersion(scriptRepository.findOne(scriptId), scriptVersion.getDescription(), scriptContent);
+		Script script = scriptRepository.findById(scriptId).orElseThrow(() -> new ControllerValidationException(String.format("Script with id %s does not exists", scriptId)));
+		ScriptVersion newScriptVersion = scriptService.addScriptVersion(script, scriptVersion.getDescription(), scriptContent);
         return "redirect:/project/" + projectId + "/script/" + scriptId + "/detail#" + newScriptVersion.getId();
     }    
     
@@ -154,10 +155,11 @@ public class ScriptController extends BaseController{
      * @return Name of the scripts listing view
      */
     @RequestMapping("/project/{projectId}/script")
-    public String showProjectScripts(@PathVariable("projectId") Long projectId, Model model) {
-        model.addAttribute("newScript",new Script());
+    public String showProjectScripts(@PathVariable("projectId") Long projectId, Model model) throws ControllerValidationException {
+		Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
+		model.addAttribute("newScript",new Script());
         model.addAttribute("scripts",scriptRepository.findAll());
-        model.addAttribute("project",projectRepository.findOne(projectId));
+        model.addAttribute("project",project);
         return "scripts";
     }
     
@@ -167,10 +169,10 @@ public class ScriptController extends BaseController{
      * @return	The script list that will be converted to JSON
      */
 	@RequestMapping(value ="/project/{projectId}/script/json/list", method=RequestMethod.GET)  
-	public @ResponseBody List<LastScriptVersionLabel> getJsonScriptList(@PathVariable("projectId") Long projectId){
-		Project p = projectRepository.findOne(projectId);
+	public @ResponseBody List<LastScriptVersionLabel> getJsonScriptList(@PathVariable("projectId") Long projectId) throws ControllerValidationException {
+		Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
 		List<LastScriptVersionLabel> lst = new ArrayList<LastScriptVersionLabel>();
-		for (Script s : p.getScripts()) {
+		for (Script s : project.getScripts()) {
 			List<ScriptVersion> versions = scriptVersionRepository.findByScriptIdOrderByNumberDesc(s.getId());
 			ScriptVersion scriptVersion = versions.get(0);
 			lst.add(new LastScriptVersionLabel(scriptVersion.getId(), s.getLabel()+" (version "+scriptVersion.getNumber()+")" + " - " + scriptVersion.getScript().getSamplerUID()));
@@ -189,9 +191,11 @@ public class ScriptController extends BaseController{
     public String showScriptDetail(
             @PathVariable("scriptId") Long scriptId,
             @PathVariable("projectId") Long projectId,
-            Model model){
-    	model.addAttribute("script",scriptRepository.findOne(scriptId));
-        model.addAttribute("project",projectRepository.findOne(projectId));
+            Model model) throws ControllerValidationException {
+		Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
+		Script script = scriptRepository.findById(scriptId).orElseThrow(() -> new ControllerValidationException(String.format("Script with id %s does not exists", scriptId)));
+		model.addAttribute("script",script);
+        model.addAttribute("project",project);
         model.addAttribute("scriptVersions",scriptVersionRepository.findByScriptIdOrderByNumberDesc(scriptId));
         model.addAttribute("newScriptVersion",new ScriptVersion());        
         return "scriptDetail";
@@ -213,7 +217,7 @@ public class ScriptController extends BaseController{
 		if(!runsAttached.isEmpty()){
 			redirectAttrs.addFlashAttribute("error","Unable to delete this script because it's attached to at least one run");
 		} else{
-			scriptRepository.delete(scriptId);
+			scriptRepository.deleteById(scriptId);
 		}
         return "redirect:/project/" + projectId + "/script";
     }
@@ -254,8 +258,8 @@ public class ScriptController extends BaseController{
     public ResponseEntity<String> downloadScriptVersionContent(
     		@PathVariable("projectId") Long projectId,
     		@PathVariable("scriptId") Long scriptId,
-            @PathVariable("versionId") Long versionId) {
-		ScriptVersion scriptVersion = scriptVersionRepository.findOne(versionId);
+            @PathVariable("versionId") Long versionId) throws ControllerValidationException {
+		ScriptVersion scriptVersion = scriptVersionRepository.findById(versionId).orElseThrow(() -> new ControllerValidationException(String.format("Script Version with id %s does not exists", versionId)));
 		Sampler sampler = samplerService.getSamplerByUID(scriptVersion.getScript().getSamplerUID());
         HttpHeaders responseHeaders = new HttpHeaders();
         // Build the file name based on script label and script version number
@@ -264,7 +268,7 @@ public class ScriptController extends BaseController{
         		+ "_" 
         		+ scriptVersion.getNumber()  
         		+ sampler.getScriptFileExtension());
-		return new ResponseEntity<String>(scriptVersion.getContent(), responseHeaders, HttpStatus.CREATED);
+		return new ResponseEntity<>(scriptVersion.getContent(), responseHeaders, HttpStatus.CREATED);
     }		
 
 	/**
@@ -293,7 +297,7 @@ public class ScriptController extends BaseController{
                             @RequestParam(value="label",required=false) String label,
                             @RequestParam(value="description",required=false) String description
                             ) throws ControllerValidationException {
-        Script script = scriptRepository.findOne(scriptId);
+		Script script = scriptRepository.findById(scriptId).orElseThrow(() -> new ControllerValidationException(String.format("Script with id %s does not exists", scriptId)));
         String valueToReturn = label;
         if(label != null){
         	script.setLabel(label);
@@ -325,7 +329,7 @@ public class ScriptController extends BaseController{
                             @PathVariable("scriptVersionId") Long scriptVersionId,
                             @RequestParam(value="description",required=false) String description
                             ) throws ControllerValidationException {
-        ScriptVersion scriptVersion = scriptVersionRepository.findOne(scriptVersionId);
+		ScriptVersion scriptVersion = scriptVersionRepository.findById(scriptVersionId).orElseThrow(() -> new ControllerValidationException(String.format("Script Version with id %s does not exists", scriptVersionId)));
         String valueToReturn = description;
         if(description != null){
         	scriptVersion.setDescription(description);
@@ -351,8 +355,8 @@ public class ScriptController extends BaseController{
     			Model model,
     			@PathVariable("scriptId") Long scriptId,
     			@PathVariable("versionNumber") int versionNumber
-    		) {
-    	Script script = scriptRepository.findOne(scriptId);
+    		) throws ControllerValidationException {
+		Script script = scriptRepository.findById(scriptId).orElseThrow(() -> new ControllerValidationException(String.format("Script with id %s does not exists", scriptId)));
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder;
 		try {

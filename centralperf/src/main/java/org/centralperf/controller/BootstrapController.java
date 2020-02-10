@@ -21,6 +21,7 @@ import javax.annotation.Resource;
 
 import org.centralperf.service.BootstrapService;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -40,7 +41,7 @@ public class BootstrapController {
 	 * Initial bootstrap page
 	 * @return
 	 */
-	@RequestMapping(value = "/bootstrap")
+	@GetMapping(value = "/bootstrap")
 	public String showBootstrapPage() {
 		return "bootstrap";
 	}
@@ -50,7 +51,7 @@ public class BootstrapController {
 	 * @param importSamples True if the user has choosen to import the samples
 	 * @return Path to the home page mapping
 	 */
-	@RequestMapping(value = "/bootstrap/initialize")
+	@GetMapping(value = "/bootstrap/initialize")
 	public String initialize(@RequestParam(value="importSamples") Boolean importSamples) {
 		// Import CP samples if specified 
 		if(importSamples){
