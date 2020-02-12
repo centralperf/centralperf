@@ -16,6 +16,10 @@ jobs:
           java-version: 1.8
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+      - name: Set version to output
+        run: |
+          POM_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo '::set-env name=POM_VERSION::$POM_VERSION'
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -24,6 +28,16 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: Automtic Github Actions Pre-Release for CentralPerf ${{ github.ref }}
+          body: Automatic Github Actions Pre-Release for CentralPerf ${{ github.ref }}
           draft: true
           prerelease: true
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./target/centralperf-webapp-${{ env.POM_VERSION }}.jar
+          asset_name: centralperf-webapp-${{ env.POM_VERSION }}.jar
+          asset_content_type: application/java-archive
