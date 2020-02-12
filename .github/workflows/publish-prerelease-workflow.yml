@@ -16,7 +16,7 @@ jobs:
           java-version: 1.8
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-      - name: Set version to output
+      - name: Set version to env
         run: |
           echo "::set-env name=POM_VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
       - name: Create Release
@@ -25,9 +25,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: Automatic Github Actions Pre-Release for CentralPerf ${{ github.ref }}
+          tag_name: ${{ env.POM_VERSION }}
+          release_name: Release ${{ env.POM_VERSION }}
+          body: Automatic Github Workflow Pre-Release for CentralPerf ${{ env.POM_VERSION }}
           draft: true
           prerelease: true
       - name: Upload Release Asset
