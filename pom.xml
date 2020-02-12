@@ -13,7 +13,7 @@
 	<groupId>org.centralperf</groupId>
 	<artifactId>centralperf-webapp</artifactId>
 	<version>1.2-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>Central Perf</name>
 
 	<parent>
@@ -57,20 +57,6 @@
 				</configuration>
 			</plugin>
 
-			<!-- LICENSE INFO PLUGIN -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<version>1.6</version>
-				<executions>
-					<execution>
-						<id>download-licenses</id>
-						<goals>
-							<goal>download-licenses</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 
@@ -221,5 +207,29 @@
 		</dependency>
 
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>licences</id>
+			<build>
+				<plugins>
+					<!-- LICENSE INFO PLUGIN -->
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>license-maven-plugin</artifactId>
+						<version>1.20</version>
+						<executions>
+							<execution>
+								<id>download-licenses</id>
+								<goals>
+									<goal>download-licenses</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
