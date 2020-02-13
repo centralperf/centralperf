@@ -3,3 +3,4 @@
 /local_config
 *.iml
 /out/
+/src/main/docker/volumes

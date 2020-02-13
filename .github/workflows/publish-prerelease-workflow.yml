@@ -28,7 +28,7 @@ jobs:
           tag_name: ${{ env.POM_VERSION }}
           release_name: Release ${{ env.POM_VERSION }}
           body: Automatic Github Workflow Pre-Release for CentralPerf ${{ env.POM_VERSION }}
-          draft: true
+          draft: false
           prerelease: true
       - name: Upload Release Asset
         id: upload-release-asset
