@@ -4,7 +4,8 @@ ARG CENTRALPERF_VERSION
 
 # Download Github release asset
 RUN apk --no-cache add curl
-RUN curl https://github.com/centralperf/centralperf/releases/download/${CENTRALPERF_VERSION}/centralperf-webapp-${CENTRALPERF_VERSION}.jar --output /centralperf.jar
+ENV CENTRAL_PERF_JAR_URL="https://github.com/centralperf/centralperf/releases/download/${CENTRALPERF_VERSION}/centralperf-webapp-${CENTRALPERF_VERSION}.jar"
+RUN curl -L ${CENTRAL_PERF_JAR_URL} --output /centralperf.jar
 
-ENTRYPOINT ["java","-jar","/centralperf.jar"]
+ENTRYPOINT ["java","-jar","/centralperf.jar","-Dspring-boot.run.profiles=docker"]
 

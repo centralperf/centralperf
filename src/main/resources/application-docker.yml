@@ -1,0 +1,14 @@
+# Specific profile to run CentralPerf in a Docker container build with Docker Compose
+spring:
+  # Spring JDBC configuration
+  datasource:
+    url: jdbc:postgresql://db:5432/centralperf
+    username: centralperf
+    password: centralperf
+    driver-class-name: org.postgresql.Driver
+  elasticsearch:
+    rest:
+      uris: http://es:9200
+jmeter:
+  launcher:
+    type: docker_container
