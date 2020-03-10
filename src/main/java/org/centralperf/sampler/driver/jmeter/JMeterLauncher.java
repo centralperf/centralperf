@@ -132,7 +132,7 @@ public class JMeterLauncher implements SamplerLauncher{
 				break;
 			}
 			case DOCKER_CONTAINER:{
-				job = new JMeterDockerContainerRunJob(jmxFilePath, jtlFilePath, jmeterCommonCliOptions, run);
+				job = new JMeterDockerContainerRunJob(jmeterCommonCliOptions, run);
 				break;
 			}
 			default: throw new ConfigurationException(String.format("JMeter launcher type %s is not supported", launcherType));

@@ -47,16 +47,13 @@ public class ElasticSearchService {
 	@Value("${centralperf.backend}")
 	private SampleDataBackendTypeEnum sampleDataBackendType;
 
-	@Value("${centralperf.elastic.kibana-index-name}")
-	private String esKibanaIndexName;
-
 	@Value("${centralperf.elastic.centralperf-index-name}")
 	private String esCentralPerfIndexName;
 
 	@Value("${spring.elasticsearch.rest.uris}")
 	private String[] esClusterUris;
 
-	@Value("${centralperf.elastic.kibana.url}")
+	@Value("${centralperf.elastic.kibana.internal-url}")
 	private String kibanaUrl;
 
 	@Resource
@@ -74,7 +71,6 @@ public class ElasticSearchService {
 	 * 
 	 * @throws IOException
 	 */
-	@SuppressWarnings({ "resource", "unchecked" })
 	@PostConstruct
 	public void init() throws IOException {
 
@@ -143,23 +139,23 @@ public class ElasticSearchService {
 		try {
 			
 			// Central Perf Index Pattern
-			this.bootstrapKibanaObject("index-pattern", "centralperf", bootstrapServiceFiles.getKibanaCentralPerfIndexPattern().getFile());
+			this.bootstrapKibanaObject("index-pattern", "centralperf", bootstrapServiceFiles.getKibanaCentralPerfIndexPattern());
 
 			// Visualizations
-			this.bootstrapKibanaObject("visualization", "centralperf_global_metrics", bootstrapServiceFiles.getKibanaVisualizationGlobalMetrics().getFile());
-			this.bootstrapKibanaObject("visualization", "centralperf_response_time_per_time", bootstrapServiceFiles.getKibanaVisualizationResponseTimePerTime().getFile());
-			this.bootstrapKibanaObject("visualization", "centralperf_response_time_per_sample", bootstrapServiceFiles.getKibanaVisualizationResponseTimePerSample().getFile());
+			this.bootstrapKibanaObject("visualization", "centralperf_global_metrics", bootstrapServiceFiles.getKibanaVisualizationGlobalMetrics());
+			this.bootstrapKibanaObject("visualization", "centralperf_response_time_per_time", bootstrapServiceFiles.getKibanaVisualizationResponseTimePerTime());
+			this.bootstrapKibanaObject("visualization", "centralperf_response_time_per_sample", bootstrapServiceFiles.getKibanaVisualizationResponseTimePerSample());
 
 			// Dashboards
-			this.bootstrapKibanaObject("dashboard", "centralperf_overview_dashboard", bootstrapServiceFiles.getKibanaDashboardOverview().getFile());
+			this.bootstrapKibanaObject("dashboard", "centralperf_overview_dashboard", bootstrapServiceFiles.getKibanaDashboardOverview());
 		} catch (IOException e) {
 			logger.error("Error on Kibana objects bootstrap import: " + e.getMessage(), e);
 		}
 	}
 
-	private void bootstrapKibanaObject(String objectType, String objectId, File inputSource) throws IOException {
+	private void bootstrapKibanaObject(String objectType, String objectId, String content) throws IOException {
 		Request request = new Request("POST", String.format("/api/saved_objects/%s/%s", objectType, objectId));
-		request.setJsonEntity(FileUtils.readFileToString(inputSource));
+		request.setJsonEntity(content);
 		request.setOptions(kibanaClientRequestOptions);
 		kibanaClient.performRequest(request);
 	}

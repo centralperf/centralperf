@@ -64,7 +64,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @SessionAttributes
 public class RunController extends BaseController{
 	
-	@Value("${centralperf.elastic.kibana.url}")
+	@Value("${centralperf.elastic.kibana.public-url}")
 	private String kibanaUrl;
 	
 	@Resource

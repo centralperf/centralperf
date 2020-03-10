@@ -17,15 +17,6 @@
 
 package org.centralperf.sampler.driver.jmeter;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
-
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.CSVResultService;
@@ -33,182 +24,195 @@ import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
+import java.util.Arrays;
+
 /**
  * A thread to handle external jMeter job launcher and watcher
+ *
  * @since 1.0
  */
 public class JMeterStandaloneRunJob implements SamplerRunJob {
 
-	private String[] command;
-	private Run run;
-	private long startTime;
-	private long endTime;
-	private boolean running;
-	private int exitStatus;
-	private StringWriter processOutputWriter = new StringWriter();
-	private File jmxFile;
-	private File resultFile;
-	private Process p;
+    private String[] command;
+    private Run run;
+    private long startTime;
+    private long endTime;
+    private boolean running;
+    private int exitStatus;
+    private StringWriter processOutputWriter = new StringWriter();
+    private File jmxFile;
+    private File resultFile;
+    private Process p;
 
-	private JMeterCSVReader JMeterCSVFileReader;
-	
-	private ScriptLauncherService scriptLauncherService;
-	private CSVResultService runResultService;
+    private ScriptLauncherService scriptLauncherService;
+    private CSVResultService runResultService;
 
-	private static final Logger log = LoggerFactory.getLogger(JMeterStandaloneRunJob.class);
+    private static final Logger log = LoggerFactory.getLogger(JMeterStandaloneRunJob.class);
 
-	public JMeterStandaloneRunJob(String[] command, Run run) {
-		this.command = command;
-		this.run=run;
-	}
+    public JMeterStandaloneRunJob(String[] command, Run run) {
+        this.command = command;
+        this.run = run;
+    }
 
-	@Override
-	public void stopProcess() {
-		log.debug("Killing jMeter process");
-		p.destroy();
-	}
-	
-	@Override
+    @Override
+    public void stopProcess() {
+        log.debug("Killing jMeter process");
+        p.destroy();
+    }
+
 	/**
 	 * Launch the jMeter external program
 	 */
-	public void run() {
-		log.debug("Running a new jMeter job with command "+ Arrays.toString(command));
-		startTime = System.currentTimeMillis();
-		ProcessBuilder pb = new ProcessBuilder(command);
-		pb = pb.redirectErrorStream(true);	
-		try {
-			p = pb.start();
-			// JMeter is launched
-			running = true;
-			// Listening to jMeter standard output
-			StreamWriter outputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));		
-		    
-		    // Watching for result file change
-		    JMeterCSVFileReader = JMeterCSVReader.newReader(this.getResultFile(), runResultService, run);
-		    
-		    outputListener.start();		    
-			while (running) {
-				try {
-					p.waitFor();
-					//Stop File reader task after end of job process
-					running = false;
-					JMeterCSVFileReader.cancel();
-					outputListener.interrupt();
-				}catch (InterruptedException iE) {
-					log.warn("JMeter run was interrupted before normal end:"+iE.getMessage(),iE);
-					p.destroy();
-				}
-			}
-			exitStatus = p.exitValue();
-		} catch (IOException iOE) {log.error("JMeter job can't read output file:"+iOE.getMessage(),iOE);}
-		endTime = System.currentTimeMillis();
-		scriptLauncherService.endJob(this);
-		JMeterCSVFileReader = null;
-		log.debug("Jmeter process ended at "+endTime+" with exit status ["+exitStatus+"]");
-	}
-	
-	public String getProcessOutput() {return processOutputWriter.toString();}	
-	
-	/**
-	 * Internal stream writer to redirect jMeter standard output to a PrintWriter
-	 */
-	class StreamWriter extends Thread {
-		private InputStream in;
-		private PrintWriter pw;
+    @Override
+    public void run() {
+        log.debug("Running a new jMeter job with command " + Arrays.toString(command));
+        startTime = System.currentTimeMillis();
+        ProcessBuilder pb = new ProcessBuilder(command);
+		pb.redirectErrorStream(true);
+		JMeterCSVReaderTimerTask csvReaderTimerTask;
+        try {
+            p = pb.start();
+            // JMeter is launched
+            running = true;
+            // Listening to jMeter standard output
+            StreamWriter outputListener = new StreamWriter(p.getInputStream(), new PrintWriter(processOutputWriter, true));
 
-		StreamWriter(InputStream in, PrintWriter pw) {
-			this.in = in;
-			this.pw = pw;
-		}
+            // Watching for result file change
+            csvReaderTimerTask = JMeterCSVReaderTimerTask.newReader(this.getResultFile(), new JMeterCSVReader(runResultService, run));
 
-		@Override
-		public void run() {
-			BufferedReader br = null;
-			try {
-				br = new BufferedReader(new InputStreamReader(in));
-				String line = null;
-				while ((line = br.readLine()) != null) {pw.println(line);}
-			}
-			catch (IOException ioE) {log.warn("JMeter run Output was interrupted:"+ioE.getMessage());}
-			catch (Exception e) {log.error("Error while reading JMeter run output:"+e.getMessage(),e);} 
-			finally {
-				try {br.close();}
-				catch (IOException ioE) {log.warn("JMeter run Output BufferedReader was not close:"+ioE.getMessage());}
-			}
-		}
-	}
+            outputListener.start();
+            while (running) {
+                try {
+                    p.waitFor();
+                    //Stop File reader task after end of job process
+                    running = false;
+                    csvReaderTimerTask.cancel();
+                    outputListener.interrupt();
+                } catch (InterruptedException iE) {
+                    log.warn("JMeter run was interrupted before normal end:" + iE.getMessage(), iE);
+                    p.destroy();
+                }
+            }
+            exitStatus = p.exitValue();
+        } catch (IOException iOE) {
+            log.error("JMeter job can't read output file:" + iOE.getMessage(), iOE);
+        }
+        endTime = System.currentTimeMillis();
+        scriptLauncherService.endJob(this);
+        log.debug("Jmeter process ended at " + endTime + " with exit status [" + exitStatus + "]");
+    }
 
-	public String[] getCommand() {
-		return command;
-	}
+    public String getProcessOutput() {
+        return processOutputWriter.toString();
+    }
 
-	public void setCommand(String[] command) {
-		this.command = command;
-	}
+    /**
+     * Internal stream writer to redirect jMeter standard output to a PrintWriter
+     */
+	static class StreamWriter extends Thread {
+        private InputStream in;
+        private PrintWriter pw;
 
-	public long getStartTime() {
-		return startTime;
-	}
+        StreamWriter(InputStream in, PrintWriter pw) {
+            this.in = in;
+            this.pw = pw;
+        }
 
-	public void setStartTime(long startTime) {
-		this.startTime = startTime;
-	}
+        @Override
+        public void run() {
+            BufferedReader br = null;
+            try {
+                br = new BufferedReader(new InputStreamReader(in));
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    pw.println(line);
+                }
+            } catch (IOException ioE) {
+                log.warn("JMeter run Output was interrupted:" + ioE.getMessage());
+            } catch (Exception e) {
+                log.error("Error while reading JMeter run output:" + e.getMessage(), e);
+            } finally {
+                try {
+                    br.close();
+                } catch (IOException ioE) {
+                    log.warn("JMeter run Output BufferedReader was not close:" + ioE.getMessage());
+                }
+            }
+        }
+    }
 
-	public long getEndTime() {
-		return endTime;
-	}
+    public String[] getCommand() {
+        return command;
+    }
 
-	public void setEndTime(long endTime) {
-		this.endTime = endTime;
-	}
+    public void setCommand(String[] command) {
+        this.command = command;
+    }
 
-	public boolean isRunning() {
-		return running;
-	}
+    public long getStartTime() {
+        return startTime;
+    }
 
-	public void setRunning(boolean running) {
-		this.running = running;
-	}
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
 
-	public int getExitStatus() {
-		return exitStatus;
-	}
+    public long getEndTime() {
+        return endTime;
+    }
 
-	public void setExitStatus(int exitStatus) {
-		this.exitStatus = exitStatus;
-	}
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
 
-	public ScriptLauncherService getScriptLauncherService() {
-		return scriptLauncherService;
-	}
+    public boolean isRunning() {
+        return running;
+    }
 
-	public void setScriptLauncherService(
-			ScriptLauncherService scriptLauncherService) {
-		this.scriptLauncherService = scriptLauncherService;
-	}
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
 
-	public File getSimulationFile() {
-		return jmxFile;
-	}
-	public void setSimulationFile(File simulationFile) {
-		this.jmxFile = simulationFile;
-	}
+    public int getExitStatus() {
+        return exitStatus;
+    }
 
-	public File getResultFile() {
-		return resultFile;
-	}
+    public void setExitStatus(int exitStatus) {
+        this.exitStatus = exitStatus;
+    }
 
-	public void setResultFile(File jtlFile) {
-		this.resultFile = jtlFile;
-	}
+    public ScriptLauncherService getScriptLauncherService() {
+        return scriptLauncherService;
+    }
 
-	public CSVResultService getRunResultService() {
-		return runResultService;
-	}
+    public void setScriptLauncherService(
+            ScriptLauncherService scriptLauncherService) {
+        this.scriptLauncherService = scriptLauncherService;
+    }
 
-	public void setRunResultService(CSVResultService runResultService) {
-		this.runResultService = runResultService;
-	}
-	
+    public File getSimulationFile() {
+        return jmxFile;
+    }
+
+    public void setSimulationFile(File simulationFile) {
+        this.jmxFile = simulationFile;
+    }
+
+    public File getResultFile() {
+        return resultFile;
+    }
+
+    public void setResultFile(File jtlFile) {
+        this.resultFile = jtlFile;
+    }
+
+    public CSVResultService getRunResultService() {
+        return runResultService;
+    }
+
+    public void setRunResultService(CSVResultService runResultService) {
+        this.runResultService = runResultService;
+    }
+
 }

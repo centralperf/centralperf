@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM debian:stretch
 LABEL maintainer="charles@amoae.com"
 
 ARG JMETER_VERSION
@@ -10,14 +10,15 @@ ENV JMETER_DOWNLOAD_URL ${MIRROR_HOST}/jmeter/binaries/apache-jmeter-${JMETER_VE
 ENV JMETER_PLUGINS_DOWNLOAD_URL http://repo1.maven.org/maven2/kg/apc
 ENV JMETER_PLUGINS_FOLDER ${JMETER_HOME}/lib/ext/
 
-RUN apk update \
-	&& apk upgrade \
-	&& apk add ca-certificates \
+RUN apt-get update \
+	&& apt-get install -y ca-certificates \
 	&& update-ca-certificates \
-            && apk add --update openjdk8-jre tzdata curl unzip bash \
+            && apt-get install -y openjdk-8-jre tzdata curl unzip bash \
             && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
             && echo "Europe/Paris" >  /etc/timezone \
-	&& rm -rf /var/cache/apk/*
+	&& rm -rf /var/lib/apt/lists/*
+
+RUN echo "Using jMeter ${JMETER_VERSION}"
 
 RUN mkdir -p /tmp/dependencies  \
 	&& curl -L --silent ${JMETER_DOWNLOAD_URL} >  /tmp/dependencies/apache-jmeter-${JMETER_VERSION}.tgz  \

@@ -9,6 +9,15 @@ spring:
   elasticsearch:
     rest:
       uris: http://es:9200
+centralperf:
+  elastic:
+    kibana:
+      internal-url: http://kibana:5601
 jmeter:
   launcher:
     type: docker_container
+logging:
+  level:
+    com.github.dockerjava: debug
+    org.centralperf: debug
+    org.springframework.web: info

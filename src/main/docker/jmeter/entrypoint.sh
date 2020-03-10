@@ -12,5 +12,7 @@ echo "JVM_ARGS=${JVM_ARGS}"
 echo "jmeter args=$@"
 
 # Keep entrypoint simple: we must pass the standard JMeter arguments
-jmeter $@
+jmeter $@ > /jmeter.out &
+echo "Tailing logs"
+tail --pid $! --retry --follow=name /logs.csv
 echo "END Running Jmeter on `date`"

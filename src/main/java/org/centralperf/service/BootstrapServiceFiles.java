@@ -17,9 +17,20 @@
 
 package org.centralperf.service;
 
+import com.google.common.io.CharStreams;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Reference sample files for bootstraping
@@ -46,64 +57,44 @@ public class BootstrapServiceFiles {
 	Resource kibanaVisualizationResponseTimePerSample;
 	@Value("${centralperf.elastic.bootstrap.templates.kibana.patterns.centralperf}")
 	Resource kibanaCentralPerfIndexPattern;
+
+	private static final Logger logger = LoggerFactory.getLogger(BootstrapServiceFiles.class);
 	
-	public Resource getSampleJMXFile() {
-		return sampleJMXFile;
+	public String getSampleJMXFile() {
+		return getResourceAsString(sampleJMXFile);
 	}
 
-	public void setSampleJMXFile(org.springframework.core.io.Resource sampleJMXFile) {
-		this.sampleJMXFile = sampleJMXFile;
+	public String getSampleGatlingFile() {
+		return getResourceAsString(sampleGatlingFile);
 	}
 
-	public Resource getSampleGatlingFile() {
-		return sampleGatlingFile;
+	public String getKibanaVisualizationGlobalMetrics() {
+		return getResourceAsString(kibanaVisualizationGlobalMetrics);
 	}
 
-	public void setSampleGatlingFile(
-			org.springframework.core.io.Resource sampleGatlingFile) {
-		this.sampleGatlingFile = sampleGatlingFile;
+	public String getKibanaVisualizationResponseTimePerTime() {
+		return getResourceAsString(kibanaVisualizationResponseTimePerTime);
 	}
 
-	public Resource getKibanaVisualizationGlobalMetrics() {
-		return kibanaVisualizationGlobalMetrics;
+	public String getKibanaVisualizationResponseTimePerSample() {
+		return getResourceAsString(kibanaVisualizationResponseTimePerSample);
 	}
 
-	public void setKibanaVisualizationGlobalMetrics(org.springframework.core.io.Resource kibanaVisualizationGlobalMetrics) {
-		this.kibanaVisualizationGlobalMetrics = kibanaVisualizationGlobalMetrics;
+	public String getKibanaDashboardOverview() {
+		return getResourceAsString(kibanaDashboardOverview);
 	}
 
-	public Resource getKibanaVisualizationResponseTimePerTime() {
-		return kibanaVisualizationResponseTimePerTime;
+	public String getKibanaCentralPerfIndexPattern() {
+		return getResourceAsString(kibanaCentralPerfIndexPattern);
 	}
 
-	public void setKibanaVisualizationResponseTimePerTime(
-			org.springframework.core.io.Resource kibanaVisualizationResponseTimePerTime) {
-		this.kibanaVisualizationResponseTimePerTime = kibanaVisualizationResponseTimePerTime;
-	}
-
-	public Resource getKibanaVisualizationResponseTimePerSample() {
-		return kibanaVisualizationResponseTimePerSample;
-	}
-
-	public void setKibanaVisualizationResponseTimePerSample(
-			org.springframework.core.io.Resource kibanaVisualizationResponseTimePerSample) {
-		this.kibanaVisualizationResponseTimePerSample = kibanaVisualizationResponseTimePerSample;
-	}
-
-	public Resource getKibanaDashboardOverview() {
-		return kibanaDashboardOverview;
-	}
-
-	public void setKibanaDashboardOverview(Resource kibanaDashboardOverview) {
-		this.kibanaDashboardOverview = kibanaDashboardOverview;
-	}
-
-	public Resource getKibanaCentralPerfIndexPattern() {
-		return kibanaCentralPerfIndexPattern;
-	}
-
-	public void setKibanaCentralPerfIndexPattern(Resource kibanaCentralPerfIndexPattern) {
-		this.kibanaCentralPerfIndexPattern = kibanaCentralPerfIndexPattern;
+	private String getResourceAsString(Resource resource){
+		try {
+			return IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8.name());
+		} catch (IOException e) {
+			logger.error(String.format("Unable to load bootstrap file %s", resource.getFilename()), e);
+			return null;
+		}
 	}
 	
 	

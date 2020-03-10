@@ -19,14 +19,14 @@ package org.centralperf.sampler.driver.jmeter;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
@@ -36,7 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 
 /**
@@ -54,20 +55,16 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 	private StringWriter processOutputWriter = new StringWriter();
 	private File jmxFile;
 	private File resultFile;
-	private JMeterCSVReader JMeterCSVFileReader;
 	private String containerId;
 
 	private ScriptLauncherService scriptLauncherService;
 	private CSVResultService runResultService;
 
-	private String jmxFilePath;
-
 	private static final Logger log = LoggerFactory.getLogger(JMeterDockerContainerRunJob.class);
 
-	public JMeterDockerContainerRunJob(String jmxFilePath, String jtlFilePath, String[] jmeterCliOptions, Run run) {
+	public JMeterDockerContainerRunJob(String[] jmeterCliOptions, Run run) {
 		this.jmeterCliOptions = jmeterCliOptions;
 		this.run=run;
-		this.jmxFilePath = jmxFilePath;
 	}
 
 	@Override
@@ -75,9 +72,6 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 		log.debug("Stopping jMeter container");
 		if(this.containerId != null) {
 			getDockerClient().stopContainerCmd(this.containerId).exec();
-			if(JMeterCSVFileReader != null){
-				JMeterCSVFileReader.cancel();
-			}
 			running = false;
 		}
 	}
@@ -99,50 +93,60 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 	 * Launch the jMeter external program
 	 */
 	public void run() {
-
-
-		Volume scriptVolume = new Volume("/script/centralperf.jmx");
-		Volume jtlVolume = new Volume("/logs/");
-		HostConfig hostConfig = new HostConfig()
-				.withBinds(
-						new Bind(jmxFilePath, scriptVolume),
-						new Bind(resultFile.getParentFile().getAbsolutePath(), jtlVolume)
-				);
-
 		String[] command = new String[]{
 				"-n",
-				"-t","/script/centralperf.jmx",
-				"-l","/logs/" + resultFile.getName(),
+				"-t","/centralperf.jmx",
+				"-l","/logs.csv",
 				"-j","/logs/jmeter.log"
 		};
 
 		// FIXME : Create Image if not existing
 		DockerClient dockerClient = getDockerClient();
 		String containerName = "jmeter_centralperf_" + new Date().getTime();
+		// Create jMeter container
 		CreateContainerResponse container = dockerClient.createContainerCmd("jmeter")
 				.withName(containerName)
-				.withHostConfig(hostConfig)
-				.withVolumes(scriptVolume, jtlVolume)
 				.withCmd((String[]) ArrayUtils.addAll(command, jmeterCliOptions))
 				.exec();
 		this.containerId = container.getId();
 		startTime = System.currentTimeMillis();
+		try {
+			Path tmp = Files.createTempFile("", ".tar");
+			TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(new BufferedOutputStream(Files.newOutputStream(tmp)));
+			tarArchiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+			TarArchiveEntry tarArchiveEntry = (TarArchiveEntry) tarArchiveOutputStream.createArchiveEntry(jmxFile, "centralperf.jmx");
+			tarArchiveEntry.setSize(jmxFile.length());
+			tarArchiveOutputStream.putArchiveEntry(tarArchiveEntry);
+			try (InputStream in = new FileInputStream(jmxFile)) {
+				log.debug("" + IOUtils.copy(in, tarArchiveOutputStream, (int)jmxFile.length()));
+			}
+			tarArchiveOutputStream.flush();
+			tarArchiveOutputStream.closeArchiveEntry();
+			tarArchiveOutputStream.finish();
+			tarArchiveOutputStream.close();
+			dockerClient
+					.copyArchiveToContainerCmd(container.getId())
+					.withTarInputStream(new BufferedInputStream(new FileInputStream(tmp.toFile())))
+					.withRemotePath("/")
+					.exec();
+		} catch (IOException e){
+			e.printStackTrace();
+		}
+
+		// Start container
 		dockerClient.startContainerCmd(containerId).exec();
 
 		// JMeter is launched
 		running = true;
 
 		// Watching for result file change
-		JMeterCSVReader JMeterCSVFileReader = JMeterCSVReader.newReader(this.getResultFile(), runResultService, run);
-
+		JMeterCSVReader reader = new JMeterCSVReader(runResultService, run);
 		LogContainerResultCallback loggingCallback = new LogContainerResultCallback(){
 			@Override
 			public void onNext(Frame item) {
-				log.debug(item.toString());
+				reader.processLine(new String(item.getPayload()).trim());
 			}
 		};
-
-		// this essentially test the since=0 case
 		dockerClient.logContainerCmd(containerId)
 				.withStdErr(true)
 				.withStdOut(true)
@@ -157,10 +161,8 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 		} catch (InterruptedException e) {
 			log.warn("JMeter container run was interrupted before normal end:"+e.getMessage(),e);
 		} finally {
-			//Stop File reader task after end of job process
 			dockerClient.removeContainerCmd(containerId).exec();
 			running = false;
-			JMeterCSVFileReader.cancel();
 			scriptLauncherService.endJob(this);
 		}
 

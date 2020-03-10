@@ -1,4 +1,4 @@
-version: "2"
+version: "2.1"
 
 services:
   
@@ -31,7 +31,9 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ./volumes/es/data:/usr/share/elasticsearch/data   
+      - ./volumes/es/data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl","-s" ,"-f", "http://localhost:9200/_cat/health"]
     
   kibana:
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
@@ -41,24 +43,29 @@ services:
       TELEMETRY_ENABLED: "false"
     ports:
       - "5601:5601"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-f", "http://localhost:5601/login"]
+      retries: 6
     depends_on:
-      - es
+      es:  { condition: service_healthy }
     
   centralperf:
     image: centralperf:${CENTRALPERF_VERSION}
     build:
       context: ../../..
-      dockerfile: ./src/main/docker/centralperf/Dockerfile
+      dockerfile: ./src/main/docker/centralperf/${DEPLOY_CENTRALPERF_FROM}.Dockerfile
       args:
         CENTRALPERF_VERSION: ${CENTRALPERF_VERSION}
     container_name: centralperf-webapp
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # To allow control of jMeter containers in CentralPerf
     ports:
       - "8080:8080"
     depends_on:
-      - db
-      - es
-      - kibana
+      db:  { condition: service_started }
+      es:  { condition: service_healthy }
+      kibana:  { condition: service_healthy }
   
   
