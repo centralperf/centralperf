@@ -13,6 +13,9 @@ if [[ ${ELASTIC_NODE_VOLUME_PATH} == .* ]]; then
 else
   ELASTIC_NODE_VOLUME_ABS_PATH=${ELASTIC_NODE_VOLUME_PATH}
 fi
+if [[ ! -d ${ELASTIC_NODE_VOLUME_PATH} ]]; then
+  mkdir -p ${ELASTIC_NODE_VOLUME_ABS_PATH}
+fi
 chmod g+rwx ${ELASTIC_NODE_VOLUME_ABS_PATH}
 chgrp 0 ${ELASTIC_NODE_VOLUME_ABS_PATH}
 
@@ -24,6 +27,8 @@ else
   echo "CENTRALPERF : No local configuration found."
   echo "CENTRALPERF : Create ${LOCAL_CONF_FILE} file to override default configuration from ${DEFAULT_CONF_FILE}"
 fi
+
+echo "CENTRALPERF : Launch CentralPerf version '${CENTRALPERF_VERSION}'"
 
 cd ${DIR}/../src/main/docker/
 docker-compose up -d --build

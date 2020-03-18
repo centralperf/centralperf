@@ -12,7 +12,9 @@ spring:
 centralperf:
   elastic:
     kibana:
-      internal-url: http://kibana:5601
+      internal:
+        url: http://kibana:5601
+        base-path: /kibana
       public-url: /kibana # Relative URL and context of Traefik Reverse Proxy
 jmeter:
   launcher:

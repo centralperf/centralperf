@@ -53,8 +53,11 @@ public class ElasticSearchService {
 	@Value("${spring.elasticsearch.rest.uris}")
 	private String[] esClusterUris;
 
-	@Value("${centralperf.elastic.kibana.internal-url}")
+	@Value("${centralperf.elastic.kibana.internal.url}")
 	private String kibanaUrl;
+
+	@Value("${centralperf.elastic.kibana.internal.base-path}")
+	private String kibanaBasePath;
 
 	@Resource
 	private BootstrapServiceFiles bootstrapServiceFiles;
@@ -85,7 +88,7 @@ public class ElasticSearchService {
 			esClient = new RestHighLevelClient(RestClient.builder(esHosts.toArray(new HttpHost[0])));
 
 			// Init Kibana client
-			kibanaClient = RestClient.builder(HttpHost.create(kibanaUrl)).build();
+			kibanaClient = RestClient.builder(HttpHost.create(kibanaUrl)).setPathPrefix(kibanaBasePath).build();
 			RequestOptions.Builder optionsBuilder = RequestOptions.DEFAULT.toBuilder();
 			optionsBuilder.addHeader("kbn-xsrf", "true");
 			kibanaClientRequestOptions = optionsBuilder.build();

@@ -41,7 +41,9 @@ centralperf:
   elastic: # Elastic Search / Kibana configuration
     centralperf-index-name: centralperf
     kibana:
-      internal-url: http://127.0.0.1:5601
+      internal:
+        url: http://127.0.0.1:5601
+        base-path: /
       public-url: http://0.0.0.0:5601
     bootstrap:
       templates:
