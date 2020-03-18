@@ -1,6 +1,5 @@
-/build
-/target
-/local_config
 *.iml
+/target
 /out/
+centralperf.config
 /src/main/docker/volumes

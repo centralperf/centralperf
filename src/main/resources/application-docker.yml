@@ -13,6 +13,7 @@ centralperf:
   elastic:
     kibana:
       internal-url: http://kibana:5601
+      public-url: /kibana # Relative URL and context of Traefik Reverse Proxy
 jmeter:
   launcher:
     type: docker_container

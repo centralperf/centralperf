@@ -8,10 +8,22 @@ Central Perf allows you to manage all your jMeter performance tests in a single 
 
 - [Install Docker](https://docs.docker.com/install/)
 - [Install Docker Compose](https://docs.docker.com/compose/install/)
-- Clone this repository and launch the setup script
+- Clone this repository
 ```
 git clone https://github.com/centralperf/centralperf.git
-cd centralperf/scripts
+cd centralperf
+```
+- Create your configuration file in the root of the repo (if necessary). [Default configuration](src/main/docker/.env) will be used instead
+```
+vi centralperf.config
+```
+- Build CentralPerf image
+```
+cd scripts
+./build_jmeter_image.sh
+```
+- Launch Central Perf containers
+```
 ./launch.sh
 ```
 
