@@ -114,7 +114,8 @@ public class JMeterLauncher implements SamplerLauncher{
 				"-Jjmeter.save.saveservice.bytes=true",
 				"-Jjmeter.save.saveservice.thread_counts=true",
 				"-Jjmeter.save.saveservice.sample_count=true",
-				"-Jjmeter.save.saveservice.timestamp_format=ms"
+				"-Jjmeter.save.saveservice.timestamp_format=ms",
+				"-Jjmeter.save.saveservice.subresults=false"
 		};
 
 		SamplerRunJob job = null;

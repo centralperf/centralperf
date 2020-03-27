@@ -31,6 +31,7 @@ services:
       node.name: centralperf
       cluster.name: es-centralperf-cluster
       cluster.initial_master_nodes: centralperf
+      cluster.routing.allocation.disk.threshold_enabled: "false"
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ulimits:
