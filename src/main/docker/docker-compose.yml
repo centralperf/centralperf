@@ -6,6 +6,10 @@ services:
     image: traefik:${TRAEFIK_VERSION}
     container_name: centralperf-traefik
     command: "--api.insecure=true --providers.docker=true --providers.docker.exposedbydefault=false --entrypoints.web.address=:80"
+    environment:
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: "*"
     ports:
       - "${TRAEFIK_PORT}:80"
       - "${TRAEFIK_ADMIN_PORT}:8080"
@@ -76,6 +80,7 @@ services:
     container_name: centralperf-webapp
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      no_proxy: es, kibana
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro" # To allow control of jMeter containers in CentralPerf
     labels:
