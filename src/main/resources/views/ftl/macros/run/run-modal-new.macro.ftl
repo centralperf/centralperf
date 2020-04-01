@@ -16,8 +16,10 @@
 -->
 <#import "/spring.ftl" as spring />
 <#macro main action="new">
-	<form method="post" action="${rc.contextPath}/project/${project.id?c}/run/${action}" class="form-horizontal" ${(action == "import")?string('enctype="multipart/form-data"','')}>
-		<div class="modal fade" id="run-modal-${action}" tabindex="-1" role="dialog" aria-labelledby="run-modal-new" aria-hidden="true">
+	<form method="post"
+		  action="${rc.contextPath}/project/${project.id?c}/run/${action}" ${(action == "import")?string('enctype="multipart/form-data"','')}>
+		<div class="modal fade" id="run-modal-${action}" tabindex="-1" role="dialog" aria-labelledby="run-modal-new"
+			 aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -26,7 +28,7 @@
 					</div>
 					<div class="modal-body">
 						<@spring.bind "newRun.project.id" />
-						<input type="hidden" name="${spring.status.expression}" value="${project.id?c}"/>                						
+						<input type="hidden" name="${spring.status.expression}" value="${project.id?c}"/>
 
 						<div class="form-group">
 							<@spring.bind "newRun.label" />
@@ -34,7 +36,7 @@
 							<@spring.formInput "newRun.label", "class=form-control style=height:30px maxLength=33"/>
 							<@spring.showErrors "<br/>", "cssError"/>
 						</div>
-									
+
 						<div class="form-group">
 							<label for="script">Script</label></td>
 							<select id="${action}_scriptSelect" class="form-control">

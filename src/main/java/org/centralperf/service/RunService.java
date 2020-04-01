@@ -17,12 +17,6 @@
 
 package org.centralperf.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import org.centralperf.helper.CSVHeaderInfo;
 import org.centralperf.model.SampleDataBackendTypeEnum;
 import org.centralperf.model.dao.Run;
@@ -41,92 +35,114 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 /**
  * All services to manage runs : start, end, copy, list....
- * 
+ *
  * @since 1.0
- * 
  */
 @Service
 public class RunService {
 
+	private static final Logger log = LoggerFactory.getLogger(RunService.class);
 	@Value("${centralperf.backend}")
 	private SampleDataBackendTypeEnum sampleDataBackendType;
-	
 	@Resource
 	private RunRepository runRepository;
-
 	@Resource
 	private CSVResultService runResultService;
-	
 	@Resource
 	private ElasticSearchService elasticSearchService;
-	
+
+	@Resource
+	private ScriptVersionRepository scriptVersionRepository;
+
+	@Value("${centralperf.csv.field-separator}")
+	private String csvSeparator;
 	@Resource
 	private ScriptVariableRepository scriptVariableRepository;
 
-    @Resource
-    private ScriptVersionRepository scriptVersionRepository;
-    
-    @Value("${centralperf.csv.field-separator}")
-    private String csvSeparator;
-	
-	private static final Logger log = LoggerFactory.getLogger(RunService.class);
-	
 	/**
-	 * Close the run when the launcher has finished. Set the end date and gets job output logs 
+	 * Close the run when the launcher has finished. Set the end date and gets job output logs
+	 * For Cron-ed runs, do not set the run as finished
+	 *
 	 * @param runId Id of the run to end
-	 * @param job Job associated with current run
+	 * @param job   Job associated with current run
 	 */
-	public void endRun(Long runId, SamplerRunJob job){
+	public void endRun(Long runId, SamplerRunJob job) {
 		Run run = runRepository.findById(runId).orElse(null);
-		if(run != null) {
+		if (run != null) {
 			log.debug("Ending run " + run.getLabel());
 			run.setRunning(false);
-			run.setEndDate(new Date());
+			run.setLastEndDate(new Date());
 			run.setProcessOutput(job.getProcessOutput());
+
+			if (!isCronRun(run)) {
+				run.setFinished(true);
+			}
 			runRepository.save(run);
 		}
 	}
-	
+
+	/**
+	 * Set a run as aborted
+	 *
+	 * @param run run to terminate
+	 */
+	public void abortRun(Run run) {
+		log.debug("Aborting run " + run.getLabel());
+		run.setRunning(false);
+		run.setLastEndDate(new Date());
+		run.setFinished(true);
+		String comment = run.getComment() == null ? "INTERRUPTED BY USER !!!" : "INTERRUPTED BY USER !!!\r\n" + run.getComment();
+		run.setComment(comment);
+		runRepository.save(run);
+	}
+
 	/**
 	 * Create a copy of a run and save it to the persistence layer (to launch it again for example)
+	 *
 	 * @param runId Id of the job to duplicate
 	 */
-	public Run copyRun(Long runId){
+	public Run copyRun(Long runId) {
 		Run run = runRepository.findById(runId).orElse(null);
-		if(run != null){	
+		if (run != null) {
 			Run newRun = new Run();
 			newRun.setLabel(run.getLabel());
 			newRun.setLaunched(false);
 			newRun.setRunning(false);
 			newRun.setScriptVersion(run.getScriptVersion());
 			newRun.setSampleDataBackendType(sampleDataBackendType);
-            newRun.setProject(run.getProject());
-            List<ScriptVariable> scriptVariables = run.getCustomScriptVariables();
-            if(scriptVariables != null && scriptVariables.size() > 0){
-            	List<ScriptVariable> customScriptVariables = new ArrayList<ScriptVariable>();
-	            for(ScriptVariable scriptVariable:run.getCustomScriptVariables()){
-	            	customScriptVariables.add(scriptVariable.clone());
+			newRun.setProject(run.getProject());
+			List<ScriptVariable> scriptVariables = run.getCustomScriptVariables();
+			if (scriptVariables != null && scriptVariables.size() > 0) {
+				List<ScriptVariable> customScriptVariables = new ArrayList<>();
+				for (ScriptVariable scriptVariable : run.getCustomScriptVariables()) {
+					customScriptVariables.add(scriptVariable.clone());
 				}
-	            newRun.setCustomScriptVariables(customScriptVariables);
-            }
+				newRun.setCustomScriptVariables(customScriptVariables);
+			}
 			runRepository.save(newRun);
 			return newRun;
 		} else {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Updates a variable for the run
-	 * @param runId			ID of the run to update
-	 * @param newVariable	variable to insert or update
+	 *
+	 * @param runId       ID of the run to update
+	 * @param newVariable variable to insert or update
 	 */
-	public void updateRunVariable(Long runId, ScriptVariable newVariable){
+	public void updateRunVariable(Long runId, ScriptVariable newVariable) {
 		Run run = runRepository.findById(runId).orElse(null);
 
-		if(run != null) {
+		if (run != null) {
 			// Searching for variable in current run custom variables
 			for (ScriptVariable customVariable : run.getCustomScriptVariables()) {
 				// Already a custom variable with this name => update it
@@ -147,120 +163,143 @@ public class RunService {
 
 	/**
 	 * Return last X runs accross all projects, ordered by startDate desc (newer first)
+	 *
 	 * @return A list of run, limited to X runs
 	 */
-    public List<Run> getLastRuns(){
-        return runRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "startDate"))).getContent();
+	public List<Run> getLastRuns() {
+		return runRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "lastStartDate"))).getContent();
+	}
+
+	/**
+	 * Get current active runs (running)
+	 *
+	 * @return List of active runs
+	 */
+	public List<Run> getActiveRuns() {
+		return runRepository.findByRunning(true);
+	}
+
+	/**
+	 * Get current running Runs
+	 *
+	 * @return List of running runs
+	 */
+	public List<Run> getRunningRuns() {
+		return runRepository.findByRunning(true);
+	}
+
+	/**
+	 * Get current schedule runs (cron or to be launched in future)
+	 *
+	 * @return List of schedule runs
+	 */
+	public List<Run> getScheduleRuns() {
+		return runRepository.findActiveAndScheduledAfter(new Date());
+	}
+
+	/**
+	 * Get a CSV file content and creates the samples from this CSV content
+	 *
+	 * @param run        Run to fullfil with CSV content
+	 * @param csvContent CSV formatted content. Must be formatted according to csv.field_separator property and CSVHeaderInfo.CSV_HEADER_* headers
+	 */
+	public void insertResultsFromCSV(Run run, String csvContent) {
+		runResultService.saveResults(run, csvContent);
+		runRepository.save(run);
+	}
+
+	/**
+	 * Get run result as a string formatted like CSV
+	 *
+	 * @param run Target run
+	 * @return All samples information as CSV format (comma separated)
+	 */
+	public String getResultAsCSV(Run run) {
+		StringBuilder CSVContent = new StringBuilder(
+				CSVHeaderInfo.CSV_HEADER_TIMESTAMP + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_ELAPSED + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_SAMPLENAME + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_STATUS + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_RESPONSECODE + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_ASSERTRESULT + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_SIZEINBYTES + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_GROUPTHREADS + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_ALLTHREADS + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_LATENCY + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_SAMPLEID + csvSeparator +
+						CSVHeaderInfo.CSV_HEADER_RUNID + "\r\n");
+		for (Sample sample : run.getSamples()) {
+			// TODO : Use String.format
+			CSVContent
+					.append(sample.getTimestamp().getTime())
+					.append(csvSeparator).append(sample.getElapsed())
+					.append(csvSeparator).append(sample.getSampleName())
+					.append(csvSeparator).append(sample.getStatus())
+					.append(csvSeparator).append(sample.getReturnCode())
+					.append(csvSeparator).append(sample.isAssertResult())
+					.append(csvSeparator).append(sample.getSizeInOctet())
+					.append(csvSeparator).append(sample.getGrpThreads())
+					.append(csvSeparator).append(sample.getAllThreads())
+					.append(csvSeparator).append(sample.getLatency())
+					.append(csvSeparator).append(sample.getId())
+					.append(csvSeparator).append(run.getId()).append("\r\n");
+		}
+		return CSVContent.toString();
+	}
+
+	/**
+	 * Import a run from CSV content
+	 */
+	public void importRun(Run run, String CSVContent) {
+
+		// Import CSV
+		insertResultsFromCSV(run, CSVContent);
+
+		// Set script version
+		scriptVersionRepository.findById(run.getId()).ifPresent(
+				scriptVersion -> {
+					run.setScriptVersion(scriptVersion);
+
+					// Update the run to mark it as launched
+					// Set start date for imported CSV files
+					run.setLastStartDate(run.getSamples().get(0).getTimestamp());
+					run.setLastEndDate(run.getSamples().get(run.getSamples().size() - 1).getTimestamp());
+					run.setLaunched(true);
+					run.setProcessOutput("Results uploaded by user on " + new Date());
+					run.setSampleDataBackendType(SampleDataBackendTypeEnum.DEFAULT);
+
+					// Insert into persistence
+					runRepository.save(run);
+				});
     }
 
-    /**
-     * Get current active runs (running)
-     * @return	List of active runs
-     */
-    public List<Run> getActiveRuns(){
-        return runRepository.findByRunning(true);
-    }
-    
-    /**
-     * Get a CSV file content and creates the samples from this CSV content
-     * @param run Run to fullfil with CSV content
-     * @param csvContent	CSV formatted content. Must be formatted according to csv.field_separator property and CSVHeaderInfo.CSV_HEADER_* headers
-     */
-    public void insertResultsFromCSV(Run run, String csvContent){
-        runResultService.saveResults(run, csvContent);
-        runRepository.save(run);
-    }
-
-    /**
-     * Get run result as a string formatted like CSV 
-     * @param run	Target run
-     * @return	All samples information as CSV format (comma separated)
-     */
-    public String getResultAsCSV(Run run){
-    	 StringBuilder CSVContent=new StringBuilder(
-    			 CSVHeaderInfo.CSV_HEADER_TIMESTAMP+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_ELAPSED+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_SAMPLENAME+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_STATUS+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_RESPONSECODE+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_ASSERTRESULT+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_SIZEINBYTES+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_GROUPTHREADS+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_ALLTHREADS+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_LATENCY+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_SAMPLEID+csvSeparator+
-    			 CSVHeaderInfo.CSV_HEADER_RUNID+"\r\n");
-         for (Sample sample : run.getSamples()) {
- 			CSVContent.append(""+
- 					sample.getTimestamp().getTime()+csvSeparator+
- 					sample.getElapsed()+csvSeparator+
- 					sample.getSampleName()+csvSeparator+
- 					sample.getStatus()+csvSeparator+ 
- 					sample.getReturnCode()+csvSeparator+ 
- 					sample.isAssertResult()+csvSeparator+ 
- 					sample.getSizeInOctet()+csvSeparator+ 
- 					sample.getGrpThreads()+csvSeparator+
- 					sample.getAllThreads()+csvSeparator+
- 					sample.getLatency()+csvSeparator+
- 					sample.getId()+csvSeparator+
- 					run.getId()+"\r\n");
- 		}    	
-        return CSVContent.toString();
-    }
-    
-    /**
-     * Import a run from CSV content
-     * @param run
-     * @param CSVContent
-     */
-    public void importRun(Run run, String CSVContent){
-
-        // Import CSV
-        insertResultsFromCSV(run, CSVContent);
-
-        // Set script version
-       scriptVersionRepository.findById(run.getId()).ifPresent(
-       		scriptVersion -> {
-				run.setScriptVersion(scriptVersion);
-
-				// Update the run to mark it as launched
-				// Set start date for imported CSV files
-				run.setStartDate(run.getSamples().get(0).getTimestamp());
-				run.setEndDate(run.getSamples().get(run.getSamples().size() - 1).getTimestamp());
-				run.setLaunched(true);
-				run.setProcessOutput("Results uploaded by user on " + new Date());
-				run.setSampleDataBackendType(SampleDataBackendTypeEnum.DEFAULT);
-
-				// Insert into persistence
-				runRepository.save(run);
-			});
-    }
-    
-    /**
-     * Create a new Run based on pre-populated bean
-     * @param run
-     * @return persisted run
-     */
-    @Transactional
-    public Run createNewRun(Run run){
-        ScriptVersion scriptVersion = scriptVersionRepository.findById(run.getScriptVersion().getId()).orElse(null);
-        if(scriptVersion != null) {
+	/**
+	 * Create a new Run based on pre-populated bean
+	 *
+	 * @param run
+	 * @return persisted run
+	 */
+	@Transactional
+	public Run createNewRun(Run run) {
+		ScriptVersion scriptVersion = scriptVersionRepository.findById(run.getScriptVersion().getId()).orElse(null);
+		if (scriptVersion != null) {
 			run.setScriptVersion(scriptVersion);
 			run.setSampleDataBackendType(sampleDataBackendType);
 			return runRepository.save(run);
 		} else {
-        	return null;
+			return null;
 		}
-    }
-    
-    /**
-     * Remove run and any associated data (from ES for example)
-     * @param runId
-     */
-    @Transactional
-    public void deleteRun(Long runId){
-    	Run run = runRepository.findById(runId).orElse(null);
-    	if(run != null) {
+	}
+
+	/**
+	 * Remove run and any associated data (from ES for example)
+	 *
+	 * @param runId
+	 */
+	@Transactional
+	public void deleteRun(Long runId) {
+		Run run = runRepository.findById(runId).orElse(null);
+		if (run != null) {
 			runRepository.deleteById(runId);
 
 			// Remove ES documents if necessary
@@ -268,5 +307,13 @@ public class RunService {
 				elasticSearchService.deleteRun(run);
 			}
 		}
-    }
+	}
+
+	public boolean isDelayedRun(Run run) {
+		return run.getScheduledDate() != null || run.getScheduleCronExpression() != null;
+	}
+
+	public boolean isCronRun(Run run) {
+		return run.getScheduleCronExpression() != null;
+	}
 }

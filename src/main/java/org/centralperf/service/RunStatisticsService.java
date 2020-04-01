@@ -17,30 +17,24 @@
 
 package org.centralperf.service;
 
-import java.util.Iterator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Resource;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.centralperf.model.dao.Run;
-import org.centralperf.model.graph.ErrorRateGraph;
-import org.centralperf.model.graph.ResponseSizeGraph;
-import org.centralperf.model.graph.ResponseTimeGraph;
-import org.centralperf.model.graph.RunStats;
-import org.centralperf.model.graph.SummaryGraph;
+import org.centralperf.model.graph.*;
 import org.centralperf.repository.RunRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import javax.annotation.Resource;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import java.util.Iterator;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is singleton service to collect run data and graphs.<br>
@@ -92,69 +86,72 @@ public class RunStatisticsService {
 				int nbSeconds=q.getResultList().size();
 				log.debug("Check for scaling [seconds:"+nbSeconds+" - Fisrt scaling after: "+limitOfFisrtScaling+" s - second scaling after: "+limitOfSecondScaling+" s");
 				// First limit : a line per second, or less
-				if(nbSeconds<limitOfFisrtScaling){
+				if (nbSeconds < limitOfFisrtScaling) {
 					q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'), round(avg(elapsed),0), count(*) from Sample s "
-							+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
+							+ "where run_fk='" + runId + "' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS')");
 				}
 				// Second limit : a line each 10 seconds
-				else if(nbSeconds < limitOfSecondScaling) {
+				else if (nbSeconds < limitOfSecondScaling) {
 					q = em.createQuery("select concat(substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19),'0') , round(avg(elapsed),0), round(count(*)/10.0,2), substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) from Sample s "
-							+ "where run_fk='"+runId+"'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");
+							+ "where run_fk='" + runId + "'group by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19) order by substring(to_char(timestamp, 'DD-MM-YYYY HH24:MI:SS'),0,19)");
 				}
 				// greater than second limit : a line
 				else {
 					q = em.createQuery("select to_char(timestamp, 'DD-MM-YYYY HH24:MI:00'), round(avg(elapsed),0), round(count(*)/60.0,2) from Sample s "
-							+ "where run_fk='"+runId+"' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");
+							+ "where run_fk='" + runId + "' group by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00') order by to_char(timestamp, 'DD-MM-YYYY HH24:MI:00')");
 				}
-				return new SummaryGraph(q.getResultList().iterator(), run.getStartDate());
+				return new SummaryGraph(q.getResultList().iterator(), run.getLastStartDate());
 			} else {
 				return null;
 			}
 	    }
 	};
 	private CacheLoader<Long, ResponseTimeGraph> responseTimeGraphLoader = new CacheLoader<Long, ResponseTimeGraph>() {
-	    @SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked")
 		@Override
-	    public ResponseTimeGraph load(Long runId) throws Exception {
-	    	//Load stats from database
-	    	log.debug("Loading ResponseTimeGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("SELECT  sampleName, round(avg(elapsed),0), round(avg(latency),0) from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
-	    	return new ResponseTimeGraph(q.getResultList().iterator());
-	    }
+		public ResponseTimeGraph load(Long runId) {
+			//Load stats from database
+			log.debug("Loading ResponseTimeGraph datas from database (not in cache)");
+			Query q = em.createQuery("SELECT  sampleName, round(avg(elapsed),0), round(avg(latency),0) from Sample s where run_fk='" + runId + "'   GROUP BY sampleName order by sampleName");
+			return new ResponseTimeGraph(q.getResultList().iterator());
+		}
 	};
 	private CacheLoader<Long, ResponseSizeGraph> responseSizeGraphLoader = new CacheLoader<Long, ResponseSizeGraph>() {
-	    @SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked")
 		@Override
-	    public ResponseSizeGraph load(Long runId) throws Exception {
-	    	//Load stats from database
-	    	log.debug("Loading ResponseSizeGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("SELECT  sampleName, round(avg(sizeInOctet),0)  from Sample s where run_fk='"+runId+"'   GROUP BY sampleName order by sampleName");
-	    	return new ResponseSizeGraph(q.getResultList().iterator());
-	    }
+		public ResponseSizeGraph load(Long runId) {
+			//Load stats from database
+			log.debug("Loading ResponseSizeGraph datas from database (not in cache)");
+			Query q = em.createQuery("SELECT  sampleName, round(avg(sizeInOctet),0)  from Sample s where run_fk='" + runId + "'   GROUP BY sampleName order by sampleName");
+			return new ResponseSizeGraph(q.getResultList().iterator());
+		}
 	};
 	private CacheLoader<Long, ErrorRateGraph> errorRateGraphLoader = new CacheLoader<Long, ErrorRateGraph>() {
-	    @SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked")
 		@Override
-	    public ErrorRateGraph load(Long runId) throws Exception {
-	    	//Load stats from database
-	    	log.debug("Loading ErrorRateGraph datas from database (not in cache)");
-	    	Query q = em.createQuery("SELECT sampleName, count(CASE WHEN assertResult IS true THEN 1 ELSE null END), count(CASE WHEN assertResult IS TRUE THEN null ELSE true END) from Sample s where run_fk='"+runId+"' GROUP BY sampleName  order by sampleName");
-	    	return new ErrorRateGraph(q.getResultList().iterator());
-	    }
+		public ErrorRateGraph load(Long runId) {
+			//Load stats from database
+			log.debug("Loading ErrorRateGraph datas from database (not in cache)");
+			Query q = em.createQuery("SELECT sampleName, count(CASE WHEN assertResult IS true THEN 1 ELSE null END), count(CASE WHEN assertResult IS TRUE THEN null ELSE true END) from Sample s where run_fk='" + runId + "' GROUP BY sampleName  order by sampleName");
+			return new ErrorRateGraph(q.getResultList().iterator());
+		}
 	};
 	private CacheLoader<Long, RunStats> runStatsLoader = new CacheLoader<Long, RunStats>() {
-	    @Override
-	    public RunStats load(Long runId) throws Exception {
-	    	//Load stats from database
-	    	log.debug("Loading RunStat datas from database (not in cache)");
-	    	Query q = em.createQuery("SELECT count(*), sum(sizeInOctet), min(timestamp), max(timestamp), sum(elapsed)/count(*), sum(latency)/count(*), max(allThreads),sum(case when assertResult=true then 0 else 1 end) from Sample s where run_fk='"+runId+"'");
-	    	@SuppressWarnings("rawtypes")
-			Iterator results =q.getResultList().iterator();
-	    	RunStats runStats=null;
-	    	String runOutput = null;
-	    	boolean running = false;
-	    	Run run = runRepository.findById(runId).orElse(null);
-	    	if(run!=null){runOutput=run.getProcessOutput(); running=run.isRunning();}
+		@Override
+		public RunStats load(Long runId) {
+			//Load stats from database
+			log.debug("Loading RunStat datas from database (not in cache)");
+			Query q = em.createQuery("SELECT count(*), sum(sizeInOctet), min(timestamp), max(timestamp), sum(elapsed)/count(*), sum(latency)/count(*), max(allThreads),sum(case when assertResult=true then 0 else 1 end) from Sample s where run_fk='" + runId + "'");
+			@SuppressWarnings("rawtypes")
+			Iterator results = q.getResultList().iterator();
+			RunStats runStats = null;
+			String runOutput = null;
+			boolean running = false;
+			Run run = runRepository.findById(runId).orElse(null);
+			if (run != null) {
+				runOutput = run.getProcessOutput();
+				running = run.isRunning();
+			}
 	    	if(results.hasNext()){runStats = new RunStats((Object[]) results.next(), runOutput,running);}
 	    	return runStats;
 	    }

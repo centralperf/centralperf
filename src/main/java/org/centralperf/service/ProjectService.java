@@ -17,20 +17,19 @@
 
 package org.centralperf.service;
 
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.List;
+
 /**
  * Manage operations on projects
- * @since 1.0
  *
+ * @since 1.0
  */
 @Service
 public class ProjectService {
@@ -54,8 +53,8 @@ public class ProjectService {
 	 * @param project
 	 * @return A list of date reverse ordered runs for this project 
 	 */
-    public List<Run> getLastRuns(Project project){
-        return runRepository.findByProjectIdOrderByStartDateDesc(project.getId());
-    }
+    public List<Run> getLastRuns(Project project) {
+		return runRepository.findByProjectIdOrderByLastStartDateDesc(project.getId());
+	}
 	
 }

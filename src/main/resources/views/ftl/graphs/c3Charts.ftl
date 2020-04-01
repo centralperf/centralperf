@@ -18,37 +18,38 @@
 <script langage="javascript">
 
 	function refreshStats() {
-		$.getJSON("${rc.contextPath}/api/getRunStatsJSON/${run.id?c}",'', function(res){
-			if(res!=null){
+		$.getJSON("${rc.contextPath}/api/getRunStatsJSON/${run.id?c}", '', function (res) {
+			if (res != null) {
 				$("#runProcessOuput").html(res.runOutput);
 				$("#summaryCurrentUsers").html(res.currentUsers);
 				$("#summaryNumberOfSamples").html(res.numberOfSample);
-				numberOfSample=res.numberOfSample;
+				numberOfSample = res.numberOfSample;
 				$("#summaryMaxUsers").html(res.maxUsers);
 				$("#summaryCurrentBandwith").html(res.currentBandwithWithUnit);
-				$("#summaryTotalBandwith").html(res.totalBandwithWithUnit);             
+				$("#summaryTotalBandwith").html(res.totalBandwithWithUnit);
 				$("#summaryAverageResponseTime").html(res.averageResponseTime);
 				$("#summaryAverageLatency").html(res.averageLatency);
-				$("#summaryRequestPerSeconds").html(Math.round(res.numberOfSample / res.duration * 100000)/100);
+				$("#summaryRequestPerSeconds").html(Math.round(res.numberOfSample / res.duration * 100000) / 100);
 				$("#summaryErrorRate").html(res.errorRate + "%");
 				$("#summaryLastSampleDate").html(res.lastSampleDate);
-				$("#summaryLaunchedDate").html("${run.startDate?date?string.short}");
-                $("#summaryLaunchedTime").html("${run.startDate?time}");
-                <#if !run.running>
-                	$("#summaryDuration").text(prettyDuration(res.duration));
-                <#else>
-					if(res.running == false){location.reload();}
-                </#if>				
+				$("#summaryLaunchedDate").html("${run.lastStartDate?date?string.short}");
+				$("#summaryLaunchedTime").html("${run.lastStartDate?time}");
+				<#if !run.running>
+				$("#summaryDuration").text(prettyDuration(res.duration));
+				<#else>
+				if (res.running == false) {
+					location.reload();
+				}
+				</#if>
 			}
 		});
 	}
 
-	function generateGraph(chartId)
-	{
+	function generateGraph(chartId) {
 		var chart;
-		switch(chartId){
-				case "SUM":
-					chart=c3.generate({
+		switch (chartId) {
+			case "SUM":
+				chart = c3.generate({
 						bindto: '#summaryChart',
 		    			data: {
 		    				x: 'x',

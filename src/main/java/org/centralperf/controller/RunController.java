@@ -17,12 +17,8 @@
 
 package org.centralperf.controller;
 
-import java.io.IOException;
-import java.util.Date;
-
-import javax.annotation.Resource;
-import javax.validation.Valid;
-
+import net.redhogs.cronparser.CronExpressionDescriptor;
+import net.redhogs.cronparser.Options;
 import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.exception.ConfigurationException;
 import org.centralperf.model.RunDetailGraphTypesEnum;
@@ -32,7 +28,6 @@ import org.centralperf.model.dao.ScriptVariable;
 import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
-import org.centralperf.repository.ScriptVersionRepository;
 import org.centralperf.sampler.api.SamplerRunJob;
 import org.centralperf.service.RunService;
 import org.centralperf.service.ScriptLauncherService;
@@ -40,19 +35,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.annotation.Resource;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  * The Run controller manage user interactions with the runs
@@ -168,12 +168,12 @@ public class RunController extends BaseController{
 	 */
     @RequestMapping("/run")
     public String showRuns(Model model) {
-    	log.debug("Displaying runs");
-    	Sort runSort = Sort.by(Sort.Direction.DESC, "startDate");
-    	model.addAttribute("runs",runRepository.findAll(runSort));
-    	Sort scriptSort = Sort.by(Sort.DEFAULT_DIRECTION, "label");
-    	model.addAttribute("scripts",scriptRepository.findAll(scriptSort));
-    	model.addAttribute("newRun",new Run());
+        log.debug("Displaying runs");
+        Sort runSort = Sort.by(Sort.Direction.DESC, "lastStartDate");
+        model.addAttribute("runs", runRepository.findAll(runSort));
+        Sort scriptSort = Sort.by(Sort.DEFAULT_DIRECTION, "label");
+        model.addAttribute("scripts", scriptRepository.findAll(scriptSort));
+        model.addAttribute("newRun", new Run());
         return "runs";
     }
     
@@ -188,19 +188,47 @@ public class RunController extends BaseController{
             @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId) throws ControllerValidationException, ConfigurationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
-    	// If the run has already been launched, then create a new run and
-    	if(run.isLaunched()){
-    		run = runService.copyRun(runId);
-    	}
-    	scriptLauncherService.launchRun(run);
-    	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
+        // If the run has already been launched, then create a new run and
+        if (run.isLaunched()) {
+            run = runService.copyRun(runId);
+        }
+        scriptLauncherService.launchRun(run);
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
-    
+
+    /**
+     * Schedule run (delay or cron)
+     *
+     * @param projectId              ID of the project (from URI)
+     * @param runId                  ID of the run (from URI)
+     * @param scheduleCronExpression Quartz-based schedule expression
+     * @param scheduledDate          ISO-8601 formatted datetime
+     * @return Redirection to the Run detail page
+     */
+    @RequestMapping(value = "/project/{projectId}/run/{runId}/schedule", method = RequestMethod.POST)
+    public String scheduleRun(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("runId") Long runId,
+            @RequestParam(value = "scheduledDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime scheduledDate, // 1976-08-11T06:00:00+0100 for example
+            @RequestParam(value = "scheduleCronExpression", required = false) String scheduleCronExpression
+    ) throws ControllerValidationException, ConfigurationException {
+        Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
+        if (!StringUtils.isEmpty(scheduledDate)) { // TODO : validate date format
+            run.setScheduledDate(Date.from(scheduledDate.atZone(ZoneId.systemDefault()).toInstant()));
+        } else if (!StringUtils.isEmpty(scheduleCronExpression)) { // TODO : validate CRON expression
+            run.setScheduleCronExpression(scheduleCronExpression);
+        }
+        runRepository.save(run);
+        scriptLauncherService.launchRun(run);
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
+    }
+
     /**
      * Stop (abort) a running run
-     * @param projectId	ID of the project (from URI)
-     * @param runId	ID of the run (from URI)
-     * @return	Redirection to the Run detail page once the run has been stopped
+     *
+     * @param projectId ID of the project (from URI)
+     * @param runId     ID of the run (from URI)
+     * @return Redirection to the Run detail page once the run has been stopped
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/stop", method = RequestMethod.GET)
     public String stopRun(
@@ -208,13 +236,10 @@ public class RunController extends BaseController{
             @PathVariable("runId") Long runId) throws ControllerValidationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
         // If the run has already been launched, then create a new run and
-    	if(run.isLaunched()){
-    		scriptLauncherService.stopRun(run);
-    		String temp=(run.getComment()==null)?"INTERRUPTED BY USER !!!":"INTERRUPTED BY USER !!!\r\n"+run.getComment();
-    		run.setComment(temp);
-    		runRepository.save(run);
-    	}
-    	return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
+        if (run.isLaunched()) {
+            scriptLauncherService.abortRun(run);
+        }
+        return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 
     /**
@@ -304,13 +329,15 @@ public class RunController extends BaseController{
             @PathVariable("ts") Long ts,
             Model model) throws ControllerValidationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
-    	long duration = 0;
-    	long lastTime=(new Date()).getTime();
-    	if(run!=null && run.isLaunched()){
-    		if(!run.isRunning()){lastTime=run.getEndDate().getTime();}
-    		duration=lastTime-run.getStartDate().getTime();	
-    	}
-    	return ts-duration;
+        long duration = 0;
+        long lastTime = (new Date()).getTime();
+        if (run != null && run.isLaunched()) {
+            if (!run.isRunning()) {
+                lastTime = run.getLastEndDate().getTime();
+            }
+            duration = lastTime - run.getLastStartDate().getTime();
+        }
+        return ts - duration;
     }
     
     
@@ -382,20 +409,20 @@ public class RunController extends BaseController{
                             ) throws ControllerValidationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
         String valueToReturn = label;
-        if(label != null){
-        	run.setLabel(label);
+        if (label != null) {
+            run.setLabel(label);
         }
-        else if(comment != null){
-        	run.setComment(comment);
-        	valueToReturn = comment;
+        if (comment != null) {
+            run.setComment(comment);
+            valueToReturn = comment;
         }
-        
+
         // Validate the data
         validateBean(run);
-        
+
         runRepository.save(run);
         return valueToReturn;
-    }       
+    }
 
     /**
      * Set model info depending on run state
@@ -404,8 +431,18 @@ public class RunController extends BaseController{
      */
     private void populateModelWithRunInfo(Long runId, Model model) throws ControllerValidationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
-    	SamplerRunJob job = scriptLauncherService.getJob(run.getId());
-    	model.addAttribute("run", run);
-    	model.addAttribute("job", job);
+        SamplerRunJob job = scriptLauncherService.getJob(run.getId());
+        model.addAttribute("run", run);
+        model.addAttribute("job", job);
+        if (run.getScheduleCronExpression() != null) {
+            CronSequenceGenerator cronTrigger = new CronSequenceGenerator(run.getScheduleCronExpression());
+            Date next = cronTrigger.next(new Date());
+            model.addAttribute("nextStartDate", next);
+            try {
+                model.addAttribute("cronExpressionReadable", CronExpressionDescriptor.getDescription(run.getScheduleCronExpression(), Options.twentyFourHour()));
+            } catch (ParseException e) {
+                model.addAttribute("cronExpressionReadable", "Unable to parse cron expression : " + run.getScheduleCronExpression());
+            }
+        }
     }
 }

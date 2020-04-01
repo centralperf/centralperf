@@ -52,6 +52,12 @@ public class BootstrapService implements InitializingBean {
     private BootstrapServiceFiles bootstrapServiceFiles;
 
     @Resource
+    private RunService runService;
+
+    @Resource
+    private ScriptLauncherService scriptLauncherService;
+
+    @Resource
     private RunRepository runRepository;
 
     private static final Logger log = LoggerFactory.getLogger(BootstrapService.class);
@@ -63,8 +69,7 @@ public class BootstrapService implements InitializingBean {
      * @return true if already initialized, false otherwise
      */
     public boolean isAlreadyInitialized() {
-        Boolean initialized = Boolean.parseBoolean(configurationService.getConfigurationValue(Configuration.INITIALIZED));
-        return initialized != null ? initialized : false;
+        return Boolean.parseBoolean(configurationService.getConfigurationValue(Configuration.INITIALIZED));
     }
 
     public void setInitialized() {
@@ -97,27 +102,39 @@ public class BootstrapService implements InitializingBean {
      * These runs should not be running on startup
      */
     private void fixIncompleteRuns() {
-        List<Run> incompleteRuns = runRepository.findByRunning(true);
-        for (Run incompleteRun : incompleteRuns) {
+        List<Run> incompleteRuns = runService.getRunningRuns();
+        log.info("Fixing incomplete runs : {} incomplete runs found", incompleteRuns.size());
+        incompleteRuns.forEach(incompleteRun -> {
             incompleteRun.setRunning(false);
             incompleteRun.setComment(
                     (incompleteRun.getComment() != null ? incompleteRun.getComment() : "") +
                             "\r\n*** System message : this run didn't complete normally *** ");
             runRepository.save(incompleteRun);
-        }
+        });
+    }
+
+    /**
+     * Relaunch scheduled runs
+     */
+    private void resumeScheduleRuns() {
+        List<Run> scheduledRuns = runService.getScheduleRuns();
+        log.info("Resuming scheduled runs : {} scheduled runs to resume", scheduledRuns.size());
+        scheduledRuns.forEach(run -> {
+            scriptLauncherService.launchSchedule(run);
+            log.info("Scheduled run resumed : ID='{}', Label='{}'", run.getId(), run.getLabel());
+        });
     }
 
     /**
      * Launched after container started
-     *
-     * @throws Exception
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         log.debug("Launch bootstrap actions");
 
-        log.debug("fix uncomplete runs");
         fixIncompleteRuns();
+
+        resumeScheduleRuns();
     }
 
 }

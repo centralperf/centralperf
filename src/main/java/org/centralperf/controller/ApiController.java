@@ -17,12 +17,7 @@
 
 package org.centralperf.controller;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-
+import freemarker.ext.beans.BeansWrapper;
 import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.dao.Run;
@@ -46,7 +41,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import freemarker.ext.beans.BeansWrapper;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.ExecutionException;
 
 /** 
  * The API controller manage the CP API (REST/CSV/Excel/HTML...) output
@@ -71,97 +68,102 @@ public class ApiController {
     private ApplicationContext applicationContext; 	
 	
 	private static final Logger log = LoggerFactory.getLogger(ApiController.class);
-	
+
 	/**
 	 * export summary chart csv.
-	 * @param runId	ID of the run (from URI)
-	 * @param model	Model prepared for the new project form view
+	 *
+	 * @param runId ID of the run (from URI)
+	 * @param model Model prepared for the new project form view
 	 * @return CSV with Response Time and concurrent requests datas
-	 * @throws IOException 
 	 */
 	@RequestMapping(value = "/api/getSumChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getSumChartCSV(@PathVariable("runId") Long runId,Model model,HttpServletResponse response) throws IOException {
-		String csv="";
-		try {csv = runStatService.getSummaryGraph(runId);} 
-		catch (ExecutionException ee) {
-			log.error("CSV data could not be retrieve from cache:"+ee.getMessage());
+	public String getSumChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+		String csv = "";
+		try {
+			csv = runStatService.getSummaryGraph(runId);
+		} catch (ExecutionException ee) {
+			log.error("CSV data could not be retrieve from cache:" + ee.getMessage());
 		}
 		return csv;
 	}
-	
+
 	/**
 	 * export csv with average response time of each sample.
-	 * @param runId	ID of the run (from URI)
-	 * @param model	Model prepared for the new project form view
+	 *
+	 * @param runId ID of the run (from URI)
+	 * @param model Model prepared for the new project form view
 	 * @return CSV with average Response Time
-	 * @throws IOException 
 	 */
 	@RequestMapping(value = "/api/getRTChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getRTChartCSV(@PathVariable("runId") Long runId,Model model,HttpServletResponse response) throws IOException {
-		String csv="";
-		try {csv = runStatService.getResponseTimeGraph(runId);} 
-		catch (ExecutionException ee) {
-			log.error("CSV data could not be retrieve from cache:"+ee.getMessage());
+	public String getRTChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+		String csv = "";
+		try {
+			csv = runStatService.getResponseTimeGraph(runId);
+		} catch (ExecutionException ee) {
+			log.error("CSV data could not be retrieve from cache:" + ee.getMessage());
 		}
 		return csv;
 	}
-	
+
 	/**
 	 * export csv with average response size of each sample.
-	 * @param runId	ID of the run (from URI)
-	 * @param model	Model prepared for the new project form view
+	 *
+	 * @param runId ID of the run (from URI)
+	 * @param model Model prepared for the new project form view
 	 * @return CSV with average Response size
-	 * @throws IOException 
 	 */
 	@RequestMapping(value = "/api/getRSChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getRSChartCSV(@PathVariable("runId") Long runId,Model model,HttpServletResponse response) throws IOException {
-		String csv="";
-		try {csv = runStatService.getResponseSizeGraph(runId);} 
-		catch (ExecutionException ee) {
-			log.error("CSV data could not be retrieve from cache:"+ee.getMessage());
+	public String getRSChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+		String csv = "";
+		try {
+			csv = runStatService.getResponseSizeGraph(runId);
+		} catch (ExecutionException ee) {
+			log.error("CSV data could not be retrieve from cache:" + ee.getMessage());
 		}
 		return csv;
 	}
-	
-	
+
+
 	/**
 	 * export csv with average response size of each sample.
-	 * @param runId	ID of the run (from URI)
-	 * @param model	Model prepared for the new project form view
+	 *
+	 * @param runId ID of the run (from URI)
+	 * @param model Model prepared for the new project form view
 	 * @return CSV with average Response size
-	 * @throws IOException 
 	 */
 	@RequestMapping(value = "/api/getERChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getERChartCSV(@PathVariable("runId") Long runId,Model model,HttpServletResponse response) throws IOException {
-		String csv="";
-		try {csv = runStatService.getErrorRateGraph(runId);} 
-		catch (ExecutionException ee) {
-			log.error("CSV data could not be retrieve from cache:"+ee.getMessage());
+	public String getERChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+		String csv = "";
+		try {
+			csv = runStatService.getErrorRateGraph(runId);
+		} catch (ExecutionException ee) {
+			log.error("CSV data could not be retrieve from cache:" + ee.getMessage());
 		}
 		return csv;
 	}
-	
+
 	/**
-	 * List run data statistics as JSON 
-	 * @param runId	ID of the run (from URI)
-	 * @param model
-	 * @return JSON run statistics 
+	 * List run data statistics as JSON
+	 *
+	 * @param runId ID of the run (from URI)
+	 * @return JSON run statistics
 	 */
-	@RequestMapping(value ="/api/getRunStatsJSON/{runId}", method=RequestMethod.GET)  
-	@ResponseBody 
-	public RunStats getRunStatsJSON(@PathVariable("runId") Long runId,Model model){
-		RunStats temp=null;
-		try {temp=runStatService.getRunStats(runId);}
-		catch (ExecutionException ee) {
-				log.error("JSON data could not be retrieve from cache:"+ee.getMessage());
+	@RequestMapping(value = "/api/getRunStatsJSON/{runId}", method = RequestMethod.GET)
+	@ResponseBody
+	public RunStats getRunStatsJSON(@PathVariable("runId") Long runId) {
+		RunStats temp = null;
+		try {
+			temp = runStatService.getRunStats(runId);
+		} catch (ExecutionException ee) {
+			log.error("JSON data could not be retrieve from cache:"+ee.getMessage());
 		}
 		return temp;
 	}
-    
+
     /**
      * Download results from a RUN as a file (CSV or other)
      * @param runId	ID of the run (from URI)
@@ -241,11 +243,11 @@ public class ApiController {
      */
     @RequestMapping(value={"/api/run/{runId}/status"}, method = RequestMethod.GET)
     public @ResponseBody RunStatus getRunStatus(@PathVariable("runId") Long runId, Model model) throws ControllerValidationException {
-    	Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
-    	 RunStatus runStatus = new RunStatus();
-    	 runStatus.setRunId(run.getId());
-    	 runStatus.setRunning(run.isRunning());
-    	 runStatus.setStartDate(run.getStartDate());
-    	 return runStatus;
-    }    
+		Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
+		RunStatus runStatus = new RunStatus();
+		runStatus.setRunId(run.getId());
+		runStatus.setRunning(run.isRunning());
+		runStatus.setStartDate(run.getLastStartDate());
+		return runStatus;
+	}
 }

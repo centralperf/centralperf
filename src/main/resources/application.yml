@@ -100,6 +100,9 @@ spring:
   freemarker:
     settings:
       template_update_delay: 0
+  devtools:
+    restart:
+      additional-exclude: views/**
 logging:
   level:
     com.github.dockerjava: info

@@ -162,12 +162,11 @@
 			<artifactId>opencsv</artifactId>
 			<version>2.0</version>
 		</dependency>
-		<!--
 		<dependency>
-			<groupId>aopalliance</groupId>
-			<artifactId>aopalliance</artifactId>
-			<version>1.0</version>
-		</dependency>-->
+			<groupId>net.redhogs.cronparser</groupId>
+			<artifactId>cron-parser-spring</artifactId>
+			<version>3.5</version>
+		</dependency>
 
 		<!-- POI -->
 		<dependency>

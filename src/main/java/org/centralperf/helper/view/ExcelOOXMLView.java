@@ -17,21 +17,8 @@
 
 package org.centralperf.helper.view;
 
-import java.io.OutputStream;
-import java.util.Date;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.poi.hssf.util.AreaReference;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.Name;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -41,6 +28,12 @@ import org.centralperf.model.dao.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.util.Date;
+import java.util.Map;
  
 /**
  * This kind of view allows to generate Office OpenXML spreadsheets with <a href="http://poi.apache.org/">Apache POI</a><br/>
@@ -72,24 +65,24 @@ public class ExcelOOXMLView extends AbstractPOIExcelView {
     	 // Set the headers
         response.setHeader("Content-Type", "application/octet-stream");
         response.setHeader("Content-Disposition", "attachment; filename=central_perf_result.xlsx");
-    	
+
         // get data model which is passed by the Spring container
         Run run = (Run) model.get("run");
-        
+
         // Set run summary informations
         setCellValueByName(PROJECT_NAME_CELL_NAME, run.getProject().getName(), workbook);
         setCellValueByName(RUN_LABEL_CELL_NAME, run.getLabel(), workbook);
         setCellValueByName(RUN_DESCRIPTION_CELL_NAME, run.getComment(), workbook);
-        setCellValueByName(START_DATE_CELL_NAME, run.getStartDate().toString(), workbook);
-        setCellValueByName(START_DATE_CELL_NAME, run.getStartDate().toString(), workbook);
+        setCellValueByName(START_DATE_CELL_NAME, run.getLastStartDate().toString(), workbook);
+        setCellValueByName(START_DATE_CELL_NAME, run.getLastStartDate().toString(), workbook);
         setCellValueByName(GENERATED_ON_CELL_NAME, "" + unixTimestamp2ExcelTimestampconvert(new Date().getTime()), workbook);
-        
+
         // Populate data sheet
         XSSFSheet dataSheet = (XSSFSheet) workbook.getSheet(DATA_SHEET_NAME);
         // Set date style for first column
         CellStyle dateStyle = workbook.createCellStyle();
         CreationHelper createHelper = workbook.getCreationHelper();
-        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy/mm/dd"));        
+        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy/mm/dd"));
         dataSheet.setDefaultColumnStyle(0, dateStyle); 
         
         // Add samples

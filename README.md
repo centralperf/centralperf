@@ -26,6 +26,18 @@ cd scripts
 ```
 ./launch.sh
 ```
+## Release History
+
+### 1.3.0
+
+- Schedule runs with start delay or cron expression
+- Bug fixes 
+
+### 1.2.0
+
+- Full Docker based deployment
+- Docker based jMeter runner option
+- Utility scripts to setup platform, reset, launch...
 
 ## Architecture
 

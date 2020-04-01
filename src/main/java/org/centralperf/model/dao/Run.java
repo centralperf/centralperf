@@ -17,16 +17,15 @@
 
 package org.centralperf.model.dao;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import org.centralperf.model.SampleDataBackendTypeEnum;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.centralperf.model.SampleDataBackendTypeEnum;
-import org.hibernate.annotations.Type;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -49,32 +48,39 @@ public class Run {
 
 	@ManyToOne
 	private ScriptVersion scriptVersion;
-	
+
 	private boolean launched = false;
-	
+
 	private boolean running = false;
-	
-	private Date startDate;
-	
-	private Date endDate;
-	
+
+	@Column(columnDefinition = "boolean default false")
+	private boolean finished = false;
+
+	private Date scheduledDate;
+
+	private Date lastStartDate;
+
+	private Date lastEndDate;
+
+	private String scheduleCronExpression;
+
 	private String comment;
-	
-	@OneToMany(cascade=CascadeType.ALL)
+
+	@OneToMany(cascade = CascadeType.ALL)
 	private List<ScriptVariable> customScriptVariables = new ArrayList<ScriptVariable>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "projectId")
-    private Project project;
-	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "projectId")
+	private Project project;
+
 	@Lob
-	@Column( length = 1000000 )
-	@Type(type="text")
+	@Column(length = 1000000)
+	@Type(type = "text")
 	private String processOutput;
-	
-	@OneToMany(mappedBy="run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+	@OneToMany(mappedBy = "run", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Sample> samples;
-	
+
 	private SampleDataBackendTypeEnum sampleDataBackendType = SampleDataBackendTypeEnum.DEFAULT;
 	
 	/**
@@ -99,8 +105,20 @@ public class Run {
 		return running;
 	}
 
+
 	/**
-	 * @param running If true, then the run is currently running	
+	 * @return true if the run is fully finished (cannot be launch again)
+	 */
+	public boolean isFinished() {
+		return finished;
+	}
+
+	public void setFinished(boolean finished) {
+		this.finished = finished;
+	}
+
+	/**
+	 * @param running If true, then the run is currently running
 	 */
 	public void setRunning(boolean running) {
 		this.running = running;
@@ -136,34 +154,37 @@ public class Run {
 
 	/**
 	 * A run is associated to a specific version of a script. Specific variables values for a run are linked to the script version
-	 * @param scriptVersion	Version of the script for this run
+	 *
+	 * @param scriptVersion Version of the script for this run
 	 */
 	public void setScriptVersion(ScriptVersion scriptVersion) {
 		this.scriptVersion = scriptVersion;
 	}
 
-	public Date getStartDate() {
-		return startDate;
+	public Date getLastStartDate() {
+		return lastStartDate;
 	}
 
 	/**
 	 * Set the date/time the run has been launched
-	 * @param startDate	Date the run has been launched
+	 *
+	 * @param startDate Date the run has been launched
 	 */
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
+	public void setLastStartDate(Date startDate) {
+		this.lastStartDate = startDate;
 	}
 
-	public Date getEndDate() {
-		return endDate;
+	public Date getLastEndDate() {
+		return lastEndDate;
 	}
 
 	/**
 	 * The date the run end (automatically or aborted)
-	 * @param endDate	Date the run has ended
+	 *
+	 * @param endDate Date the run has ended
 	 */
-	public void setEndDate(Date endDate) {
-		this.endDate = endDate;
+	public void setLastEndDate(Date endDate) {
+		this.lastEndDate = endDate;
 	}
 
 	public String getProcessOutput() {
@@ -228,6 +249,7 @@ public class Run {
 
 	/**
 	 * Type of backend used to store this run sample results data
+	 *
 	 * @return
 	 */
 	public SampleDataBackendTypeEnum getSampleDataBackendType() {
@@ -236,5 +258,27 @@ public class Run {
 
 	public void setSampleDataBackendType(SampleDataBackendTypeEnum sampleDataStorageTypeEnum) {
 		this.sampleDataBackendType = sampleDataStorageTypeEnum;
+	}
+
+	/**
+	 * Date the Run will be launched for the first time
+	 */
+	public Date getScheduledDate() {
+		return scheduledDate;
+	}
+
+	public void setScheduledDate(Date scheduledDate) {
+		this.scheduledDate = scheduledDate;
+	}
+
+	/**
+	 * Cron (Quartz based) expression for recurrent Run
+	 */
+	public String getScheduleCronExpression() {
+		return scheduleCronExpression;
+	}
+
+	public void setScheduleCronExpression(String scheduleCronExpression) {
+		this.scheduleCronExpression = scheduleCronExpression;
 	}
 }
