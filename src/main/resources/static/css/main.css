@@ -181,12 +181,32 @@ body {
 }
 
 #loading-image {
-  top: 100px;
-  left: 240px;
-  z-index: 100;
+    top: 100px;
+    left: 240px;
+    z-index: 100;
 }
 
 /** Kibana iFrame **/
-.embeddedApp{
-	border: 0px;
+.embeddedApp {
+    border: 0px;
+}
+
+/** Process Output pre **/
+.processOutput {
+    height: 600px;
+    font-size: 10px;
+}
+
+/** Fix X-Editable Bootstrap plugin preventing display of Bootstrap-datetimepicker plugin **/
+.datepicker > div {
+    display: block;
+}
+
+.cron-info-addon {
+    font-size: 11px;
+}
+
+.cron-info-btn {
+    top: 0px;
+    border-left-width: 0px;
 }

@@ -24,35 +24,35 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
+import org.centralperf.sampler.driver.jmeter.helper.DockerHelper;
 import org.centralperf.service.CSVResultService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 
 /**
- * A thread to handle external jMeter job launcher and watcher
- * @since 1.0
+ * A thread to handle Docker based jMeter job launcher and watcher
+ *
+ * @since 1.2
  */
 public class JMeterDockerContainerRunJob implements SamplerRunJob {
 
+	private static final String CONTAINER_PREFIX = "jmeter_centralperf_run_";
 	private String[] jmeterCliOptions;
 	private Run run;
 	private long startTime;
 	private long endTime;
 	private boolean running;
 	private int exitStatus;
-	private StringWriter processOutputWriter = new StringWriter();
+	private String processOutput;
 	private File jmxFile;
 	private File resultFile;
 	private String containerId;
@@ -78,14 +78,49 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 
 	// FIXME : Extract to external provided and check Docker on startup
 	private static DockerClient _dockerClient;
-	private static DockerClient getDockerClient(){
-		if(_dockerClient == null) {
+
+	private static DockerClient getDockerClient() {
+		if (_dockerClient == null) {
 			DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
 					.withDockerHost("unix:///var/run/docker.sock")
 					.build();
 			_dockerClient = DockerClientBuilder.getInstance(config).build();
 		}
 		return _dockerClient;
+	}
+
+	/**
+	 * Remove any container for brutaly aborted runs (JVM restart for example)
+	 *
+	 * @param run The associated run
+	 */
+	public static void fixIncompleteRun(Run run) {
+		getDockerClient()
+				.listContainersCmd()
+				.withShowAll(true)
+				.withNameFilter(Collections.singletonList(buildJMeterContainerNameWithoutTimestamp(run)))
+				.exec()
+				.stream()
+				.findFirst()
+				.ifPresent(container -> {
+					// TODO : retrieve output and parse it before removing container and wait container completion if still running (resume previous)
+					getDockerClient().removeContainerCmd(container.getId()).withForce(true).exec();
+					log.info("Container with id '{}' for run with id '{}' was automatically removed after incomplete Run", container.getId(), run.getId());
+				});
+	}
+
+	/**
+	 * Build container name
+	 *
+	 * @param run Associated run
+	 * @return name for the container
+	 */
+	private static String buildJMeterContainerName(Run run) {
+		return buildJMeterContainerNameWithoutTimestamp(run) + "_" + new Date().getTime();
+	}
+
+	private static String buildJMeterContainerNameWithoutTimestamp(Run run) {
+		return CONTAINER_PREFIX + run.getId();
 	}
 
 	@Override
@@ -95,14 +130,15 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 	public void run() {
 		String[] command = new String[]{
 				"-n",
-				"-t","/centralperf.jmx",
-				"-l","/logs.csv",
-				"-j","/logs/jmeter.log"
+				"-t", "/centralperf.jmx",
+				"-l", "/logs.csv",
+				"-j", "/logs/jmeter.log"
 		};
 
 		// FIXME : Create Image if not existing
 		DockerClient dockerClient = getDockerClient();
-		String containerName = "jmeter_centralperf_" + new Date().getTime();
+		String containerName = buildJMeterContainerName(run);
+
 		// Create jMeter container
 		CreateContainerResponse container = dockerClient.createContainerCmd("jmeter")
 				.withName(containerName)
@@ -110,27 +146,13 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 				.exec();
 		this.containerId = container.getId();
 		startTime = System.currentTimeMillis();
+
+		// Copy the JMX File to the container. Must be transfered through Docker API as a TAR file
 		try {
-			Path tmp = Files.createTempFile("", ".tar");
-			TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(new BufferedOutputStream(Files.newOutputStream(tmp)));
-			tarArchiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-			TarArchiveEntry tarArchiveEntry = (TarArchiveEntry) tarArchiveOutputStream.createArchiveEntry(jmxFile, "centralperf.jmx");
-			tarArchiveEntry.setSize(jmxFile.length());
-			tarArchiveOutputStream.putArchiveEntry(tarArchiveEntry);
-			try (InputStream in = new FileInputStream(jmxFile)) {
-				log.debug("" + IOUtils.copy(in, tarArchiveOutputStream, (int)jmxFile.length()));
-			}
-			tarArchiveOutputStream.flush();
-			tarArchiveOutputStream.closeArchiveEntry();
-			tarArchiveOutputStream.finish();
-			tarArchiveOutputStream.close();
-			dockerClient
-					.copyArchiveToContainerCmd(container.getId())
-					.withTarInputStream(new BufferedInputStream(new FileInputStream(tmp.toFile())))
-					.withRemotePath("/")
-					.exec();
-		} catch (IOException e){
-			e.printStackTrace();
+			DockerHelper.copyFileToContainer(dockerClient, containerId, jmxFile, "centralperf.jmx", "/");
+		} catch (IOException e) {
+			log.error("Unable to copy jMeter script file to container", e);
+			throw new RuntimeException("Unable to copy jMeter script file to container", e);
 		}
 
 		// Start container
@@ -159,16 +181,23 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 			endTime = System.currentTimeMillis();
 			log.debug("Jmeter container ended at "+endTime+" with exit status ["+exitStatus+"]");
 		} catch (InterruptedException e) {
-			log.warn("JMeter container run was interrupted before normal end:"+e.getMessage(),e);
+			log.warn("JMeter container run was interrupted before normal end:" + e.getMessage(), e);
 		} finally {
+			try {
+				this.processOutput = DockerHelper.getFileContentFromContainer(dockerClient, containerId, "/logs/jmeter.log");
+			} catch (IOException e) {
+				log.warn("Unable to get jMeter output logs", e);
+			}
 			dockerClient.removeContainerCmd(containerId).exec();
 			running = false;
 			scriptLauncherService.endJob(this);
 		}
 
 	}
-	
-	public String getProcessOutput() {return processOutputWriter.toString();}
+
+	public String getProcessOutput() {
+		return processOutput;
+	}
 
 	public long getStartTime() {
 		return startTime;

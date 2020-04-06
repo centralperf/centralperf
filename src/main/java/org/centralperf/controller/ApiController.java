@@ -19,8 +19,10 @@ package org.centralperf.controller;
 
 import freemarker.ext.beans.BeansWrapper;
 import org.centralperf.controller.exception.ControllerValidationException;
+import org.centralperf.helper.CronExpression;
 import org.centralperf.helper.view.ExcelOOXMLView;
 import org.centralperf.model.dao.Run;
+import org.centralperf.model.dto.CronFormatResponse;
 import org.centralperf.model.dto.RunStatus;
 import org.centralperf.model.graph.RunStats;
 import org.centralperf.repository.RunRepository;
@@ -28,21 +30,16 @@ import org.centralperf.service.RunService;
 import org.centralperf.service.RunStatisticsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.ExecutionException;
 
 /** 
@@ -57,28 +54,30 @@ public class ApiController {
 	
 	@Resource
 	private RunStatisticsService runStatService;
-	
+
 	@Resource
 	private RunRepository runRepository;
-	
+
 	@Resource
-	private RunService runService;	
-	
-    @Autowired 
-    private ApplicationContext applicationContext; 	
-	
+	private RunService runService;
+
+	private final ApplicationContext applicationContext;
+
 	private static final Logger log = LoggerFactory.getLogger(ApiController.class);
+
+	public ApiController(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 
 	/**
 	 * export summary chart csv.
 	 *
 	 * @param runId ID of the run (from URI)
-	 * @param model Model prepared for the new project form view
 	 * @return CSV with Response Time and concurrent requests datas
 	 */
 	@RequestMapping(value = "/api/getSumChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getSumChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+	public String getSumChartCSV(@PathVariable("runId") Long runId) {
 		String csv = "";
 		try {
 			csv = runStatService.getSummaryGraph(runId);
@@ -92,12 +91,11 @@ public class ApiController {
 	 * export csv with average response time of each sample.
 	 *
 	 * @param runId ID of the run (from URI)
-	 * @param model Model prepared for the new project form view
 	 * @return CSV with average Response Time
 	 */
 	@RequestMapping(value = "/api/getRTChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getRTChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+	public String getRTChartCSV(@PathVariable("runId") Long runId) {
 		String csv = "";
 		try {
 			csv = runStatService.getResponseTimeGraph(runId);
@@ -111,12 +109,11 @@ public class ApiController {
 	 * export csv with average response size of each sample.
 	 *
 	 * @param runId ID of the run (from URI)
-	 * @param model Model prepared for the new project form view
 	 * @return CSV with average Response size
 	 */
 	@RequestMapping(value = "/api/getRSChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getRSChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+	public String getRSChartCSV(@PathVariable("runId") Long runId) {
 		String csv = "";
 		try {
 			csv = runStatService.getResponseSizeGraph(runId);
@@ -131,12 +128,11 @@ public class ApiController {
 	 * export csv with average response size of each sample.
 	 *
 	 * @param runId ID of the run (from URI)
-	 * @param model Model prepared for the new project form view
 	 * @return CSV with average Response size
 	 */
 	@RequestMapping(value = "/api/getERChartCSV/{runId}", method = RequestMethod.GET, produces = "text/csv")
 	@ResponseBody
-	public String getERChartCSV(@PathVariable("runId") Long runId, Model model, HttpServletResponse response) {
+	public String getERChartCSV(@PathVariable("runId") Long runId) {
 		String csv = "";
 		try {
 			csv = runStatService.getErrorRateGraph(runId);
@@ -168,10 +164,10 @@ public class ApiController {
      * Download results from a RUN as a file (CSV or other)
      * @param runId	ID of the run (from URI)
      * @return The JTL/CSV file as text/csv file content type
-     */
-    @RequestMapping(
-    		value = {
-    				"/project/{projectId}/run/{runId}/results",
+	 */
+	@RequestMapping(
+			value = {
+					"/project/*/run/{runId}/results",
     				"/api/getRunResultsCSV/{runId}",
     				}, 
     		method = RequestMethod.GET, 
@@ -190,12 +186,12 @@ public class ApiController {
      * Display all samples of a RUN as a HTML page
      * @param runId	ID of the run (from URI)
      * @return	Name of the view for samples as HTML
-     */
-    @RequestMapping(
-    		value = {
-    				"/project/{projectId}/run/{runId}/samples", 
-    				"/run/{runId}/samples",
-    				"/api/getRunResultsHTML/{rundId}"
+	 */
+	@RequestMapping(
+			value = {
+					"/project/*/run/{runId}/samples",
+					"/run/{runId}/samples",
+    				"/api/getRunResultsHTML/{runId}"
     		}, 
     		method = RequestMethod.GET)
     public String getRunResultsAsHTML(
@@ -216,10 +212,10 @@ public class ApiController {
      * @param mav	ModelAndView will be used to return an Excel view
      * @param runId ID of the run (from URI)
      * @return A view that will be resolved as an Excel view by the view resolver
-     */
-    @RequestMapping(value = {
-    		"/project/{projectId}/run/{runId}/centralperf.xlsx",
-    		"/api/getRunResultsHTML/{rundId}/centralperf.xlsx"    		    		
+	 */
+	@RequestMapping(value = {
+			"/project/*/run/{runId}/centralperf.xlsx",
+			"/api/getRunResultsHTML/{runId}/centralperf.xlsx"
     	}
     	, method = RequestMethod.GET)
     public ModelAndView getRunResultsAsExcel(
@@ -233,16 +229,18 @@ public class ApiController {
 	    mav.getModel().put("run", run);
     	mav.setView(excelView);
         // return a view which will be resolved by an excel view resolver
-        return mav;
-    }
-    
-    /**
-     * Run status
-     * @param runId	ID of the run (from URI)
-     * @return	Status for selected run
-     */
-    @RequestMapping(value={"/api/run/{runId}/status"}, method = RequestMethod.GET)
-    public @ResponseBody RunStatus getRunStatus(@PathVariable("runId") Long runId, Model model) throws ControllerValidationException {
+		return mav;
+	}
+
+	/**
+	 * Run status
+	 *
+	 * @param runId ID of the run (from URI)
+	 * @return Status for selected run
+	 */
+	@RequestMapping(value = {"/api/run/{runId}/status"}, method = RequestMethod.GET)
+	public @ResponseBody
+	RunStatus getRunStatus(@PathVariable("runId") Long runId) throws ControllerValidationException {
 		Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
 		RunStatus runStatus = new RunStatus();
 		runStatus.setRunId(run.getId());
@@ -250,4 +248,28 @@ public class ApiController {
 		runStatus.setStartDate(run.getLastStartDate());
 		return runStatus;
 	}
+
+	/**
+	 * Validate a cron expression and return info about it
+	 *
+	 * @param cronExpression Cron based expression (6 terms)
+	 * @return A response with next date, human readable and validation status
+	 */
+	@RequestMapping(value = {"/api/cron/format"}, method = RequestMethod.GET)
+	public @ResponseBody
+	CronFormatResponse validateAndFormat(@RequestParam("expression") String cronExpression) {
+		CronFormatResponse response = new CronFormatResponse();
+		response.setCronExpression(cronExpression);
+		try {
+			CronExpression.validateCronExpression(cronExpression);
+			response.setValid(true);
+			response.setNext(CronExpression.getNextIteration(cronExpression));
+			response.setHumanReadable(CronExpression.asHumanReadable(cronExpression));
+		} catch (IllegalArgumentException e) {
+			response.setValid(false);
+			response.setValidationErrorMesssage(e.getMessage());
+		}
+		return response;
+	}
+
 }

@@ -17,6 +17,7 @@
 
 package org.centralperf.service;
 
+import org.centralperf.exception.ConfigurationException;
 import org.centralperf.helper.CSVHeaderInfo;
 import org.centralperf.model.SampleDataBackendTypeEnum;
 import org.centralperf.model.dao.Run;
@@ -48,23 +49,25 @@ import java.util.List;
 @Service
 public class RunService {
 
-	private static final Logger log = LoggerFactory.getLogger(RunService.class);
-	@Value("${centralperf.backend}")
-	private SampleDataBackendTypeEnum sampleDataBackendType;
-	@Resource
-	private RunRepository runRepository;
-	@Resource
-	private CSVResultService runResultService;
-	@Resource
-	private ElasticSearchService elasticSearchService;
+    private static final Logger log = LoggerFactory.getLogger(RunService.class);
+    @Value("${centralperf.backend}")
+    private SampleDataBackendTypeEnum sampleDataBackendType;
+    @Resource
+    private RunRepository runRepository;
+    @Resource
+    private CSVResultService runResultService;
+    @Resource
+    private ScriptLauncherService scriptLauncherService;
+    @Resource
+    private ElasticSearchService elasticSearchService;
 
-	@Resource
-	private ScriptVersionRepository scriptVersionRepository;
+    @Resource
+    private ScriptVersionRepository scriptVersionRepository;
 
-	@Value("${centralperf.csv.field-separator}")
-	private String csvSeparator;
-	@Resource
-	private ScriptVariableRepository scriptVariableRepository;
+    @Value("${centralperf.csv.field-separator}")
+    private String csvSeparator;
+    @Resource
+    private ScriptVariableRepository scriptVariableRepository;
 
 	/**
 	 * Close the run when the launcher has finished. Set the end date and gets job output logs
@@ -88,30 +91,70 @@ public class RunService {
 		}
 	}
 
-	/**
-	 * Set a run as aborted
-	 *
-	 * @param run run to terminate
-	 */
-	public void abortRun(Run run) {
-		log.debug("Aborting run " + run.getLabel());
-		run.setRunning(false);
-		run.setLastEndDate(new Date());
-		run.setFinished(true);
-		String comment = run.getComment() == null ? "INTERRUPTED BY USER !!!" : "INTERRUPTED BY USER !!!\r\n" + run.getComment();
-		run.setComment(comment);
-		runRepository.save(run);
-	}
+    /**
+     * Force a run to terminate
+     *
+     * @param run run to terminate
+     */
+    public void abortRun(Run run) {
+        log.debug("Aborting run " + run.getLabel());
+        run.setRunning(false);
+        run.setLastEndDate(new Date());
+        run.setFinished(true);
+        String comment = run.getComment() == null ? "INTERRUPTED BY USER !!!" : "INTERRUPTED BY USER !!!\r\n" + run.getComment();
+        run.setComment(comment);
+        runRepository.save(run);
+    }
 
-	/**
-	 * Create a copy of a run and save it to the persistence layer (to launch it again for example)
-	 *
-	 * @param runId Id of the job to duplicate
-	 */
-	public Run copyRun(Long runId) {
-		Run run = runRepository.findById(runId).orElse(null);
-		if (run != null) {
-			Run newRun = new Run();
+    /**
+     * Cancel a run
+     *
+     * @param run run to cance
+     */
+    public void cancelRun(Run run) {
+        log.debug("Canceling run " + run.getLabel());
+        if (run.isLaunched()) {
+            if (run.isRunning()) {
+                scriptLauncherService.abortRun(run);
+            } else if (isPlannedRun(run)) { // Run was scheduled and the user want to reset it
+                scriptLauncherService.cancelScheduleRun(run);
+                run.setScheduledDate(null);
+                run.setLaunched(false);
+                runRepository.save(run);
+            } else if (isCronRun(run)) {
+                if (run.getLastStartDate() != null) { // It has been running at least one time
+                    run.setFinished(true);
+                } else {
+                    run.setScheduleCronExpression(null);
+                    run.setLaunched(false);
+                }
+                scriptLauncherService.cancelScheduleRun(run);
+                runRepository.save(run);
+            }
+        }
+    }
+
+    public void scheduleRun(Run run, String cronExpression) throws ConfigurationException {
+        run.setScheduleCronExpression(cronExpression);
+        runRepository.save(run);
+        scriptLauncherService.launchRun(run);
+    }
+
+    public void scheduleRun(Run run, Date scheduledDate) throws ConfigurationException {
+        run.setScheduledDate(scheduledDate);
+        runRepository.save(run);
+        scriptLauncherService.launchRun(run);
+    }
+
+    /**
+     * Create a copy of a run and save it to the persistence layer (to launch it again for example)
+     *
+     * @param runId Id of the job to duplicate
+     */
+    public Run copyRun(Long runId) {
+        Run run = runRepository.findById(runId).orElse(null);
+        if (run != null) {
+            Run newRun = new Run();
 			newRun.setLabel(run.getLabel());
 			newRun.setLaunched(false);
 			newRun.setRunning(false);
@@ -286,34 +329,45 @@ public class RunService {
 			run.setScriptVersion(scriptVersion);
 			run.setSampleDataBackendType(sampleDataBackendType);
 			return runRepository.save(run);
-		} else {
-			return null;
-		}
-	}
+        } else {
+            return null;
+        }
+    }
 
-	/**
-	 * Remove run and any associated data (from ES for example)
-	 *
-	 * @param runId
+    /**
+     * Remove run and any associated data (from ES for example)
+     *
+     * @param runId If of the run to remove
 	 */
 	@Transactional
 	public void deleteRun(Long runId) {
 		Run run = runRepository.findById(runId).orElse(null);
-		if (run != null) {
-			runRepository.deleteById(runId);
+        if (run != null) {
 
-			// Remove ES documents if necessary
-			if (SampleDataBackendTypeEnum.ES.equals(run.getSampleDataBackendType())) {
-				elasticSearchService.deleteRun(run);
-			}
-		}
-	}
+            // Remove run from schedule
+            if (isCronRun(run) || isDelayedRun(run)) {
+                scriptLauncherService.cancelScheduleRun(run);
+            }
 
-	public boolean isDelayedRun(Run run) {
-		return run.getScheduledDate() != null || run.getScheduleCronExpression() != null;
-	}
+            // Delete run in persistance
+            runRepository.deleteById(runId);
 
-	public boolean isCronRun(Run run) {
-		return run.getScheduleCronExpression() != null;
+            // Remove ES documents if necessary
+            if (SampleDataBackendTypeEnum.ES.equals(run.getSampleDataBackendType())) {
+                elasticSearchService.deleteRun(run);
+            }
+        }
+    }
+
+    public boolean isDelayedRun(Run run) {
+        return isPlannedRun(run) || isCronRun(run);
+    }
+
+    public boolean isPlannedRun(Run run) {
+        return run.getScheduledDate() != null;
+    }
+
+    public boolean isCronRun(Run run) {
+        return run.getScheduleCronExpression() != null;
 	}
 }

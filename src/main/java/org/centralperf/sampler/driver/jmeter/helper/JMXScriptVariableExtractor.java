@@ -17,34 +17,6 @@
 
 package org.centralperf.sampler.driver.jmeter.helper;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
 import org.centralperf.model.dao.ScriptVariable;
 import org.centralperf.model.dao.ScriptVariableSet;
 import org.slf4j.Logger;
@@ -55,15 +27,26 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.*;
+import java.io.*;
+import java.util.*;
+
 /**
  * Extract variables declared in a JMeter JMX file.
  * Variables are locate in &lt;Arguments tags.
- * This class returns variables grouped by set (a set by Argument blocks)  
+ * This class returns variables grouped by set (a set by Argument blocks)
+ *
  * @since 1.0
  */
 public class JMXScriptVariableExtractor {
 
-	private static final Logger log = LoggerFactory.getLogger(JMXScriptVariableExtractor.class);
+    private static final Logger log = LoggerFactory.getLogger(JMXScriptVariableExtractor.class);
 	
 	/**
 	 * Parse a JMX file to extract all variables declared in it
@@ -91,17 +74,17 @@ public class JMXScriptVariableExtractor {
 	 * @return
 	 */
 	public static List<ScriptVariableSet> extractVariables(InputSource jmxFileContent) {
-		List<ScriptVariableSet> variableSets = new ArrayList<ScriptVariableSet>();
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder builder;
-		try {
-			builder = factory.newDocumentBuilder();
-			
-			// Parse JMX File
-			Document doc = builder.parse(jmxFileContent);
-			
-			// Build XSLT Factory and xpath queries
-			XPathFactory xPathFactory = XPathFactory.newInstance();
+        List<ScriptVariableSet> variableSets = new ArrayList<>();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        try {
+            builder = factory.newDocumentBuilder();
+
+            // Parse JMX File
+            Document doc = builder.parse(jmxFileContent);
+
+            // Build XSLT Factory and xpath queries
+            XPathFactory xPathFactory = XPathFactory.newInstance();
 			XPath xpath = xPathFactory.newXPath();
 			XPathExpression xPathExprArguments = xpath.compile("//Arguments[@enabled='true']");
 			XPathExpression xPathExprVariables = xpath.compile("collectionProp/elementProp");
@@ -111,24 +94,27 @@ public class JMXScriptVariableExtractor {
 			
 			// Loop over found arguments
 			for (int i = 0; i < argumentsNodes.getLength(); i++) {
-				Node argumentNode = argumentsNodes.item(i);
-				String variableSetName = argumentNode.getAttributes().getNamedItem("testname").getNodeValue(); 
-				
-				// Create the variables set
-				ScriptVariableSet scriptVariableSet = new ScriptVariableSet();
-				scriptVariableSet.setName(variableSetName);
-				
-				NodeList variablesNodes = (NodeList) xPathExprVariables.evaluate(argumentNode, XPathConstants.NODESET);
-				
-				// Loop over variables
-				for (int j = 0; j < variablesNodes.getLength(); j++) {
-					Node variableNode = variablesNodes.item(j);
-					ScriptVariable scriptVariable = new ScriptVariable();
-					NodeList childs = variableNode.getChildNodes();
-					
-					// Loop over variable properties
-					for(int k = 0; k < childs.getLength(); k++){
-						Node childNode = childs.item(k);
+                Node argumentNode = argumentsNodes.item(i);
+                String variableSetName = argumentNode.getAttributes().getNamedItem("testname").getNodeValue();
+
+                // Create the variables set
+                ScriptVariableSet scriptVariableSet = new ScriptVariableSet();
+                scriptVariableSet.setName(variableSetName);
+
+                NodeList variablesNodes = (NodeList) xPathExprVariables.evaluate(argumentNode, XPathConstants.NODESET);
+
+                if (variablesNodes.getLength() == 0)
+                    break; // Skip empty variables sets (when used a separator for example)
+
+                // Loop over variables
+                for (int j = 0; j < variablesNodes.getLength(); j++) {
+                    Node variableNode = variablesNodes.item(j);
+                    ScriptVariable scriptVariable = new ScriptVariable();
+                    NodeList childs = variableNode.getChildNodes();
+
+                    // Loop over variable properties
+                    for (int k = 0; k < childs.getLength(); k++) {
+                        Node childNode = childs.item(k);
 						if(childNode.getNodeType() == Node.ELEMENT_NODE){
 							String childType = childNode.getAttributes().getNamedItem("name").getNodeValue();
 							String childValue = childNode.getTextContent().trim();
@@ -249,23 +235,23 @@ public class JMXScriptVariableExtractor {
 			log.error("Parsing Error on variable replacement:"+e.getMessage(), e);
 		} catch (SAXException e) {
 			log.error("SAX Error on variable replacement:"+e.getMessage(), e);
-		} catch (IOException e) {
-			log.error("IO Error on variable replacement:"+e.getMessage(), e);
-		} catch (XPathExpressionException e) {
-			log.error("XPath Error on variable replacement:"+e.getMessage(), e);
-		} catch (TransformerException e) {
-			log.error("Transformer Error on variable replacement:"+e.getMessage(), e);
-		}
-		return null;		
-	}
-	
-	public static void main(String args[]){
-		try {
-			File inputFile = new File("E:\\Users\\charles\\Desktop\\sonde.jmx");
-			String jmxContent = new Scanner(inputFile).useDelimiter("\\Z").next();
-			JMXScriptVariableExtractor.extractVariables(jmxContent);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
+        } catch (IOException e) {
+            log.error("IO Error on variable replacement:" + e.getMessage(), e);
+        } catch (XPathExpressionException e) {
+            log.error("XPath Error on variable replacement:" + e.getMessage(), e);
+        } catch (TransformerException e) {
+            log.error("Transformer Error on variable replacement:" + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public static void main(String[] args) {
+        try {
+            File inputFile = new File("E:\\Users\\charles\\Desktop\\sonde.jmx");
+            String jmxContent = new Scanner(inputFile).useDelimiter("\\Z").next();
+            JMXScriptVariableExtractor.extractVariables(jmxContent);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -17,27 +17,25 @@
 
 package org.centralperf.service;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
 import org.centralperf.sampler.api.Sampler;
-import org.centralperf.sampler.driver.gatling.GatlingSampler;
 import org.centralperf.sampler.driver.jmeter.JMeterSampler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Manager available sampler types (JMeter, Gatling...) 
- * @since 1.0
+ * Manager available sampler types (JMeter, Gatling...)
  *
+ * @since 1.0
  */
 @Service
-public class SamplerService implements InitializingBean{
-	
-	private Map<String,Sampler> samplers;
+public class SamplerService implements InitializingBean {
+
+    private Map<String, Sampler> samplers;
 
 	@Resource
 	private JMeterSampler jMeterSampler;	

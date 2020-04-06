@@ -14,6 +14,26 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<#macro prettyDate dateToFormat >
-	<span title="${dateToFormat?datetime?iso_utc}"><script>document.write(moment("${dateToFormat?datetime?iso_utc}").fromNow())</script></span>
+<#import "/spring.ftl" as spring />
+<#macro main run>
+	<div class="modal fade" id="run-modal-output" tabindex="-1" role="dialog" aria-labelledby="run-modal-output"
+		 aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title">Process output</h4>
+				</div>
+				<div class="modal-body">
+					<pre class="processOutput">${run.processOutput!}</pre>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
 </#macro>
+
+

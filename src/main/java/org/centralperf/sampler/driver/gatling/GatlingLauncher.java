@@ -17,14 +17,6 @@
 
 package org.centralperf.sampler.driver.gatling;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.Resource;
-
 import org.apache.commons.io.FileUtils;
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerLauncher;
@@ -34,7 +26,13 @@ import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Gatling based Launcher
@@ -148,7 +146,12 @@ public class GatlingLauncher implements SamplerLauncher{
 		job.setGatlingLauncherPath(gatlingLauncherPath);
 		Thread jobThread = new Thread(job);
 		jobThread.start();
-		
+
 		return job;
+	}
+
+	@Override
+	public void fixIncompleteRuns(Run run) {
+		// NOT IMPLEMENTED / NOT NECESSARY
 	}
 }

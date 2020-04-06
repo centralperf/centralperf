@@ -35,26 +35,36 @@
             <script src="${rc.contextPath}/webjars/bootstrap/js/bootstrap.min.js"></script>
 
 			<#-- Bootstrap select -->
-			<link href="${rc.contextPath}/webjars/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
-      		<script src="${rc.contextPath}/webjars/bootstrap-select/js/bootstrap-select.min.js"></script>
-      		<script type="text/javascript">$(document).ready(function(){$('.selectpicker').selectpicker();});</script>
-      		
-      		<#-- Bootstrap editable -->
-			<link href="${rc.contextPath}/webjars/x-editable-bootstrap/css/bootstrap-editable.css" rel="stylesheet">
-      		<script src="${rc.contextPath}/webjars/x-editable-bootstrap/js/bootstrap-editable.min.js"></script>
+            <link href="${rc.contextPath}/webjars/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+            <script src="${rc.contextPath}/webjars/bootstrap-select/js/bootstrap-select.min.js"></script>
+            <script type="text/javascript">$(document).ready(function () {
+                    $('.selectpicker').selectpicker();
+                });</script>
 
-			<#-- Moment JS -->
-			<script src="${rc.contextPath}/webjars/momentjs/min/moment-with-locales.min.js"></script>
-			
+            <#-- Bootstrap editable -->
+            <link href="${rc.contextPath}/webjars/x-editable-bootstrap/css/bootstrap-editable.css" rel="stylesheet">
+            <script src="${rc.contextPath}/webjars/x-editable-bootstrap/js/bootstrap-editable.min.js"></script>
+
+            <#-- Moment JS -->
+            <script src="${rc.contextPath}/webjars/momentjs/min/moment-with-locales.min.js"></script>
+
+            <#-- Date time picker -->
+            <script type="text/javascript" src="${rc.contextPath}/webjars/bootstrap/js/transition.js"></script>
+            <script type="text/javascript" src="${rc.contextPath}/webjars/bootstrap/js/collapse.js"></script>
+            <script type="text/javascript"
+                    src="${rc.contextPath}/webjars/Eonasdan-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+            <link href="${rc.contextPath}/webjars/Eonasdan-bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css"
+                  rel="stylesheet">
+
             <#-- Central Perf -->
             <link rel="stylesheet" type="text/css" href="${rc.contextPath}/resources/css/main.css">
             <script src="${rc.contextPath}/resources/js/centralperfs.js"></script>
             <script>
-                $( document ).ready(function() {
-				    // Edit in place
-				    setEditable('#projectNameEditable');
-				    setEditable('#projectDescriptionEditable');
-				    setEditable('#scriptLabelEditable');
+                $(document).ready(function () {
+                    // Edit in place
+                    setEditable('#projectNameEditable');
+                    setEditable('#projectDescriptionEditable');
+                    setEditable('#scriptLabelEditable');
 				    setEditable('#scriptDescriptionEditable');
 				    setEditable('[id^=scriptVersionDescriptionEditable]');
 				    setEditable('#runLabelEditable');

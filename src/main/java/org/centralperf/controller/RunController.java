@@ -17,10 +17,9 @@
 
 package org.centralperf.controller;
 
-import net.redhogs.cronparser.CronExpressionDescriptor;
-import net.redhogs.cronparser.Options;
 import org.centralperf.controller.exception.ControllerValidationException;
 import org.centralperf.exception.ConfigurationException;
+import org.centralperf.helper.CronExpression;
 import org.centralperf.model.RunDetailGraphTypesEnum;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
@@ -36,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -49,9 +47,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.io.IOException;
-import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 
 /**
@@ -209,17 +204,15 @@ public class RunController extends BaseController{
     public String scheduleRun(
             @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId,
-            @RequestParam(value = "scheduledDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime scheduledDate, // 1976-08-11T06:00:00+0100 for example
+            @RequestParam(value = "scheduledDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date scheduledDate, // 1976-08-11T06:00:00+0100 for example
             @RequestParam(value = "scheduleCronExpression", required = false) String scheduleCronExpression
     ) throws ControllerValidationException, ConfigurationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
-        if (!StringUtils.isEmpty(scheduledDate)) { // TODO : validate date format
-            run.setScheduledDate(Date.from(scheduledDate.atZone(ZoneId.systemDefault()).toInstant()));
+        if (scheduledDate != null) { // TODO : validate date format
+            runService.scheduleRun(run, scheduledDate);
         } else if (!StringUtils.isEmpty(scheduleCronExpression)) { // TODO : validate CRON expression
-            run.setScheduleCronExpression(scheduleCronExpression);
+            runService.scheduleRun(run, scheduleCronExpression);
         }
-        runRepository.save(run);
-        scriptLauncherService.launchRun(run);
         return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 
@@ -235,10 +228,7 @@ public class RunController extends BaseController{
             @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId) throws ControllerValidationException {
         Run run = runRepository.findById(runId).orElseThrow(() -> new ControllerValidationException(String.format("Run with id %s does not exists", runId)));
-        // If the run has already been launched, then create a new run and
-        if (run.isLaunched()) {
-            scriptLauncherService.abortRun(run);
-        }
+        runService.cancelRun(run);
         return "redirect:/project/" + projectId + "/run/" + run.getId() + "/detail";
     }
 
@@ -435,14 +425,8 @@ public class RunController extends BaseController{
         model.addAttribute("run", run);
         model.addAttribute("job", job);
         if (run.getScheduleCronExpression() != null) {
-            CronSequenceGenerator cronTrigger = new CronSequenceGenerator(run.getScheduleCronExpression());
-            Date next = cronTrigger.next(new Date());
-            model.addAttribute("nextStartDate", next);
-            try {
-                model.addAttribute("cronExpressionReadable", CronExpressionDescriptor.getDescription(run.getScheduleCronExpression(), Options.twentyFourHour()));
-            } catch (ParseException e) {
-                model.addAttribute("cronExpressionReadable", "Unable to parse cron expression : " + run.getScheduleCronExpression());
-            }
+            model.addAttribute("nextStartDate", CronExpression.getNextIteration(run.getScheduleCronExpression()));
+            model.addAttribute("cronExpressionReadable", CronExpression.asHumanReadable(run.getScheduleCronExpression()));
         }
     }
 }

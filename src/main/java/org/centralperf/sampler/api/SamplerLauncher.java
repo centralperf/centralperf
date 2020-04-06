@@ -26,12 +26,18 @@ import org.centralperf.model.dao.Run;
  * @since 1.0
  */
 public interface SamplerLauncher {
-	
+
 	/**
 	 * Launched the sampler and provides a job to interact with it
-	 * @param ScriptContent	The script content to be used
-	 * @param run	The run associated with this launch
-	 * @return	A running job
+	 *
+	 * @param ScriptContent The script content to be used
+	 * @param run           The run associated with this launch
+	 * @return A running job
 	 */
-	public abstract SamplerRunJob launch(String ScriptContent, Run run) throws ConfigurationException;
+	SamplerRunJob launch(String ScriptContent, Run run) throws ConfigurationException;
+
+	/**
+	 * Allows to clean the launchers if necessary after a run was aborted (JVM restart for example)
+	 */
+	void fixIncompleteRuns(Run run);
 }

@@ -31,6 +31,7 @@ cd scripts
 ### 1.3.0
 
 - Schedule runs with start delay or cron expression
+- Database migrations with FlyWay
 - Bug fixes 
 
 ### 1.2.0

@@ -43,37 +43,39 @@ public class Run {
 	private Long id;
 
 	@NotNull
-	@Size(min = 1, max = 33)
-	private String label;
+    @Size(min = 1, max = 33)
+    private String label;
 
-	@ManyToOne
-	private ScriptVersion scriptVersion;
+    @ManyToOne
+    private ScriptVersion scriptVersion;
 
-	private boolean launched = false;
+    private boolean launched = false;
 
-	private boolean running = false;
+    private boolean running = false;
 
-	@Column(columnDefinition = "boolean default false")
-	private boolean finished = false;
+    @Column
+    private boolean finished = false;
 
-	private Date scheduledDate;
+    private Date scheduledDate;
 
-	private Date lastStartDate;
+    private Date lastStartDate;
 
-	private Date lastEndDate;
+    private Date lastEndDate;
 
-	private String scheduleCronExpression;
+    private String scheduleCronExpression;
 
-	private String comment;
+    @Lob
+    @Type(type = "text")
+    private String comment;
 
-	@OneToMany(cascade = CascadeType.ALL)
-	private List<ScriptVariable> customScriptVariables = new ArrayList<ScriptVariable>();
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<ScriptVariable> customScriptVariables = new ArrayList<>();
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "projectId")
-	private Project project;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "projectId")
+    private Project project;
 
-	@Lob
+    @Lob
 	@Column(length = 1000000)
 	@Type(type = "text")
 	private String processOutput;

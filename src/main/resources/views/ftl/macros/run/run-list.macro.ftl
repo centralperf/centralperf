@@ -25,7 +25,9 @@
                 <th>Label</th>
                 <th style="width: 18px"></th>
                 <#if displayProject>
-                    <th>Project</th></#if>
+                    <th>Project</th>
+                </#if>
+                <th>Schedule</th>
                 <th>Launched</th>
                 <th>Script</th>
                 <th class="column-with-btns"></th>
@@ -41,10 +43,21 @@
                                               style="border: 0px"></#if></td>
                     <#if displayProject>
                         <td><a href="${rc.contextPath}/project/${run.project.id?c}/detail"
-                               title="Project">${run.project.name}</a></td></#if>
-                    <td><#if run.launched && run.lastStartDate??><@utils.prettyDate run.lastStartDate/><#else><em>Not
-                            yet</em></#if>
+                               title="Project">${run.project.name}</a>
+                        </td>
+                    </#if>
+                    <td>
+                        <#if !run.finished && (run.scheduledDate?? || run.scheduleCronExpression??)>
+                            <#if run.scheduledDate??><span class="glyphicon glyphicon-time"
+                                                           aria-hidden="true"></span><@utils.prettyDate run.scheduledDate/></#if>
+                            <#if run.scheduleCronExpression??><span class="glyphicon glyphicon-refresh"
+                                                                    aria-hidden="true"></span>&nbsp;${run.scheduleCronExpression}</#if>
+                        <#else>
+                            -
+                        </#if>
                     </td>
+                    <td><#if run.launched && run.lastStartDate??><@utils.prettyDate run.lastStartDate/><#else><em>Not
+                            yet</em></#if></td>
                     <td>
                         <a href="${rc.contextPath}/project/${run.project.id?c}/script/${run.scriptVersion.script.id?c}/detail"
                         >${run.scriptVersion.script.label}

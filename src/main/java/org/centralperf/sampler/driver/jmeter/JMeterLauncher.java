@@ -17,12 +17,6 @@
 
 package org.centralperf.sampler.driver.jmeter;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-
-import javax.annotation.Resource;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.centralperf.exception.ConfigurationException;
@@ -36,12 +30,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+
 /**
  * Jmeter based Sampler Launcher
+ *
  * @see SamplerLauncher
  */
 @Component
-public class JMeterLauncher implements SamplerLauncher{
+public class JMeterLauncher implements SamplerLauncher {
 
 	@Value("${jmeter.launcher.type}")
 	private JMeterLauncherTypeEnum launcherType;
@@ -82,14 +82,14 @@ public class JMeterLauncher implements SamplerLauncher{
 	 * </ul>		
 	 */
 	public SamplerRunJob launch(String script, Run run) throws ConfigurationException {
-		
+
 		// Create temporary JMX file
 		UUID uuid = UUID.randomUUID();
 		// Java temp path is not shared with Docker by default under OSX
 		String tmpPath = launcherType.equals(JMeterLauncherTypeEnum.DOCKER_CONTAINER) ? "/tmp" : System.getProperty("java.io.tmpdir");
 		String jmxFilePath = tmpPath + File.separator + uuid + ".jmx";
 		String jtlFilePath = tmpPath + File.separator + uuid + "." + jmeterLauncherOutputFormat;
-		
+
 		File jmxFile = new File(jmxFilePath);
 		try {
 			FileUtils.writeStringToFile(jmxFile, script);
@@ -118,10 +118,10 @@ public class JMeterLauncher implements SamplerLauncher{
 				"-Jjmeter.save.saveservice.subresults=false"
 		};
 
-		SamplerRunJob job = null;
-		switch (launcherType){
+		SamplerRunJob job;
+		switch (launcherType) {
 			case STANDALONE: {
-				String[] command = new String[] {
+				String[] command = new String[]{
 						jmeterLauncherScriptPath,
 						"-n",
 						"-t",
@@ -144,7 +144,14 @@ public class JMeterLauncher implements SamplerLauncher{
 		job.setResultFile(new File(jtlFilePath));
 		Thread jobThread = new Thread(job);
 		jobThread.start();
-		
+
 		return job;
+	}
+
+	@Override
+	public void fixIncompleteRuns(Run run) {
+		if (JMeterLauncherTypeEnum.DOCKER_CONTAINER.equals(launcherType)) {
+			JMeterDockerContainerRunJob.fixIncompleteRun(run);
+		}
 	}
 }

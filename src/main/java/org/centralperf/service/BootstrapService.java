@@ -25,7 +25,13 @@ import org.centralperf.sampler.driver.jmeter.JMeterSampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -97,21 +103,9 @@ public class BootstrapService implements InitializingBean {
         // TODO : Import sample result
     }
 
-    /**
-     * Check if jobs where running while the application stopped (after a crash for example ...)
-     * These runs should not be running on startup
-     */
-    private void fixIncompleteRuns() {
-        List<Run> incompleteRuns = runService.getRunningRuns();
-        log.info("Fixing incomplete runs : {} incomplete runs found", incompleteRuns.size());
-        incompleteRuns.forEach(incompleteRun -> {
-            incompleteRun.setRunning(false);
-            incompleteRun.setComment(
-                    (incompleteRun.getComment() != null ? incompleteRun.getComment() : "") +
-                            "\r\n*** System message : this run didn't complete normally *** ");
-            runRepository.save(incompleteRun);
-        });
-    }
+    @Autowired
+    @Qualifier("transactionManager")
+    protected PlatformTransactionManager txManager;
 
     /**
      * Relaunch scheduled runs
@@ -126,15 +120,32 @@ public class BootstrapService implements InitializingBean {
     }
 
     /**
+     * Check if jobs where running while the application stopped (after a crash for example ...)
+     * These runs should not be running on startup
+     */
+    private void fixIncompleteRuns() {
+        List<Run> incompleteRuns = runService.getRunningRuns();
+        log.info("Fixing incomplete runs : {} incomplete runs found", incompleteRuns.size());
+        incompleteRuns.forEach(incompleteRun -> {
+            scriptLauncherService.fixIncompleteRun(incompleteRun);
+        });
+    }
+
+    /**
      * Launched after container started
      */
     @Override
     public void afterPropertiesSet() {
         log.debug("Launch bootstrap actions");
 
-        fixIncompleteRuns();
-
-        resumeScheduleRuns();
+        TransactionTemplate tmpl = new TransactionTemplate(txManager);
+        tmpl.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus status) {
+                fixIncompleteRuns();
+                resumeScheduleRuns();
+            }
+        });
     }
 
 }

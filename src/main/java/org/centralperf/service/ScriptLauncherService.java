@@ -35,6 +35,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 
 /**
  * All operation to launch / stop / monitor launched jobs
@@ -50,48 +51,66 @@ public class ScriptLauncherService {
 	@Resource
 	private SamplerService samplerService;
 
-	@Resource
-	private RunService runService;
+    @Resource
+    private RunService runService;
 
-	@Resource
-	private ThreadPoolTaskScheduler scheduledRunThreadPoolTaskScheduler;
+    @Resource
+    private ThreadPoolTaskScheduler scheduledRunThreadPoolTaskScheduler;
 
-	@Resource
-	private BackgroundThreadSessionManager backgroundThreadSessionManager;
+    @Resource
+    private BackgroundThreadSessionManager backgroundThreadSessionManager;
 
-	private HashMap<Long, SamplerRunJob> runningJobs = new HashMap<>();
+    private HashMap<Long, SamplerRunJob> runningJobs = new HashMap<>();
+    private HashMap<Long, ScheduledFuture<?>> scheduledRuns = new HashMap<>();
 
-	private static final Logger log = LoggerFactory.getLogger(ScriptLauncherService.class);
+    private static final Logger log = LoggerFactory.getLogger(ScriptLauncherService.class);
 
-	public void launchRun(Run run) throws ConfigurationException {
-		if (runService.isDelayedRun(run)) {
-			this.launchSchedule(run);
-		} else {
-			this.launchNow(run);
-		}
-	}
+    public void launchRun(Run run) throws ConfigurationException {
+        if (runService.isDelayedRun(run)) {
+            this.launchSchedule(run);
+        } else {
+            this.launchNow(run);
+        }
+    }
 
 	public void launchSchedule(Run run) {
-		ScriptLauncherTask task = new ScriptLauncherTask(run, this, backgroundThreadSessionManager);
-		if (run.getScheduleCronExpression() != null) {
-			scheduledRunThreadPoolTaskScheduler.schedule(task, new CronTrigger(run.getScheduleCronExpression()));
-		} else if (run.getScheduledDate() != null) {
-			scheduledRunThreadPoolTaskScheduler.schedule(task, run.getScheduledDate());
-		} else
-			throw new IllegalArgumentException("The run me be either scheduled for a delayed start or with a cron expression");
-		run.setLaunched(true);
-		runRepository.save(run);
-	}
+        // Search if already scheduled and cancel it
+        ScheduledFuture<?> scheduledFuture = scheduledRuns.get(run.getId());
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+        }
 
-	public void launchNow(Long runId) throws ConfigurationException {
-		launchNow(runRepository.findById(runId).get());
-	}
+        // Create a new task to schedule
+        ScriptLauncherTask task = new ScriptLauncherTask(run, this, backgroundThreadSessionManager);
+        if (run.getScheduleCronExpression() != null) {
+            scheduledFuture = scheduledRunThreadPoolTaskScheduler.schedule(task, new CronTrigger(run.getScheduleCronExpression()));
+        } else if (run.getScheduledDate() != null) {
+            scheduledFuture = scheduledRunThreadPoolTaskScheduler.schedule(task, run.getScheduledDate());
+        } else
+            throw new IllegalArgumentException("The run me be either scheduled for a delayed start or with a cron expression");
+        scheduledRuns.put(run.getId(), scheduledFuture);
+        run.setLaunched(true);
+        runRepository.save(run);
+    }
 
-	public void launchNow(Run run) throws ConfigurationException {
-		ScriptVersion scriptVersion = run.getScriptVersion();
+    /**
+     * Cancel a delayed or cron run
+     *
+     * @param run Run to cancel
+     */
+    public void cancelScheduleRun(Run run) {
+        scheduledRuns.get(run.getId()).cancel(true);
+    }
 
-		// Get the sampler type
-		Sampler sampler = samplerService.getSamplerByUID(run.getScriptVersion().getScript().getSamplerUID());
+    public void launchNow(Long runId) throws ConfigurationException {
+        launchNow(runRepository.findById(runId).get());
+    }
+
+    public void launchNow(Run run) throws ConfigurationException {
+        ScriptVersion scriptVersion = run.getScriptVersion();
+
+        // Get the sampler type
+        Sampler sampler = samplerService.getSamplerByUID(run.getScriptVersion().getScript().getSamplerUID());
 
 		log.debug("Launching run " + run.getLabel());
 		// Replace variables by their value
@@ -126,18 +145,28 @@ public class ScriptLauncherService {
 	/**
 	 * Called once the job finished
 	 */
-	public void endJob(SamplerRunJob job) {
-		runningJobs
-				.entrySet()
-				.stream()
-				.filter(entry -> job.equals(entry.getValue()))
-				.findFirst()
-				.map(Map.Entry::getKey)
-				.ifPresent(runId -> {
-					runningJobs.remove(runId);
-					job.getSimulationFile().delete();
-					job.getResultFile().delete();
-					runService.endRun(runId, job);
-				});
-	}
+    public void endJob(SamplerRunJob job) {
+        runningJobs
+                .entrySet()
+                .stream()
+                .filter(entry -> job.equals(entry.getValue()))
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .ifPresent(runId -> {
+                    runningJobs.remove(runId);
+                    job.getSimulationFile().delete();
+                    job.getResultFile().delete();
+                    runService.endRun(runId, job);
+                });
+    }
+
+    public void fixIncompleteRun(Run incompleteRun) {
+        Sampler sampler = samplerService.getSamplerByUID(incompleteRun.getScriptVersion().getScript().getSamplerUID());
+        sampler.getLauncher().fixIncompleteRuns(incompleteRun);
+        incompleteRun.setRunning(false);
+        incompleteRun.setComment(
+                (incompleteRun.getComment() != null ? incompleteRun.getComment() : "") +
+                        "\r\n*** System message : this run didn't complete normally *** ");
+        runRepository.save(incompleteRun);
+    }
 }
