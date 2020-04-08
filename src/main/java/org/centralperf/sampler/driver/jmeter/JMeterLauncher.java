@@ -48,17 +48,21 @@ public class JMeterLauncher implements SamplerLauncher {
 
 	@Value("${jmeter.launcher.script-path}")
 	private String jmeterLauncherScriptPath;
-	
+
 	@Value("${jmeter.launcher.output.format}")
-	private String jmeterLauncherOutputFormat;	
-	
+	private String jmeterLauncherOutputFormat;
+
+	@Value("${jmeter.launcher.docker.image}")
+	private String jmeterLauncherDockerImage;
+
 	@Resource
 	private ScriptLauncherService scriptLauncherService;
 
 	@Resource
 	private CSVResultService runResultService;
-	
+
 	private static final Logger log = LoggerFactory.getLogger(JMeterLauncher.class);
+
 	/**
 	 * {@inheritDoc}<br/>
 	 * The jMeter launcher launches jMeter with the following parameters
@@ -132,8 +136,8 @@ public class JMeterLauncher implements SamplerLauncher {
 				job = new JMeterStandaloneRunJob((String[]) ArrayUtils.addAll(command, jmeterCommonCliOptions), run);
 				break;
 			}
-			case DOCKER_CONTAINER:{
-				job = new JMeterDockerContainerRunJob(jmeterCommonCliOptions, run);
+			case DOCKER_CONTAINER: {
+				job = new JMeterDockerContainerRunJob(jmeterCommonCliOptions, run, jmeterLauncherDockerImage);
 				break;
 			}
 			default: throw new ConfigurationException(String.format("JMeter launcher type %s is not supported", launcherType));

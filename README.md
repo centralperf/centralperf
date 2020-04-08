@@ -17,6 +17,8 @@ cd centralperf
 ```
 vi centralperf.config
 ```
+
+#### From Github
 - Build CentralPerf image
 ```
 cd scripts
@@ -26,12 +28,30 @@ cd scripts
 ```
 ./launch.sh
 ```
+
+#### From source
+- Add following to [repo_root]/centralperf.config
+```
+DEPLOY_CENTRALPERF_FROM=local
+```
+- Build project with Maven
+```
+mvn clean package
+```
+- Launch Central Perf containers
+```
+cd scripts
+./launch.sh
+```
+
 ## Release History
 
 ### 1.3.0
 
 - Schedule runs with start delay or cron expression
 - Database migrations with FlyWay
+- Allow to choose jMeter Docker Image
+- jMeter Plugins in jMeter container (based on https://hub.docker.com/r/egaillardon/jmeter-plugins/)
 - Bug fixes 
 
 ### 1.2.0

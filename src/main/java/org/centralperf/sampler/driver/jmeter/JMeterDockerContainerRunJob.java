@@ -20,10 +20,12 @@ package org.centralperf.sampler.driver.jmeter;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
+import com.github.dockerjava.core.command.PullImageResultCallback;
 import org.apache.commons.lang.ArrayUtils;
 import org.centralperf.model.dao.Run;
 import org.centralperf.sampler.api.SamplerRunJob;
@@ -37,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * A thread to handle Docker based jMeter job launcher and watcher
@@ -48,6 +51,7 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 	private static final String CONTAINER_PREFIX = "jmeter_centralperf_run_";
 	private String[] jmeterCliOptions;
 	private Run run;
+	private String dockerImage;
 	private long startTime;
 	private long endTime;
 	private boolean running;
@@ -62,15 +66,16 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 
 	private static final Logger log = LoggerFactory.getLogger(JMeterDockerContainerRunJob.class);
 
-	public JMeterDockerContainerRunJob(String[] jmeterCliOptions, Run run) {
+	public JMeterDockerContainerRunJob(String[] jmeterCliOptions, Run run, String dockerImage) {
 		this.jmeterCliOptions = jmeterCliOptions;
-		this.run=run;
+		this.run = run;
+		this.dockerImage = dockerImage;
 	}
 
 	@Override
 	public void stopProcess() {
 		log.debug("Stopping jMeter container");
-		if(this.containerId != null) {
+		if (this.containerId != null) {
 			getDockerClient().stopContainerCmd(this.containerId).exec();
 			running = false;
 		}
@@ -139,8 +144,21 @@ public class JMeterDockerContainerRunJob implements SamplerRunJob {
 		DockerClient dockerClient = getDockerClient();
 		String containerName = buildJMeterContainerName(run);
 
+		// Check image
+		String dockerImageNameWithTag = dockerImage.contains(":") ? dockerImage : dockerImage + ":latest";
+		List<Image> matchingImages = dockerClient.listImagesCmd().withImageNameFilter(dockerImageNameWithTag).exec();
+		// If missing, try to pull
+		if (matchingImages.isEmpty()) {
+			log.info("Docker image '{}' is missing. Pulling it ...", dockerImageNameWithTag);
+			try {
+				dockerClient.pullImageCmd(dockerImageNameWithTag).exec(new PullImageResultCallback()).awaitCompletion();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(String.format("Unable to pull image %s", dockerImageNameWithTag), e);
+			}
+		}
+
 		// Create jMeter container
-		CreateContainerResponse container = dockerClient.createContainerCmd("jmeter")
+		CreateContainerResponse container = dockerClient.createContainerCmd(dockerImageNameWithTag)
 				.withName(containerName)
 				.withCmd((String[]) ArrayUtils.addAll(command, jmeterCliOptions))
 				.exec();

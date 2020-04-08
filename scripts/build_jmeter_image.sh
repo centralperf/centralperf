@@ -7,4 +7,4 @@ cd ${DIR}/../src/main/docker/jmeter/
 # Load jMeter version from Docker Compose .env
 source ${DIR}/../src/main/docker/.env
 echo "Build jMeter Docker Image with version ${JMETER_VERSION}"
-docker build -t jmeter --build-arg JMETER_VERSION=${JMETER_VERSION} .
+docker build -t centralperf_jmeter:latest --build-arg JMETER_VERSION=${JMETER_VERSION} .

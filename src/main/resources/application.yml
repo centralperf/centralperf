@@ -77,6 +77,8 @@ jmeter: # JMETER CONFIGURATION
     #     - standalone : jMeter is installed on the host (must provide "script-path" value)
     #     - docker_container : jMeter is launched as a local Docker Container. Unix based connection to Docker daemon for now
     type: docker_container
+    docker:
+      image: centralperf_jmeter:latest # Name of the docker image to use to launch jMeter
     script-path: C\:\\centralperf\\softs\\jmeter\\bin\\jmeter.bat
     output:
       # Only 'csv' allowed from now
