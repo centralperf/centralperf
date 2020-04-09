@@ -104,7 +104,7 @@ public class JMXScriptVariableExtractor {
                 NodeList variablesNodes = (NodeList) xPathExprVariables.evaluate(argumentNode, XPathConstants.NODESET);
 
                 if (variablesNodes.getLength() == 0)
-                    break; // Skip empty variables sets (when used a separator for example)
+                    continue; // Skip empty variables sets (when used a separator for example)
 
                 // Loop over variables
                 for (int j = 0; j < variablesNodes.getLength(); j++) {
