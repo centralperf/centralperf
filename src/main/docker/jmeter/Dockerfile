@@ -2,6 +2,7 @@ FROM debian:stretch
 LABEL maintainer="charles@amoae.com"
 
 ARG JMETER_VERSION
+ARG JVM_ARGS
 
 ENV JMETER_HOME /opt/apache-jmeter-${JMETER_VERSION}
 ENV JMETER_BIN  ${JMETER_HOME}/bin
