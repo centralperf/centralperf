@@ -36,6 +36,7 @@ services:
       cluster.name: es-centralperf-cluster
       cluster.initial_master_nodes: centralperf
       cluster.routing.allocation.disk.threshold_enabled: "false"
+      xpack.monitoring.collection.enabled: "true"
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ulimits:
@@ -92,5 +93,12 @@ services:
       db:  { condition: service_started }
       es:  { condition: service_healthy }
       kibana:  { condition: service_healthy }
-  
-  
+
+  spring-boot-admin:
+    container_name: centralperf-boot-admin
+    image: slydeveloper/spring-boot-admin
+    environment:
+      SPRING_BOOT_ADMIN_SECURITY_ENABLED: "false"
+      SPRING_BOOT_ADMIN_TITLE: "Central Perf Admin"
+    ports:
+      - "1111:1111"

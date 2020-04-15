@@ -1,4 +1,8 @@
 # Specific profile to run CentralPerf in a Docker container build with Docker Compose
+
+server:
+  address: centralperf
+
 spring:
   # Spring JDBC configuration
   datasource:
@@ -9,6 +13,14 @@ spring:
   elasticsearch:
     rest:
       uris: http://es:9200
+  boot:
+    admin:
+      client:
+        enabled: true
+        url: http://spring-boot-admin:1111
+        instance:
+          name: CentralPerf Webapp
+
 centralperf:
   elastic:
     kibana:
@@ -16,11 +28,11 @@ centralperf:
         url: http://kibana:5601
         base-path: /kibana
       public-url: /kibana # Relative URL and context of Traefik Reverse Proxy
+
 jmeter:
   launcher:
     type: docker_container
+
 logging:
   level:
-    com.github.dockerjava: debug
-    org.centralperf: debug
-    org.springframework.web: info
+    org.centralperf: info

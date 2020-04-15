@@ -31,9 +31,18 @@ spring:
     template-loader-path: classpath:/views/ftl/
     suffix: .ftl
     request-context-attribute: rc
-
   mvc:
     static-path-pattern: /resources/**
+  boot:
+    admin:
+      client:
+        enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 centralperf:
   # Data storage backend configuration (DEFAULT to user CP database or ES for ElasticSearch)
