@@ -59,15 +59,30 @@ public class RunService {
     @Resource
     private ScriptLauncherService scriptLauncherService;
     @Resource
-    private ElasticSearchService elasticSearchService;
+	private ElasticSearchService elasticSearchService;
 
-    @Resource
-    private ScriptVersionRepository scriptVersionRepository;
+	@Resource
+	private ScriptVersionRepository scriptVersionRepository;
 
-    @Value("${centralperf.csv.field-separator}")
-    private String csvSeparator;
-    @Resource
-    private ScriptVariableRepository scriptVariableRepository;
+	@Value("${centralperf.csv.field-separator}")
+	private String csvSeparator;
+	@Resource
+	private ScriptVariableRepository scriptVariableRepository;
+
+	/**
+	 * Set common info when a run ends
+	 *
+	 * @param run Run to update
+	 * @param job Job Info for process output
+	 */
+	private void setEndedRunCommonInfo(Run run, SamplerRunJob job) {
+		run.setRunning(false);
+		run.setLastEndDate(new Date());
+		if (!isCronRun(run)) {
+			run.setFinished(true);
+		}
+		run.setProcessOutput(job.getProcessOutput());
+	}
 
 	/**
 	 * Close the run when the launcher has finished. Set the end date and gets job output logs
@@ -80,31 +95,24 @@ public class RunService {
 		Run run = runRepository.findById(runId).orElse(null);
 		if (run != null) {
 			log.debug("Ending run " + run.getLabel());
-			run.setRunning(false);
-			run.setLastEndDate(new Date());
-			run.setProcessOutput(job.getProcessOutput());
-
-			if (!isCronRun(run)) {
-				run.setFinished(true);
-			}
+			setEndedRunCommonInfo(run, job);
 			runRepository.save(run);
 		}
 	}
 
-    /**
-     * Force a run to terminate
-     *
-     * @param run run to terminate
-     */
-    public void abortRun(Run run) {
-        log.debug("Aborting run " + run.getLabel());
-        run.setRunning(false);
-        run.setLastEndDate(new Date());
-        run.setFinished(true);
-        String comment = run.getComment() == null ? "INTERRUPTED BY USER !!!" : "INTERRUPTED BY USER !!!\r\n" + run.getComment();
-        run.setComment(comment);
-        runRepository.save(run);
-    }
+	/**
+	 * Force a run to terminate
+	 *
+	 * @param run run to terminate
+	 */
+	public void abortRun(Run run, SamplerRunJob job) {
+		log.debug("Aborting run " + run.getLabel());
+		setEndedRunCommonInfo(run, job);
+		String comment = run.getComment() == null ? "INTERRUPTED BY USER !!!" : "INTERRUPTED BY USER !!!\r\n" + run.getComment();
+		run.setComment(comment);
+		runRepository.save(run);
+	}
+
 
     /**
      * Cancel a run

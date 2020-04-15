@@ -60,8 +60,8 @@ public class ScriptLauncherService {
     @Resource
     private BackgroundThreadSessionManager backgroundThreadSessionManager;
 
-    private HashMap<Long, SamplerRunJob> runningJobs = new HashMap<>();
-    private HashMap<Long, ScheduledFuture<?>> scheduledRuns = new HashMap<>();
+    private final HashMap<Long, SamplerRunJob> runningJobs = new HashMap<>();
+    private final HashMap<Long, ScheduledFuture<?>> scheduledRuns = new HashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(ScriptLauncherService.class);
 
@@ -129,13 +129,13 @@ public class ScriptLauncherService {
 	 */
 	public void abortRun(Run run) {
 		if (run.isRunning()) {
-			log.debug("Stopping run [" + run.getId() + "]:" + run.getLabel());
-			SamplerRunJob job = getJob(run.getId());
-			if (job != null) {
-				job.stopProcess();
-			}
-			runService.abortRun(run);
-		}
+            log.debug("Stopping run [" + run.getId() + "]:" + run.getLabel());
+            SamplerRunJob job = getJob(run.getId());
+            if (job != null) {
+                job.stopProcess();
+            }
+            runService.abortRun(run, job);
+        }
 	}
 
 	public SamplerRunJob getJob(Long runId) {
