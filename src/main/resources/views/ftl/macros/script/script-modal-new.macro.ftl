@@ -16,20 +16,22 @@
 -->
 <#import "/spring.ftl" as spring />
 <#macro main>
-	<div class="modal fade" id="script-modal-new" tabindex="-1" role="dialog" aria-labelledby="run-modal-new" aria-hidden="true">
+	<div class="modal fade" id="script-modal-new" tabindex="-1" role="dialog" aria-labelledby="run-modal-new"
+		 aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-                <form method="post" action="${rc.contextPath}/project/${project.id?c}/script/new" enctype="multipart/form-data" class="form-horizontal">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4 class="modal-title">Add a new script</h4>
-				</div>
-				<div class="modal-body">
-				            <@spring.bind "newScript.project.id" />
-				            <input type="hidden" name="${spring.status.expression}" value="${project.id?c}"/>
-				
-							<#-- INPUT SCRIPT NAME -->
-							<div class="form-group">
+				<form method="post" action="${rc.contextPath}/project/${project.id?c}/script/new"
+					  enctype="multipart/form-data">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Add a new script</h4>
+					</div>
+					<div class="modal-body">
+						<@spring.bind "newScript.project.id" />
+						<input type="hidden" name="${spring.status.expression}" value="${project.id?c}"/>
+
+						<#-- INPUT SCRIPT NAME -->
+						<div class="form-group">
 				            	<label for="label">Label</label>
 			            		<@spring.formInput "newScript.label", "class=form-control"/>
 				            	<@spring.showErrors "<br/>", "cssError"/>
