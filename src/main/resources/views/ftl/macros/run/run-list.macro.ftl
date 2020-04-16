@@ -61,7 +61,7 @@
                     <td>
                         <a href="${rc.contextPath}/project/${run.project.id?c}/script/${run.scriptVersion.script.id?c}/detail"
                         >${run.scriptVersion.script.label}
-                            (${run.scriptVersion.number} - ${run.scriptVersion.description})
+                            (${run.scriptVersion.number} - <@utils.truncate run.scriptVersion.description/>)
                         </a>
                     </td>
                     <td>

@@ -17,3 +17,7 @@
 <#macro prettyDate dateToFormat >
 	<span title="${dateToFormat?datetime?iso_utc}"><script>document.write(moment("${dateToFormat?datetime?iso_utc}").fromNow())</script></span>
 </#macro>
+
+<#macro truncate textToTruncate >
+	<span title="${textToTruncate}">${textToTruncate?truncate_w(20)}</span>
+</#macro>
