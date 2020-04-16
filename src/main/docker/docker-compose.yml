@@ -97,8 +97,12 @@ services:
   spring-boot-admin:
     container_name: centralperf-boot-admin
     image: slydeveloper/spring-boot-admin
-    environment:
-      SPRING_BOOT_ADMIN_SECURITY_ENABLED: "false"
-      SPRING_BOOT_ADMIN_TITLE: "Central Perf Admin"
+    volumes:
+      - "./spring-boot-admin/application-docker.properties:/opt/spring-boot-admin-docker/application-docker.properties"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.centralperf-boot-admin.rule=PathPrefix(`/boot-admin`)"
+      - "traefik.http.routers.centralperf-boot-admin.entrypoints=web"
+      - "traefik.http.services.centralperf-boot-admin.loadbalancer.server.port=1111"
     ports:
       - "1111:1111"

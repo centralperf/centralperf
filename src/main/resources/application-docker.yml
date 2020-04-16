@@ -20,6 +20,7 @@ spring:
         url: http://spring-boot-admin:1111
         instance:
           name: CentralPerf Webapp
+        api-path: "boot-admin/instances"
 
 centralperf:
   elastic:
