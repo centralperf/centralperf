@@ -52,6 +52,8 @@ cd scripts
 - Database migrations with FlyWay
 - Allow to choose jMeter Docker Image
 - jMeter Plugins in jMeter container (based on https://hub.docker.com/r/egaillardon/jmeter-plugins/)
+- Run result comparison
+- Improved Kibana dashboards / improved loading
 - Bug fixes 
 
 ### 1.2.0
