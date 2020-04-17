@@ -20,20 +20,23 @@ package org.centralperf.service;
 import org.centralperf.model.Configuration;
 import org.centralperf.model.dao.Project;
 import org.centralperf.model.dao.Run;
-import org.centralperf.repository.RunRepository;
 import org.centralperf.sampler.driver.jmeter.JMeterSampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Scanner;
 
@@ -55,16 +58,16 @@ public class BootstrapService implements InitializingBean {
     private ProjectService projectService;
 
     @Resource
-    private BootstrapServiceFiles bootstrapServiceFiles;
-
-    @Resource
     private RunService runService;
 
     @Resource
     private ScriptLauncherService scriptLauncherService;
 
-    @Resource
-    private RunRepository runRepository;
+    @Value("${jmeter.sample-file}")
+    org.springframework.core.io.Resource sampleJMXFile;
+
+    @Value("${gatling.sample-file}")
+    org.springframework.core.io.Resource sampleGatlingFile;
 
     private static final Logger log = LoggerFactory.getLogger(BootstrapService.class);
 
@@ -83,7 +86,7 @@ public class BootstrapService implements InitializingBean {
         configurationService.updateConfigurationValue(Configuration.INITIALIZED, Boolean.TRUE.toString());
     }
 
-    public void importSamples() {
+    public void importSamples() throws IOException {
 
         // Create sample Projet
         Project sampleProject = new Project();
@@ -92,13 +95,10 @@ public class BootstrapService implements InitializingBean {
         projectService.addProject(sampleProject);
 
         // Associate sample script
-        // Load sample JMX and Gatling files
+        // Load sample JMX
         String jmxContent;
-        //String gatlingContent;
-        jmxContent = new Scanner(bootstrapServiceFiles.getSampleJMXFile()).useDelimiter("\\Z").next();
+        jmxContent = new Scanner(StreamUtils.copyToString(sampleJMXFile.getInputStream(), StandardCharsets.UTF_8)).useDelimiter("\\Z").next();
         scriptService.addScript(sampleProject, JMeterSampler.UID, "JMETER Sample script", "Central Perf sample JMETER script. Queries a single URL with few scenario's parameters", jmxContent);
-        //gatlingContent = new Scanner(bootstrapServiceFiles.getSampleGatlingFile().getFile()).useDelimiter("\\Z").next();
-        //scriptService.addScript(sampleProject,GatlingSampler.UID, "GATLING Sample script", "Central Perf sample script. Queries Google; only for demonstration (no parameters)", gatlingContent);
         // Import sample resuts
         // TODO : Import sample result
     }

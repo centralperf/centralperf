@@ -1,17 +1,15 @@
 package org.centralperf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.centralperf.model.SampleDataBackendTypeEnum;
 import org.centralperf.model.dao.Run;
 import org.centralperf.model.dao.Sample;
 import org.centralperf.model.dto.ESSample;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -28,9 +26,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,8 +56,14 @@ public class ElasticSearchService {
 	@Value("${centralperf.elastic.kibana.internal.base-path}")
 	private String kibanaBasePath;
 
-	@Resource
-	private BootstrapServiceFiles bootstrapServiceFiles;
+	@Value("classpath:kibana/dashboards/*")
+	private org.springframework.core.io.Resource[] kibanaDashboardsFiles;
+
+	@Value("classpath:kibana/visualizations/*")
+	private org.springframework.core.io.Resource[] kibanaVisualizationsFiles;
+
+	@Value("classpath:kibana/index-patterns/*")
+	private org.springframework.core.io.Resource[] kibanaIndexPatternsFiles;
 
 	private RestHighLevelClient esClient;
 	private RestClient kibanaClient;
@@ -110,7 +113,7 @@ public class ElasticSearchService {
 						builder.startObject("timestamp");
 						{
 							builder.field("type", "date");
-							builder.field("format","epoch_millis");
+							builder.field("format", "epoch_millis");
 						}
 						builder.endObject();
 					}
@@ -119,10 +122,10 @@ public class ElasticSearchService {
 				builder.endObject();
 				createRequest.mapping(builder);
 				esClient.indices().create(createRequest, RequestOptions.DEFAULT);
-
-				// Create Kibana objects
-				boostrapKibanaObjects();
 			}
+
+			// Create Kibana objects
+			boostrapKibanaObjects();
 
 			// For further json serialization
 			mapper = new ObjectMapper();
@@ -140,32 +143,58 @@ public class ElasticSearchService {
 	 */
 	private void boostrapKibanaObjects() {
 		try {
-			
-			// Central Perf Index Pattern
-			this.bootstrapKibanaObject("index-pattern", "centralperf", bootstrapServiceFiles.getKibanaCentralPerfIndexPattern());
 
-			// Visualizations
-			this.bootstrapKibanaObject("visualization", "centralperf_global_metrics", bootstrapServiceFiles.getKibanaVisualizationGlobalMetrics());
-			this.bootstrapKibanaObject("visualization", "centralperf_response_time_per_time", bootstrapServiceFiles.getKibanaVisualizationResponseTimePerTime());
-			this.bootstrapKibanaObject("visualization", "centralperf_response_time_per_sample", bootstrapServiceFiles.getKibanaVisualizationResponseTimePerSample());
+			// Central Perf Index Pattern
+			for (org.springframework.core.io.Resource f : kibanaIndexPatternsFiles) {
+				this.bootstrapKibanaObject("index-pattern", f);
+			}
+
+			// Vizualisations
+			for (org.springframework.core.io.Resource f : kibanaVisualizationsFiles) {
+				this.bootstrapKibanaObject("visualization", f);
+			}
 
 			// Dashboards
-			this.bootstrapKibanaObject("dashboard", "centralperf_overview_dashboard", bootstrapServiceFiles.getKibanaDashboardOverview());
+			for (org.springframework.core.io.Resource f : kibanaDashboardsFiles) {
+				this.bootstrapKibanaObject("dashboard", f);
+			}
+
 		} catch (IOException e) {
 			logger.error("Error on Kibana objects bootstrap import: " + e.getMessage(), e);
 		}
 	}
 
-	private void bootstrapKibanaObject(String objectType, String objectId, String content) throws IOException {
-		Request request = new Request("POST", String.format("/api/saved_objects/%s/%s", objectType, objectId));
-		request.setJsonEntity(content);
-		request.setOptions(kibanaClientRequestOptions);
-		kibanaClient.performRequest(request);
+	private void bootstrapKibanaObject(String objectType, org.springframework.core.io.Resource savedObjet) throws IOException {
+		String objectId = "centralperf_" + FilenameUtils.removeExtension(savedObjet.getFilename());
+
+		// Check if object already exists
+		Request existsRequest = new Request("GET", String.format("/api/saved_objects/%s/%s", objectType, objectId));
+		existsRequest.setOptions(kibanaClientRequestOptions);
+		try {
+			kibanaClient.performRequest(existsRequest); // throws 404 if not found
+			logger.debug("The '{}' saved object already exists, skip it", objectId);
+		} catch (ResponseException responseException) {
+			String content = getResourceAsString(savedObjet);
+			Request request = new Request("POST", String.format("/api/saved_objects/%s/%s", objectType, objectId));
+			request.setJsonEntity(content);
+			request.setOptions(kibanaClientRequestOptions);
+			kibanaClient.performRequest(request);
+			logger.debug("Saved object of type '{}' imported in Kibana with id '{}'", objectType, objectId);
+		}
+	}
+
+	private String getResourceAsString(org.springframework.core.io.Resource resource) {
+		try {
+			return IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8.name());
+		} catch (IOException e) {
+			logger.error(String.format("Unable to load bootstrap file %s", resource.getFilename()), e);
+			return null;
+		}
 	}
 
 	/**
 	 * Remove all documents linked to the run
-	 * 
+	 *
 	 * @param run Run to reset
 	 * @return Number of sample deleted or -1 if unable to delete
 	 */

@@ -17,19 +17,18 @@
 
 package org.centralperf.controller;
 
-import javax.annotation.Resource;
-
 import org.centralperf.service.BootstrapService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.annotation.Resource;
+import java.io.IOException;
 
 /**
  * The Bootstrap controller is used when CP is launched for the first time, to propose to initialize with samples
- * 
+ *
  * @since 1.0
- * 
  */
 @Controller
 public class BootstrapController {
@@ -52,17 +51,17 @@ public class BootstrapController {
 	 * @return Path to the home page mapping
 	 */
 	@GetMapping(value = "/bootstrap/initialize")
-	public String initialize(@RequestParam(value="importSamples") Boolean importSamples) {
+	public String initialize(@RequestParam(value = "importSamples") Boolean importSamples) throws IOException {
 		// Import CP samples if specified 
-		if(importSamples){
+		if (importSamples) {
 			bootstrapService.importSamples();
 		}
-		
+
 		// Update configuration, set as initialized
 		bootstrapService.setInitialized();
-		
+
 		// Display Welcome Page
 		return "redirect:/home";
-	}	
+	}
 
 }

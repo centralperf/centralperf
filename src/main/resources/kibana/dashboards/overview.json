@@ -1,14 +1,41 @@
 {
   "attributes": {
-    "title": "[CentralPerf] Overview",
-    "hits": 0,
-    "description": "",
-    "panelsJSON": "[{\"col\":1,\"id\":\"centralperf_response_time_per_time\",\"panelIndex\":1,\"row\":3,\"size_x\":6,\"size_y\":4,\"type\":\"visualization\"},{\"col\":1,\"id\":\"centralperf_global_metrics\",\"panelIndex\":2,\"row\":1,\"size_x\":12,\"size_y\":2,\"type\":\"visualization\"},{\"col\":7,\"id\":\"centralperf_response_time_per_sample\",\"panelIndex\":3,\"row\":3,\"size_x\":6,\"size_y\":4,\"type\":\"visualization\"}]",
-    "optionsJSON": "{\"darkTheme\":false}",
-    "version": 1,
     "timeRestore": false,
+    "title": "CentralPerf - Default",
+    "version": 1,
+    "description": "",
+    "hits": 0,
     "kibanaSavedObjectMeta": {
-      "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"+runId:46 +projectId:1\"}}}],\"highlightAll\":true,\"version\":true}"
+      "searchSourceJSON": "{\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filter\":[],\"index\":\"centralperf_main\"}"
+    },
+    "optionsJSON": "{\"darkTheme\":false}",
+    "panelsJSON": "[{\"version\":\"7.5.2\",\"gridData\":{\"h\":20,\"i\":\"1\",\"w\":20,\"x\":0,\"y\":8},\"panelIndex\":\"1\",\"embeddableConfig\":{\"title\":\"Response time per time\"},\"title\":\"Response time per time\",\"panelRefName\":\"panel_0\"},{\"version\":\"7.5.2\",\"gridData\":{\"h\":28,\"i\":\"2\",\"w\":7,\"x\":40,\"y\":0},\"panelIndex\":\"2\",\"embeddableConfig\":{\"title\":\"\"},\"panelRefName\":\"panel_1\"},{\"version\":\"7.5.2\",\"gridData\":{\"h\":28,\"i\":\"3\",\"w\":20,\"x\":20,\"y\":0},\"panelIndex\":\"3\",\"embeddableConfig\":{\"title\":\"Response time per sample\"},\"title\":\"Response time per sample\",\"panelRefName\":\"panel_2\"},{\"version\":\"7.5.2\",\"gridData\":{\"h\":8,\"i\":\"ab4ba26d-cbbc-4d1c-a583-52544a0d3105\",\"w\":13,\"x\":0,\"y\":0},\"panelIndex\":\"ab4ba26d-cbbc-4d1c-a583-52544a0d3105\",\"embeddableConfig\":{\"title\":\"\"},\"panelRefName\":\"panel_3\"},{\"version\":\"7.5.2\",\"gridData\":{\"h\":8,\"i\":\"83c37c0c-2dbb-48e6-a3c8-dffbe0328616\",\"w\":7,\"x\":13,\"y\":0},\"panelIndex\":\"83c37c0c-2dbb-48e6-a3c8-dffbe0328616\",\"embeddableConfig\":{\"title\":\"\"},\"panelRefName\":\"panel_4\"}]"
+  },
+  "references": [
+    {
+      "id": "centralperf_response_time_per_time",
+      "name": "panel_0",
+      "type": "visualization"
+    },
+    {
+      "id": "centralperf_global_metrics",
+      "name": "panel_1",
+      "type": "visualization"
+    },
+    {
+      "id": "centralperf_response_time_per_sample",
+      "name": "panel_2",
+      "type": "visualization"
+    },
+    {
+      "id": "centralperf_started_date",
+      "name": "panel_3",
+      "type": "visualization"
+    },
+    {
+      "id": "centralperf_error_gauge",
+      "name": "panel_4",
+      "type": "visualization"
     }
-  }
+  ]
 }

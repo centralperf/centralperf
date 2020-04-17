@@ -2,7 +2,7 @@
   "attributes": {
     "description": "",
     "kibanaSavedObjectMeta": {
-      "searchSourceJSON": "{\"query\":{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"language\":\"lucene\"},\"filter\":[],\"index\":\"centralperf\"}"
+      "searchSourceJSON": "{\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filter\":[],\"index\":\"centralperf_main\"}"
     },
     "title": "[CentralPerf] Response time per sample",
     "uiStateJSON": "{}",

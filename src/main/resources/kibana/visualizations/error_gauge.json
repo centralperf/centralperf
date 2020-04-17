@@ -1,0 +1,12 @@
+{
+  "attributes": {
+    "description": "",
+    "kibanaSavedObjectMeta": {
+      "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[],\"index\":\"centralperf_main\"}"
+    },
+    "title": "[CentralPerf] Errors Gauge",
+    "uiStateJSON": "{}",
+    "version": 1,
+    "visState": "{\"title\":\"[CentralPerf] Errors Gauge\",\"type\":\"metrics\",\"params\":{\"id\":\"61ca57f0-469d-11e7-af02-69e470af7417\",\"type\":\"gauge\",\"series\":[{\"id\":\"61ca57f1-469d-11e7-af02-69e470af7417\",\"color\":\"#68BC00\",\"split_mode\":\"everything\",\"metrics\":[{\"id\":\"61ca57f2-469d-11e7-af02-69e470af7417\",\"type\":\"filter_ratio\",\"numerator\":\"assertResult:\\\"false\\\"\",\"denominator\":\"assertResult:\\\"true\\\"\",\"metric_agg\":\"count\",\"field\":\"runId\"}],\"separate_axis\":0,\"axis_position\":\"right\",\"formatter\":\"0.00 %\",\"chart_type\":\"line\",\"line_width\":1,\"point_size\":1,\"fill\":0.5,\"stacked\":\"none\",\"label\":\"Errors\",\"type\":\"timeseries\",\"filter\":{\"query\":\"\",\"language\":\"kuery\"},\"value_template\":\"\"}],\"time_field\":\"\",\"index_pattern\":\"\",\"interval\":\"\",\"axis_position\":\"left\",\"axis_formatter\":\"number\",\"axis_scale\":\"normal\",\"show_legend\":1,\"show_grid\":1,\"default_index_pattern\":\"centralperf*\",\"default_timefield\":\"timestamp\",\"isModelInvalid\":false,\"gauge_color_rules\":[{\"value\":0,\"id\":\"9bbbeec0-7f1f-11ea-ad58-79f84052688b\",\"gauge\":\"rgba(104,188,0,1)\",\"operator\":\"gt\"},{\"value\":0.05,\"id\":\"7ca23e30-7f20-11ea-ad58-79f84052688b\",\"gauge\":\"rgba(255,107,0,1)\",\"operator\":\"gt\"},{\"value\":0.1,\"id\":\"9655ae20-7f20-11ea-ad58-79f84052688b\",\"gauge\":\"rgba(255,0,0,1)\",\"operator\":\"gt\"}],\"gauge_width\":10,\"gauge_inner_width\":10,\"gauge_style\":\"half\",\"background_color_rules\":[{\"id\":\"a21fd3d0-7f1f-11ea-ad58-79f84052688b\"}],\"filter\":{\"query\":\"\",\"language\":\"kuery\"},\"time_range_mode\":\"entire_time_range\",\"bar_color_rules\":[{\"id\":\"4509e9a0-7f20-11ea-ad58-79f84052688b\"}],\"gauge_max\":\"1\"},\"aggs\":[]}"
+  }
+}
