@@ -28,6 +28,7 @@ import org.centralperf.repository.ProjectRepository;
 import org.centralperf.repository.RunRepository;
 import org.centralperf.repository.ScriptRepository;
 import org.centralperf.sampler.api.SamplerRunJob;
+import org.centralperf.service.ProjectService;
 import org.centralperf.service.RunService;
 import org.centralperf.service.ScriptLauncherService;
 import org.slf4j.Logger;
@@ -63,26 +64,29 @@ public class RunController extends BaseController{
 	private String kibanaUrl;
 	
 	@Resource
-	private RunRepository runRepository;
+    private RunRepository runRepository;
 
-	@Resource
-	private ScriptRepository scriptRepository;
+    @Resource
+    private ScriptRepository scriptRepository;
 
-	@Resource
-	private ScriptLauncherService scriptLauncherService;
-	
-	@Resource
-	private RunService runService;
-	
+    @Resource
+    private ScriptLauncherService scriptLauncherService;
+
+    @Resource
+    private RunService runService;
+
+    @Resource
+    private ProjectService projectService;
+
     @Resource
     private ProjectRepository projectRepository;
 
     @Value("${centralperf.report.cache.delay-seconds}")
     private Long cacheRefreshDelay;
-    
-	private static final Logger log = LoggerFactory.getLogger(RunController.class);
 
-	/**
+    private static final Logger log = LoggerFactory.getLogger(RunController.class);
+
+    /**
 	 * Display the form to create a new Run, for a specific project
 	 * @param projectId	ID of the project for this run (from URI)
 	 * @param model	Model prepared for the new project form view
@@ -245,38 +249,45 @@ public class RunController extends BaseController{
         Run newRun = runService.copyRun(rundId);
         return "redirect:/project/" + projectId + "/run/" + newRun.getId() + "/detail";
     }
-    
+
     /**
      * Display run detail
-     * @param runId	ID of the run to display  (from URI)
-     * @param model	Model prepared for the run detail view
-     * @return	Name of the run detail view
+     *
+     * @param projectId ID of the run to display  (from URI)
+     * @param runId     ID of the run to display  (from URI)
+     * @param model     Model prepared for the run detail view
+     * @return Name of the run detail view
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/detail", method = RequestMethod.GET)
     public String showRunDetail(
+            @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId,
             Model model) throws ControllerValidationException {
-    	return showRunDetail(runId, RunDetailGraphTypesEnum.SUMMARY.getPageName(), model);
-    } 
-    
+        return showRunDetail(projectId, runId, RunDetailGraphTypesEnum.SUMMARY.getPageName(), model);
+    }
+
     /**
      * Display run detail and arrive directly to a specific chart page
-     * @param runId	ID of the run to display  (from URI)
-     * @param page	Name of the chart type (see {@link RunDetailGraphTypesEnum#getPageName()})
+     * @param projectId    ID of the run to display  (from URI)
+     * @param runId    ID of the run to display  (from URI)
+     * @param page    Name of the chart type (see {@link RunDetailGraphTypesEnum#getPageName()})
      * @param model Model prepared for the run detail view
      * @return Name of the run detail view
      */
     @RequestMapping(value = "/project/{projectId}/run/{runId}/detail/{page}", method = RequestMethod.GET)
     public String showRunDetail(
+            @PathVariable("projectId") Long projectId,
             @PathVariable("runId") Long runId,
             @PathVariable("page") String page,
             Model model) throws ControllerValidationException {
-    	log.debug("Run details for run ["+runId+"]");
-    	populateModelWithRunInfo(runId, model);
-    	model.addAttribute("page",page);
-    	model.addAttribute("refreshDelay",cacheRefreshDelay*1000);
-    	model.addAttribute("kibanaUrl", kibanaUrl);
-    	return "runDetail";
+        log.debug("Run details for run [" + runId + "]");
+        populateModelWithRunInfo(runId, model);
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
+        model.addAttribute("otherRuns", projectService.getLastRuns(project));
+        model.addAttribute("page", page);
+        model.addAttribute("refreshDelay", cacheRefreshDelay * 1000);
+        model.addAttribute("kibanaUrl", kibanaUrl);
+        return "runDetail";
     }    
     
     /**

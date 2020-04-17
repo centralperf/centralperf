@@ -14,7 +14,7 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<#macro prettyDate dateToFormat >
+<#macro prettyDate dateToFormat>
 	<span title="${dateToFormat?datetime?iso_utc}"><script>document.write(moment("${dateToFormat?datetime?iso_utc}").fromNow())</script></span>
 </#macro>
 
