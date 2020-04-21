@@ -49,6 +49,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 /**
  * The Run controller manage user interactions with the runs
@@ -283,7 +284,7 @@ public class RunController extends BaseController{
         log.debug("Run details for run [" + runId + "]");
         populateModelWithRunInfo(runId, model);
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ControllerValidationException(String.format("Project with id %s does not exists", projectId)));
-        model.addAttribute("otherRuns", projectService.getLastRuns(project));
+        model.addAttribute("otherRuns", projectService.getLastRuns(project).stream().filter(run -> !run.getId().equals(runId)).collect(Collectors.toList()));
         model.addAttribute("page", page);
         model.addAttribute("refreshDelay", cacheRefreshDelay * 1000);
         model.addAttribute("kibanaUrl", kibanaUrl);

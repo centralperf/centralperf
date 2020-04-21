@@ -23,20 +23,21 @@
 		<div class="pull-right form-group form-inline">
 			<a href="${url}" class="btn btn-info" target="_blank"><span class="glyphicon glyphicon-new-window"
 																		aria-hidden="true"></span> open in Kibana</a>
-			<select id="compareWithRun" name="compareWithRunId" class="form-control">
-				<#list otherRuns as otherRun>
-					<#if otherRun.id != run.id && otherRun.launched && otherRun.lastStartDate??>
-						<option value="${otherRun.id}">${otherRun.label} (id : ${otherRun.id}
-							, ${otherRun.lastStartDate?datetime?string.short})
-						</option>
-					</#if>
-				</#list>
-			</select>
-			<a id="compareWithOtherRunBtn" class="btn btn-success"><span class="glyphicon glyphicon-transfer"
-																		 aria-hidden="true"></span> Compare with another
-				run</a>
-			<a id="returnToCurrentRun" class="btn btn-success hidden"><span class="glyphicon glyphicon-triangle-left"
-																			aria-hidden="true"></span>&nbsp;</a>
+			<#if otherRuns?has_content>
+				<a id="compareWithOtherRunBtn" class="btn btn-success">
+					<span class="glyphicon glyphicon-transfer" aria-hidden="true"></span> Compare with : </a>
+				<select id="compareWithRun" name="compareWithRunId" class="form-control">
+					<#list otherRuns as otherRun>
+						<#if otherRun.launched && otherRun.lastStartDate??>
+							<option value="${otherRun.id}">${otherRun.label} (id : ${otherRun.id}
+								, ${otherRun.lastStartDate?datetime?string.short})
+							</option>
+						</#if>
+					</#list>
+				</select>
+				<a id="returnToCurrentRun" class="btn btn-success hidden"><span
+							class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span>&nbsp;</a>
+			</#if>
 		</div>
 		<iframe
 				id="kibanaIFrame"

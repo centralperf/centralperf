@@ -35,6 +35,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 
 /**
@@ -99,11 +100,18 @@ public class ScriptLauncherService {
      * @param run Run to cancel
      */
     public void cancelScheduleRun(Run run) {
-        scheduledRuns.get(run.getId()).cancel(true);
+        Optional.ofNullable(scheduledRuns.get(run.getId()))
+                .ifPresent(scheduledRun -> scheduledRun.cancel(true));
     }
 
-    public void launchNow(Long runId) throws ConfigurationException {
-        launchNow(runRepository.findById(runId).get());
+    public void launchNow(Long runId) {
+        runRepository.findById(runId).ifPresent(run -> {
+            try {
+                launchNow(run);
+            } catch (ConfigurationException e) {
+                log.error("Error while launching run with id '{}'", runId);
+            }
+        });
     }
 
     public void launchNow(Run run) throws ConfigurationException {
@@ -112,8 +120,8 @@ public class ScriptLauncherService {
         // Get the sampler type
         Sampler sampler = samplerService.getSamplerByUID(run.getScriptVersion().getScript().getSamplerUID());
 
-		log.debug("Launching run " + run.getLabel());
-		// Replace variables by their value
+        log.debug("Launching run " + run.getLabel());
+        // Replace variables by their value
 		String finalScriptContent = sampler.getScriptProcessor().replaceVariablesInScript(scriptVersion.getContent(), run.getCustomScriptVariables());
 
 		SamplerRunJob job = sampler.getLauncher().launch(finalScriptContent, run);
