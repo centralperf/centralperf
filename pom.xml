@@ -34,7 +34,7 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<elastic.version>7.5.2</elastic.version>
+		<elastic.version>7.13.3</elastic.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.source.sourceEncoding>UTF-8</project.source.sourceEncoding>
 		<project.resources.sourceEncoding>UTF-8</project.resources.sourceEncoding>
